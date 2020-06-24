@@ -33,7 +33,6 @@
 
 # ignore directory of this project
 build/
-test/
 
 # ignore editor setting and language server config 
 *.vscode
