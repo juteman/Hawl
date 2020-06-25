@@ -1,8 +1,9 @@
-﻿/*
+/*
  * Copyright (c) 2020 juteman
  *
  * This file is part of ReForge
  * (see https://github.com/juteman/Hawl).
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,62 +22,36 @@
  * under the License.
  */
 
+/****************************************************************
+ * 每个接口都是不可变的，一个新的接口不能和旧的接口拥有同样的一个标识
+ * 这里采用了Hawl Interface ID (HIID) 的方法去保证每个接口的独立性
+ *****************************************************************/
 #pragma once
-#ifndef HAWL_TIMER_H
-#  define HAWL_TIMER_H
+#ifndef HAWL_HIID_H
+#  define HAWL_HIID_H
 #  include "BaseType.h"
+#  include <cstring>
 namespace Hawl {
-INT64
-getUSec();
 
-INT64
-getTimerFrequency();
-
-// 获得当前时间，毫秒
-UINT32
-getMSec();
-
-UINT32
-getTimeSinceStart();
-
-/// 低精度时间
-class LTimer
+// 定义 HIID
+typedef struct HIID
 {
-public:
+  UINT32 Data1;
+  UINT16 Data2;
+  UINT16 Data3;
+  UINT8  Data4[8];
 
-  LTimer();
+  // HIID 相等需每个字段相等
+  bool operator==(const HIID& rhs)
+  {
+    return (Data1 = rhs.Data1) && (Data2 == rhs.Data2) &&
+           (Data3 == rhs.Data3) &&
+           (memcmp(Data4, rhs.Data4, sizeof(Data4)) == 0);
+  }
 
-  // 得到时间差
-  // @param reset 调用函数是否重置时间
-  // @return 返回时间差
-  UINT32 GetElapsedTime(bool reset);
+} HIID;
 
-  //重置时间
-  void Reset();
+static const HIID HIIDUnknown = { 0, 0, 0, { 0 } };
 
-private:
-  UINT32 m_startTime;
-};
-
-/// 高精度时间
-class HTimer
-{
-public:
-  HTimer();
-
-  INT64   GetElapsedTime(bool reset);
-  INT64   GetElapsedTimeAverage();
-  FLOAT32 GetSeconds(bool reset);
-  FLOAT32 GetSecondsAverage();
-  void    Reset();
-
-private:
-  INT64 m_startTime;
-
-  static const UINT32 LENGTH_OF_HISTORY = 60;
-  INT64               m_history[LENGTH_OF_HISTORY];
-  UINT32              m_historyIndex;
-};
 }
-
-#endif // !TIMER_H
+#endif

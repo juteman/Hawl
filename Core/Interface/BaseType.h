@@ -41,10 +41,11 @@ typedef float  FLOAT32;
 typedef double FLOAT64;
 
 /// bool类型封装
-typedef bool      BOOL;
-static const BOOL FALSE = false;
-static const BOOL TRUE  = true;
-
+typedef bool BOOL;
+// 这里使用 static 定义 FALSE 而不是
+// 使用宏， 宏会与其他头文件中定义冲突
+static BOOL FALSE = false;
+static BOOL TRUE  = true;
 // char 类型封装
 typedef char CHAR;
 
@@ -53,6 +54,8 @@ typedef size_t      SIZETYPE;
 typedef void*       PVOID;
 typedef const void* CPVOID;
 
+// 引用计数类型包装
+typedef UINT64 RefCount;
 }
 
 #endif // !HAWL_BASE_TYPE

@@ -20,6 +20,7 @@
 
 #pragma once
 #ifndef COREAFX_H
-#define COREAFX_H
-#include "BaseType.h"
+#  define COREAFX_H
+#  include "BaseType.h"
+#  include "Common.h"
 #endif

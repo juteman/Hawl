@@ -20,7 +20,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 #include "Timer.h"
 #include <Windows.h>
 #include <ctime>
