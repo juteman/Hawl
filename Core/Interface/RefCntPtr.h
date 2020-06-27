@@ -29,6 +29,8 @@
 #  include "coreafx.h"
 #  include <type_traits>
 namespace Hawl {
+/// IObject 类型需要再次研究
+/// TODO: 类似UE4 的垃圾回收 + 智能指针的模式
 class IObject
 {
 public:
@@ -48,6 +50,8 @@ public:
   /// 返回减少后的引用计数值
   /// @note 多线程环境下的引用计数不可靠，需要加锁
   virtual RefCount HAWL_CALLCONV Release() = 0;
+
+  virtual ~IObject();
 };
 
 /// 引用计数智能指针的实现
