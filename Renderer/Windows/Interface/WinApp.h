@@ -18,10 +18,12 @@
  *
  */
 #pragma once
+
 #ifndef HAWL_WINAPP_H
 #  define HAWL_WINAPP_H
 #  include "IAppBase.h"
 #  include <Windows.h>
+#  include <string>
 namespace Hawl {
 class WindowsApp : IApp
 {
@@ -36,7 +38,7 @@ public:
   /// @param title 窗口标题
   /// @note 可在继承中override 此方法
   virtual void        InitWindowClass();
-  virtual void        CreateMainWindow();
+  virtual bool        CreateMainWindow();
   virtual void        Exit();
   virtual bool        Load();
   virtual void        Unload();
@@ -44,19 +46,29 @@ public:
   virtual void        Draw();
   virtual const char* GetName();
 
-public:
-  const WCHAR* m_title;
+  inline UINT         GetWidth() const { return m_width; }
+  inline UINT         GetHeight() const { return m_height; }
+  inline const WCHAR* GetTitle() const { return m_title.c_str(); }
+  inline void         SetWidth(UINT width) { m_width = width; }
+  inline void         SetHeight(UINT height) { m_height = height; }
+  void                SetTitle(std::wstring title);
 
+public:
 protected:
   HINSTANCE  m_instance = nullptr;
   HWND       m_hWnd     = nullptr;
   WNDCLASSEX m_WndClass;
+  UINT       m_width  = 1200;
+  UINT       m_height = 800;
 
 protected:
   static LRESULT CALLBACK WndProc(HWND   hWnd,
                                   UINT   message,
                                   WPARAM wParam,
                                   LPARAM lParam);
+
+private:
+  std::wstring m_title = L"空白标题";
 };
 }
 #endif
