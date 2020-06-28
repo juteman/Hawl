@@ -22,12 +22,19 @@
  */
 
 #include "WinApp.h"
+#include <locale>
 
 namespace Hawl {
 
 WindowsApp::WindowsApp()
 {
   m_instance = GetModuleHandle(NULL);
+}
+
+void
+WindowsApp::SetTitle(std::wstring title)
+{
+  m_title = title;
 }
 
 void
@@ -42,6 +49,23 @@ WindowsApp::InitWindowClass()
   m_WndClass.hIcon         = LoadIcon(0, IDI_APPLICATION);
   m_WndClass.hCursor       = LoadCursor(0, IDC_ARROW);
   m_WndClass.lpszClassName = L"WindowAppClass";
+}
+
+bool
+WindowsApp::CreateMainWindow()
+{
+  if (!RegisterClassEx(&m_WndClass)) {
+    MessageBox(0, L"RegisterClass Failed.", 0, 0);
+    return false;
+  }
+
+  RECT windowRect = {
+    0, 0, static_cast<LONG>(GetWidth()), static_cast<LONG>(GetHeight())
+  };
+
+  AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+  return true;
 }
 
 }
