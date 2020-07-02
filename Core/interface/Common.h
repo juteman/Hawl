@@ -21,5 +21,5 @@
 #ifdef _MSC_VER
 #  define HAWL_CALLCONV __cdecl
 #else
-#  define HAWL_CALLCONV
+#  define HAWL_CALLCONV 
 #endif
