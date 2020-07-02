@@ -21,6 +21,7 @@
 #pragma once
 #ifndef HAWL_BASETYPE_H
 #  define HAWL_BASETYPE_H
+#  include <cstddef>
 #  include <cstdint>
 
 namespace Hawl {

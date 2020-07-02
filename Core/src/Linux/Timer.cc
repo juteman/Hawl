@@ -44,7 +44,7 @@ getMSec()
 }
 
 INT64
-getUsec()
+getUSec()
 {
   timespec timeSpec;
   clock_gettime(CLOCK_REALTIME, &timeSpec);
