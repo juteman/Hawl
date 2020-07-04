@@ -7,6 +7,7 @@ set(INCLUDE
 	include/coreafx.h
 )
 
+
 set(INTERFACE
 	interface/BaseType.h
 	interface/Common.h
@@ -21,6 +22,11 @@ set(SOURCE
 )
 endif()
 
+if(PLATFORM_LINUX)
+set(SOURCE
+	src/Linux/Timer.cc
+)
+endif()
 add_library(Hawl-Core STATIC ${SOURCE} ${INCLUDE} ${INTERFACE})
 
 target_include_directories(Hawl-Core 
