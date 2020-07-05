@@ -36,6 +36,7 @@ public:
     if (!object) {
       return true;
     }
+
     /// TODO
   }
 };

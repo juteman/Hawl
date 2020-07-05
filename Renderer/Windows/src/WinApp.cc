@@ -37,6 +37,25 @@ WindowsApp::SetTitle(std::wstring title)
   m_title = title;
 }
 
+bool
+WindowsApp::Init()
+{
+  InitWindowClass();
+  bool ret = CreateMainWindow();
+  // 如果返回0，则创建窗体失败
+  return ret;
+}
+
+void
+WindowsApp::Run()
+{
+  Init();
+  Load();
+  Unload();
+  /// TODO 这里采用循环，并传入 delta time
+  Draw();
+}
+
 void
 WindowsApp::InitWindowClass()
 {
@@ -55,7 +74,7 @@ bool
 WindowsApp::CreateMainWindow()
 {
   if (!RegisterClassEx(&m_WndClass)) {
-    MessageBox(0, L"RegisterClass Failed.", 0, 0);
+    MessageBox(0, L"注册结构失败.", 0, 0);
     return false;
   }
 
@@ -64,7 +83,25 @@ WindowsApp::CreateMainWindow()
   };
 
   AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+  m_hWnd = CreateWindow(m_WndClass.lpszClassName,
+                        WindowsApp::GetTitle(),
+                        WS_OVERLAPPEDWINDOW,
+                        CW_USEDEFAULT,
+                        CW_USEDEFAULT,
+                        windowRect.right - windowRect.left,
+                        windowRect.bottom - windowRect.top,
+                        nullptr,
+                        nullptr,
+                        m_instance,
+                        nullptr);
 
+  if (!m_hWnd) {
+    MessageBox(0, L"创建窗口失败", nullptr, 0);
+    return false;
+  }
+
+  ShowWindow(m_hWnd, SW_SHOW);
+  UpdateWindow(m_hWnd);
   return true;
 }
 

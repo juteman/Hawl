@@ -1,4 +1,4 @@
-/**
+﻿/**
  *  Copyright 2020 juteman
  *
  *  This file is a part of Hawl
@@ -32,13 +32,14 @@ public:
   /// 禁用拷贝构造
   WindowsApp(const WindowsApp& rhs) = delete;
   WindowsApp& operator=(const WindowsApp& rhs) = delete;
-  /// 虚构方法
-  virtual bool Init();
+
   /// 初始化Windows窗体结构
-  /// @param title 窗口标题
   /// @note 可在继承中override 此方法
-  virtual void        InitWindowClass();
-  virtual bool        CreateMainWindow();
+  virtual void InitWindowClass();
+  virtual bool CreateMainWindow();
+  /// 初始化函数，可初始化变量，执行在创建窗口程序之前
+  /// @note 继承对象覆盖需要执行
+  virtual bool        Init();
   virtual void        Exit();
   virtual bool        Load();
   virtual void        Unload();
@@ -66,6 +67,8 @@ protected:
                                   UINT   message,
                                   WPARAM wParam,
                                   LPARAM lParam);
+
+  void Run();
 
 private:
   std::wstring m_title = L"空白标题";
