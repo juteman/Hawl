@@ -20,25 +20,30 @@
 #pragma once
 #ifndef HAWL_HEAP_H
 #  define HAWL_HEAP_H
+#  include "BaseType.h"
 namespace HAWL {
-class Heap
+
+template<typename T>
+class HawlGC
 {
+private:
+  /// 禁止拷贝
+  HawlGC(const HawlGC&) = delete;
+  HawlGC& operator=(const HawlGC&) = delete;
+
+  /// 禁止在堆上分配数组对象
+  void* operator new[](size_t size);
+  void  operator delete[](void* ptr);
+
 public:
-  static void Init();
-  static void Shutdown();
+  void*        operator new(size_t size);
+  static void* allocateObject(size_t size);
 
-  template<typename T>
-  static inline bool IsObjectAlive(T* object)
-  {
-    static_assert(sizeof(T), "T 应该是一个已经被定义的类型");
-    /// 如果一个指针是一个空指针，应该被标记为或者，这样它才能被
-    /// 一个强收集系统收集
-    if (!object) {
-      return true;
-    }
+  /// 在垃圾回收下delete应不可用，无需手动释放
+  void operator delete(void* ptr);
 
-    /// TODO
-  }
+protected:
+  HawlGC() {}
 };
 }
 #endif
