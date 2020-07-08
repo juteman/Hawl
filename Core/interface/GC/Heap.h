@@ -20,8 +20,8 @@
 #pragma once
 #ifndef HAWL_HEAP_H
 #  define HAWL_HEAP_H
-#  include "BaseType.h"
-namespace HAWL {
+#  include <cstddef>
+namespace Hawl {
 
 template<typename T>
 class HawlGC
