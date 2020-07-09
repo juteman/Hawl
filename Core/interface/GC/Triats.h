@@ -46,6 +46,28 @@ public:
   /// sizeof 不需要函数的具体实现，根据函数定义的返回值就能确定大小
   static const bool value = sizeof(SubclassCheck(derived)) == sizeof(TrueType);
 };
+
+/// 判断该类型是否包含IsGCMixinMarker
+template<typename T>
+struct IsHawlGCMixin
+{
+private:
+  typedef int8_t  TrueType;
+  typedef int32_t FalseType;
+
+  /// 编译器在编译期通过重载判断出T是否有IsGCMixinMarker
+  /// 不同的重载返回值不同
+  template<typename U>
+  static TrueType GCMixinMarkerCheck(typename U::IsGCMixinMarker*);
+
+  template<typename U>
+  static FalseType GCMixinMarkerCheck(...);
+
+public:
+  /// sizeof 不需要函数的具体实现，根据函数定义的返回值就能确定大小
+  static const bool value =
+    sizeof(GCMixinMarkerCheck<T>(nullptr)) == sizeof(TrueType);
+};
 }
 
 #endif
