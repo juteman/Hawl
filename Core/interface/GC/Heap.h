@@ -51,6 +51,48 @@ protected:
   HawlGC() {}
 };
 
+/* 还有另一种偏特化的方式
+
+template <typename T> struct Base1 {};
+template <typename T> struct Base2 {};
+class DerivedSingle : private Base1<int> {};
+class DerivedProtected : protected Base1<int> {};
+class DerivedMultiple : Base1<int>, Base2<int> {};
+class DerivedSame : Base1<int>, Base1<char> {};
+class NotDerived {};
+template <typename T1, typename T2> class Base2v {};
+class D : Base2v<int, int> {};
+
+template <template <typename...> class B, typename D, typename = void>
+struct test_base_template;
+
+template <template <typename...> class B, typename D>
+struct test_base_template<
+    B, D, typename std::enable_if<std::is_class<D>::value>::type> {
+  template <typename... T> static constexpr std::true_type test(B<T...> *);
+  static constexpr std::false_type test(...);
+};
+
+template <template <typename...> class B, typename D>
+struct test_base_template<
+    B, D, typename std::enable_if<!std::is_class<D>::value>::type> {
+  static constexpr std::false_type test(...);
+};
+
+template <class...> using void_t = void;
+template <template <typename...> class B, typename D>
+using test_for_same_or_public_inheritance =
+    decltype(test_base_template<B, D>::test(static_cast<D *>(nullptr)));
+
+template <template <typename...> class B, typename D, typename = void>
+struct is_template_base_of : public std::true_type {};
+
+template <template <typename...> class B, typename D>
+struct is_template_base_of<B, D,
+                           void_t<test_for_same_or_public_inheritance<B, D>>>
+    : public test_for_same_or_public_inheritance<B, D> {};
+*/
+
 // clang-format off
 /******************************************************************************
 这里是一系列的偏特化判断
