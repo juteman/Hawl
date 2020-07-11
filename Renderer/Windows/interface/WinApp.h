@@ -18,7 +18,9 @@
  *
  */
 #pragma once
-
+#ifdef _WIN32
+#  pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
 #ifndef HAWL_WINAPP_H
 #  define HAWL_WINAPP_H
 #  include "IAppBase.h"

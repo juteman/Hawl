@@ -28,7 +28,7 @@ namespace Hawl {
 
 WindowsApp::WindowsApp()
 {
-    m_instance = GetModuleHandle(NULL);
+  m_instance = GetModuleHandle(NULL);
 }
 
 void
@@ -99,18 +99,18 @@ WindowsApp::Run()
 void
 WindowsApp::InitWindowClass()
 {
-    m_WndClass.cbSize = sizeof(WNDCLASSEX);
-    m_WndClass.style = CS_HREDRAW | CS_VREDRAW;
-    m_WndClass.lpfnWndProc = WndProc;
-    m_WndClass.cbClsExtra = 0;
-    m_WndClass.cbWndExtra = 0;
-    m_WndClass.hInstance = m_instance;
-    m_WndClass.hIcon = LoadIcon(m_instance, IDI_APPLICATION);
-    m_WndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    m_WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    m_WndClass.lpszMenuName = NULL;
-    m_WndClass.lpszClassName = L"WindowsClass";
-    m_WndClass.hIconSm = LoadIcon(m_WndClass.hInstance, IDI_APPLICATION);
+  m_WndClass.cbSize        = sizeof(WNDCLASSEX);
+  m_WndClass.style         = CS_HREDRAW | CS_VREDRAW;
+  m_WndClass.lpfnWndProc   = WndProc;
+  m_WndClass.cbClsExtra    = 0;
+  m_WndClass.cbWndExtra    = 0;
+  m_WndClass.hInstance     = m_instance;
+  m_WndClass.hIcon         = LoadIcon(m_instance, IDI_APPLICATION);
+  m_WndClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  m_WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  m_WndClass.lpszMenuName  = NULL;
+  m_WndClass.lpszClassName = L"WindowsClass";
+  m_WndClass.hIconSm       = LoadIcon(m_WndClass.hInstance, IDI_APPLICATION);
 }
 
 INT
@@ -151,7 +151,18 @@ WindowsApp::CreateMainWindow()
 LRESULT CALLBACK
 WindowsApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  return DefWindowProc(hWnd, message, wParam, lParam);
+  switch (message) {
+    case WM_PAINT:
+      break;
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
+    default:
+      return DefWindowProc(hWnd, message, wParam, lParam);
+      break;
+  }
+
+  return 0;
 }
 
 } // end namespace
