@@ -20,15 +20,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 #include "WinApp.h"
+#include "Timer.h"
 #include <locale>
 
 namespace Hawl {
 
 WindowsApp::WindowsApp()
 {
-  m_instance = GetModuleHandle(NULL);
+    m_instance = GetModuleHandle(NULL);
 }
 
 void
@@ -37,45 +37,88 @@ WindowsApp::SetTitle(std::wstring title)
   m_title = title;
 }
 
-bool
+INT
 WindowsApp::Init()
 {
   InitWindowClass();
-  bool ret = CreateMainWindow();
-  // 如果返回0，则创建窗体失败
+  INT ret = CreateMainWindow();
+  // 如果返回1，则创建窗体失败
   return ret;
 }
 
 void
+WindowsApp::Exit()
+{}
+
+bool
+WindowsApp::Load()
+{
+  return true;
+}
+
+void
+WindowsApp::Unload()
+{}
+
+void
+WindowsApp::Update(FLOAT32 deltaTime)
+{}
+
+void
+WindowsApp::Draw()
+{}
+
+void
 WindowsApp::Run()
 {
-  Init();
+  INT ret = Init();
+  if (ret) {
+    MessageBox(0, L"Init Window Failed.", 0, 0);
+    return;
+  }
   Load();
+
   Unload();
-  /// TODO 这里采用循环，并传入 delta time
-  Draw();
+  HTimer timer;
+  MSG    msg = { 0 };
+  while (msg.message != WM_QUIT) {
+    if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+    else {
+      FLOAT32 deltaTime = timer.GetSeconds(true);
+      Update(deltaTime);
+      Draw();
+    }
+  }
+
+  Exit();
 }
 
 void
 WindowsApp::InitWindowClass()
 {
-  m_WndClass.cbSize        = sizeof(WNDCLASSEX);
-  m_WndClass.style         = CS_HREDRAW | CS_VREDRAW;
-  m_WndClass.lpfnWndProc   = WndProc;
-  m_WndClass.cbClsExtra    = 0;
-  m_WndClass.cbWndExtra    = 0;
-  m_WndClass.hInstance     = m_instance;
-  m_WndClass.hIcon         = LoadIcon(0, IDI_APPLICATION);
-  m_WndClass.hCursor       = LoadCursor(0, IDC_ARROW);
-  m_WndClass.lpszClassName = L"WindowAppClass";
+    m_WndClass.cbSize = sizeof(WNDCLASSEX);
+    m_WndClass.style = CS_HREDRAW | CS_VREDRAW;
+    m_WndClass.lpfnWndProc = WndProc;
+    m_WndClass.cbClsExtra = 0;
+    m_WndClass.cbWndExtra = 0;
+    m_WndClass.hInstance = m_instance;
+    m_WndClass.hIcon = LoadIcon(m_instance, IDI_APPLICATION);
+    m_WndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    m_WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    m_WndClass.lpszMenuName = NULL;
+    m_WndClass.lpszClassName = L"WindowsClass";
+    m_WndClass.hIconSm = LoadIcon(m_WndClass.hInstance, IDI_APPLICATION);
 }
 
-bool
+INT
 WindowsApp::CreateMainWindow()
 {
   if (!RegisterClassEx(&m_WndClass)) {
-    MessageBox(0, L"注册结构失败.", 0, 0);
-    return false;
+    MessageBox(0, L"Register failed.", 0, 0);
+    return 1;
   }
 
   RECT windowRect = {
@@ -96,13 +139,19 @@ WindowsApp::CreateMainWindow()
                         nullptr);
 
   if (!m_hWnd) {
-    MessageBox(0, L"创建窗口失败", nullptr, 0);
-    return false;
+    MessageBox(0, L"Create Windows failed", nullptr, 0);
+    return 2;
   }
 
   ShowWindow(m_hWnd, SW_SHOW);
   UpdateWindow(m_hWnd);
-  return true;
+  return 0;
 }
 
+LRESULT CALLBACK
+WindowsApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
+} // end namespace

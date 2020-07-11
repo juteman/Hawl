@@ -18,6 +18,6 @@ main()
   Sleep(1000);
   cout << hTimer.GetElapsedTime(false) << endl;
   cout << hTimer.GetElapsedTimeAverage() << endl;
-  cout << hTimer.GetSeconds(false) << endl;
+  cout << hTimer.GetSeconds(true) << endl;
   return 0;
 }

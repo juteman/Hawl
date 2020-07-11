@@ -32,20 +32,22 @@ public:
   /// 禁用拷贝构造
   WindowsApp(const WindowsApp& rhs) = delete;
   WindowsApp& operator=(const WindowsApp& rhs) = delete;
-
+  virtual ~WindowsApp() {}
   /// 初始化Windows窗体结构
   /// @note 可在继承中override 此方法
   virtual void InitWindowClass();
-  virtual bool CreateMainWindow();
+  /// 注册创建窗口
+  /// @note 可在继承中override 此方法
+  virtual INT CreateMainWindow();
+
   /// 初始化函数，可初始化变量，执行在创建窗口程序之前
   /// @note 继承对象覆盖需要执行
-  virtual bool        Init();
-  virtual void        Exit();
-  virtual bool        Load();
-  virtual void        Unload();
-  virtual void        Update(FLOAT32 deltaTime);
-  virtual void        Draw();
-  virtual const char* GetName();
+  virtual INT  Init();
+  virtual void Exit();
+  virtual bool Load();
+  virtual void Unload();
+  virtual void Update(FLOAT32 deltaTime);
+  virtual void Draw();
 
   inline UINT         GetWidth() const { return m_width; }
   inline UINT         GetHeight() const { return m_height; }
@@ -53,6 +55,8 @@ public:
   inline void         SetWidth(UINT width) { m_width = width; }
   inline void         SetHeight(UINT height) { m_height = height; }
   void                SetTitle(std::wstring title);
+  /// 启动
+  void Run();
 
 public:
 protected:
@@ -67,8 +71,6 @@ protected:
                                   UINT   message,
                                   WPARAM wParam,
                                   LPARAM lParam);
-
-  void Run();
 
 private:
   std::wstring m_title = L"空白标题";

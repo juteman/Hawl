@@ -18,14 +18,16 @@ set(SOURCE
 add_library(Hawl-Window STATIC ${SOURCE} ${INTERFACE})
 
 target_link_libraries(Hawl-Window
-PRIVATE
+PUBLIC
     Hawl-Core
+PRIVATE
     BuildSettings
 	winmm
 )
+
+
 target_include_directories(Hawl-Window
 PUBLIC 
     Windows/interface
 )
-target_link_options(Hawl-Window PUBLIC /subsystem:windows /ENTRY:mainCRTStartup)
 endif()

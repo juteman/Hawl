@@ -20,7 +20,7 @@
 #pragma once
 #ifndef HAWL_TRIATS_H
 #  define HAWL_TRIATS_H
-#  include <cstdlib>
+#  include <cstdint>
 namespace Hawl {
 
 /// 用作triats判断是否为Template的子类
