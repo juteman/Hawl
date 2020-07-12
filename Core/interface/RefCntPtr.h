@@ -25,191 +25,178 @@
 #pragma once
 #ifndef HAWL_REFCNTPTR_H
 #  define HAWL_REFCNTPTR_H
+#  include "BaseType.h"
 #  include "HIID.h"
-#  include "coreafx.h"
+#  include <assert.h>
+#  include <atomic>
 #  include <type_traits>
+#  include <utility>
+
 namespace Hawl {
-/// IObject 类型需要再次研究
-/// TODO: 类似UE4 的垃圾回收 + 智能指针的模式
-class IObject
+
+/// 智能指针所需要的接口
+class IRefCountObject
 {
 public:
-  /// 查询该类型是否支持指定类型接口
-  /// @param IID Hawl 接口标识符ID
-  /// @param ppInterface 返回值
-  /// 输入指定Interface ID，如果类型支持指定，返回接口的指针内存地址
-  /// 否则返回 一个 空指针
-  virtual void HAWL_CALLCONV QueryInterface(const HIID& IID,
-                                            IObject**   ppInterface) = 0;
-  /// 使引用计数加1
-  /// 返回增加后的引用计数值
-  /// @note 多线程环境下的引用计数不可靠，需要加锁
-  virtual RefCount HAWL_CALLCONV AddRef() = 0;
-
-  /// 使引用计数减1，若引用计数的值为0，则释放资源
-  /// 返回减少后的引用计数值
-  /// @note 多线程环境下的引用计数不可靠，需要加锁
-  virtual RefCount HAWL_CALLCONV Release() = 0;
-
-  virtual ~IObject();
+  virtual ~IRefCountObject() {}
+  virtual UINT32 AddRef() const      = 0;
+  virtual UINT32 Release() const     = 0;
+  virtual UINT32 GetRefCount() const = 0;
 };
 
-/// 引用计数智能指针的实现
-/// @warning 此引用计数接口还未经过测试，使用有风险
-/// @note RefCntPtr 参数必须包含IObject
-template<typename T>
-class RefCntPtr
+class AtomicRefCountObject : public IRefCountObject
 {
 public:
-  RefCntPtr() noexcept {}
+  AtomicRefCountObject()
+    : m_refCounter(0)
+  {}
 
-  explicit RefCntPtr(T* pObject) noexcept
-    : m_pObject(pObject)
+  virtual ~AtomicRefCountObject() { assert(m_refCounter == 0); }
+
+  UINT32 AddRef() const { return (UINT32)++m_refCounter; }
+  UINT32 Release() const
+  {
+    --m_refCounter;
+    UINT temp = (UINT32)m_refCounter;
+    if (temp == 0)
+      delete this;
+    return temp;
+  }
+
+  UINT32 GetRefCount() const { return m_refCounter; }
+
+private:
+  mutable std::atomic<UINT32> m_refCounter;
+};
+
+///@note 一个类型实现了AddRef 和 Release的时候可使用此只能指针
+template<typename T>
+class RefCountPtr
+{
+public:
+  inline RefCountPtr() noexcept {}
+
+  explicit RefCountPtr(T* pObject, bool IsAddRef = true) noexcept
+    : m_pObject{ pObject }
+  {
+    if (m_pObject && IsAddRef)
+      m_pObject->AddRef();
+  }
+
+  RefCountPtr(const RefCountPtr& Ptr) noexcept
+    : m_pObject{ Ptr.m_pObject }
   {
     if (m_pObject)
       m_pObject->AddRef();
   }
 
-  RefCntPtr(T* pObject, const HIID& IID) noexcept
-    : m_pObject(pObject)
-  {
-    if (pObject)
-      pObject->QueryInterface(IID, reinterpret_cast<IObject**>(&m_pObject));
-  }
-
-  RefCntPtr(const RefCntPtr& AutoPtr) noexcept
-    : m_pObject{ AutoPtr.m_pObject }
+  template<typename U>
+  explicit RefCountPtr(const RefCountPtr<U>& Ptr)
+    : m_pObject{ static_cast<T*>(Ptr.GetReference()) }
   {
     if (m_pObject)
       m_pObject->AddRef();
   }
 
-  /// 继承类型指针不会增加引用计数
-  template<typename DerivedType,
-           typename = typename std::enable_if<
-             std::is_base_of<T, DerivedType>::value>::type>
-  RefCntPtr(RefCntPtr<DerivedType>&& AutoPtr) noexcept
-    : m_pObject{ std::move(AutoPtr.m_pObject) }
+  RefCountPtr(RefCountPtr&& Ptr) noexcept
+    : m_pObject{ std::move(Ptr.m_pObject) }
   {
-    AutoPtr.m_pObject = nullptr;
+    Ptr.m_pObject = nullptr;
   }
 
-  ~RefCntPtr() { Release(); }
-
-  void swap(RefCntPtr& AutoPtr) noexcept
+  ~RefCountPtr()
   {
-    std::swap(m_pObject, AutoPtr.m_pObject);
-  }
-
-  void Attach(T* pObject) noexcept
-  {
-    Release();
-    m_pObject = pObject;
-  }
-
-  T* Detach() noexcept
-  {
-    T* pObject = m_pObject;
-    m_pObject  = nullptr;
-    return pObject;
-  }
-
-  void Release() noexcept
-  {
-    if (m_pObject) {
+    if (m_pObject)
       m_pObject->Release();
-      m_pObject = nullptr;
-    }
   }
 
-  RefCntPtr& operator=(T* pObject) noexcept
+  RefCountPtr& operator=(T* pObject) noexcept
   {
     if (m_pObject != pObject) {
       if (m_pObject)
         m_pObject->Release();
+
       m_pObject = pObject;
+
       if (m_pObject)
         m_pObject->AddRef();
+    }
+
+    return *this;
+  }
+
+  RefCountPtr& operator=(const RefCountPtr& Ptr) noexcept
+  {
+    return *this = Ptr.m_pObject;
+  }
+
+  template<typename U>
+  RefCountPtr& operator=(const RefCountPtr<U>& Ptr)
+  {
+    return *this = Ptr.GetReference();
+  }
+
+  RefCountPtr& operator=(RefCountPtr&& Ptr)
+  {
+    if (this != &Ptr) {
+      if (m_pObject)
+        m_pObject->Release();
+
+      m_pObject     = Ptr.m_pObejct;
+      Ptr.m_pObject = nullptr;
     }
     return *this;
   }
 
-  RefCntPtr& operator=(const RefCntPtr& AutoPtr) noexcept
-  {
-    return *this = AutoPtr.m_pObject;
-  }
+  inline T&       operator*() noexcept { return *m_pObject; }
+  inline const T& operator*() const noexcept { return *m_pObject; }
 
-  template<typename DerivedType,
-           typename = typename std::enable_if<
-             std::is_base_of<T, DerivedType>::value>::type>
-  RefCntPtr& operator=(const RefCntPtr<DerivedType>& AutoPtr) noexcept
-  {
-    return *this = static_cast<T*>(AutoPtr.m_pObject);
-  }
+  inline T*       operator->() noexcept { return m_pObject; }
+  inline const T* operator->() const noexcept { return m_pObject; }
 
-  RefCntPtr& operator=(RefCntPtr&& AutoPtr) noexcept
-  {
-    if (m_pObject != AutoPtr.m_pObject)
-      Attach(AutoPtr.Detach());
-
-    return *this;
-  }
-
-  template<typename DerivedType,
-           typename = typename std::enable_if<
-             std::is_base_of<T, DerivedType>::value>::type>
-  RefCntPtr& operator=(RefCntPtr<DerivedType>&& AutoPtr) noexcept
-  {
-    if (m_pObject != AutoPtr.m_pObject)
-      Attach(AutoPtr.Detach());
-
-    return *this;
-  }
-
-  bool operator!() const noexcept { return m_pObject == nullptr; }
-
-  operator bool() const noexcept { return m_pObject != nullptr; }
-
-  bool operator==(const RefCntPtr& Ptr) const noexcept
+  bool operator==(const RefCountPtr& Ptr) const noexcept
   {
     return m_pObject == Ptr.m_pObject;
   }
 
-  bool operator!=(const RefCntPtr& Ptr) const noexcept
+  bool operator!=(const RefCountPtr& Ptr) const noexcept
   {
     return m_pObject != Ptr.m_pObject;
   }
 
-  bool operator<(const RefCntPtr& Ptr) const noexcept
+  T** GetInitReference()
   {
-    return static_cast<const T*>(*this) < static_cast<const T*>(Ptr);
+    *this = nullptr;
+    return &m_pObject;
   }
 
-  T& operator*() noexcept { return *m_pObject; }
+  T* GetReference() const { return m_pObject; }
 
-  const T& operator*() const noexcept { return *m_pObject; }
-
-  T*       RawPtr() noexcept { return m_pObject; }
-  const T* RawPtr() const noexcept { return m_pObject; }
-
-  operator T*() noexcept { return RawPtr(); }
-  operator const T*() const noexcept { return RawPtr(); }
-
-  T*       operator->() noexcept { return m_pObject; }
-  const T* operator->() const noexcept { return m_pObject; }
-
-  template<typename InterfaceType>
-  RefCntPtr<InterfaceType> Cast(const HIID& IID)
+  inline friend bool IsValidRef(const RefCountPtr& Ptr)
   {
-    return RefCntAutoPtr<InterfaceType>{ m_pObject, IID };
+    return Ptr.m_pObject != nullptr;
   }
+
+  bool IsValid() const { return m_pObject != nullptr; }
+
+  inline void SafeRelease() { *this = nullptr; }
+
+  UINT32 GetRefCount()
+  {
+    UINT32 Result = 0;
+    if (m_pObject) {
+      Result = m_pObject->GetRefCount();
+      assert(Result > 0);
+    }
+    return Result;
+  }
+
+  void swap(RefCountPtr& Ptr) noexcept { std::swap(m_pObject, Ptr.m_pObject); }
 
 private:
-  template<typename OtherType>
-  friend class RefCntPtr;
-
   T* m_pObject = nullptr;
 };
+
 }
 
 #endif

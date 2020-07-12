@@ -31,3 +31,28 @@ PUBLIC
     Windows/interface
 )
 endif()
+
+###################################################
+# DirectX12 Build Setting
+###################################################
+if(D3D12_SUPPORTED)
+set(INTERFACE 
+    DX12/interface/Renderer.h
+)
+
+set(SOURCE
+    DX12/src/Renderer.cc
+)
+
+add_library(RendererDX12 STATIC ${SOURCE} ${INTERFACE})
+target_link_libraries(RendererDX12
+PUBLIC
+    Hawl-Core
+PRIVATE
+    BuildSettings
+)
+target_include_directories(RendererDX12
+PUBLIC
+    DX12/interface
+)
+endif()

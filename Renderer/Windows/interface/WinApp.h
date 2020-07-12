@@ -51,12 +51,16 @@ public:
   virtual void Update(FLOAT32 deltaTime);
   virtual void Draw();
 
-  inline UINT         GetWidth() const { return m_width; }
-  inline UINT         GetHeight() const { return m_height; }
+  /// 长和宽的调用设置接口
+  inline UINT GetWidth() const { return m_width; }
+  inline UINT GetHeight() const { return m_height; }
+  inline void SetWidth(UINT width) { m_width = width; }
+  inline void SetHeight(UINT height) { m_height = height; }
+
+  /// 窗口标题的调用设置接口
   inline const WCHAR* GetTitle() const { return m_title.c_str(); }
-  inline void         SetWidth(UINT width) { m_width = width; }
-  inline void         SetHeight(UINT height) { m_height = height; }
-  void                SetTitle(std::wstring title);
+  inline void         SetTitle(std::wstring title);
+
   /// 启动
   void Run();
 
