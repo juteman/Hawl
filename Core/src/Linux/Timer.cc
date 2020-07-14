@@ -107,6 +107,7 @@ HTimer::GetElapsedTime(bool reset)
   INT64 elapsedTime = currentTime - m_startTime;
 
   // 如内部出现异常，修改时间
+  // 在不同的cpu上也许会出现计时不同的情况
   if (elapsedTime < 0)
     elapsedTime = 0;
 
@@ -128,6 +129,7 @@ HTimer::GetElapsedTimeAverage()
   elapsedTime /= LENGTH_OF_HISTORY;
 
   // 如内部出现异常，修改时间
+  // 在不同的cpu上也许会出现计时不同的情况
   if (elapsedTime < 0)
     elapsedTime = 0;
 

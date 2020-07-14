@@ -7,17 +7,15 @@ using namespace Hawl;
 int
 main()
 {
-  INT64  uSec = getUSec();
-  UINT32 mSec = getMSec();
-  cout << uSec << endl;
-  cout << mSec << endl;
-  LTimer lowTimer;
-  usleep(1000000);
-  cout << lowTimer.GetElapsedTime(true) << endl;
-  HTimer hTimer;
-  usleep(1000000);
-  cout << hTimer.GetElapsedTime(false) << endl;
-  cout << hTimer.GetElapsedTimeAverage() << endl;
-  cout << hTimer.GetSeconds(false) << endl;
+  FLOAT32 fixedDeltaTime = 0.01f;
+  HTimer  hTimer;
+  while (true) {
+    FLOAT32 deltaTime = hTimer.GetSeconds(false);
+    if (deltaTime >= fixedDeltaTime) {
+      cout << deltaTime << endl;
+      hTimer.Reset();
+    }
+  }
+
   return 0;
 }
