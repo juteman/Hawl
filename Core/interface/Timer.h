@@ -45,9 +45,9 @@ class LTimer
 public:
   LTimer();
 
-  /// 得到时间差
-  /// @param reset 调用函数是否重置时间
-  /// @return 返回时间差
+  /// Get the time in Low accuracy time
+  /// @param reset true to reset time
+  /// @return return the elapsed time
   UINT32 GetElapsedTime(bool reset);
 
   //重置时间
@@ -63,8 +63,12 @@ class HTimer
 public:
   HTimer();
 
-  INT64   GetElapsedTime(bool reset);
-  INT64   GetElapsedTimeAverage();
+  INT64 GetElapsedTime(bool reset);
+  INT64 GetElapsedTimeAverage();
+
+  /// Get the time in second format
+  /// @param reset true to reset time
+  /// @return return time from last reset
   FLOAT32 GetSeconds(bool reset);
   FLOAT32 GetSecondsAverage();
   void    Reset();

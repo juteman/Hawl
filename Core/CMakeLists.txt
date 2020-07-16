@@ -3,10 +3,12 @@ project(Hawl-Core CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) 
 include(platform.cmake)
 
+if(PLATFORM_LINUX)
 set(INCLUDE 
-	include/coreafx.h
+	include/Linux/CriticalSection.h
+	include/Linux/RWLock.h
 )
-
+endif()
 
 set(INTERFACE
 	interface/BaseType.h
@@ -27,7 +29,7 @@ set(SOURCE
 	src/Linux/Timer.cc
 )
 endif()
-add_library(Hawl-Core STATIC ${SOURCE} ${INCLUDE} ${INTERFACE})
+add_library(Hawl-Core SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
 
 target_include_directories(Hawl-Core 
 PRIVATE
