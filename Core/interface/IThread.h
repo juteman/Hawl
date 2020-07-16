@@ -26,6 +26,12 @@
 #ifndef HAWL_ITHREAD_H
 #  define HAWL_ITHREAD_H
 #  include "BaseType.h"
+
+#  if PLATFORM_LINUX
+#    include <pthread.h>
+typedef pid_t ThreadID;
+#  endif
+
 namespace Hawl {
 
 enum class ThreadPriority
@@ -37,12 +43,12 @@ enum class ThreadPriority
   Highest,
 };
 
-class IThread
+class Thread
 {
 public:
-  IThread();
+  Thread();
 
-  virtual ~IThread();
+  virtual ~Thread();
   /// 创建线程
   virtual void Create() = 0;
 
@@ -57,7 +63,7 @@ public:
   inline UINT32 GetThreadID() { return m_threadID; }
 
 protected:
-  UINT32 m_threadID;
+  ThreadID m_threadID;
 
   ThreadPriority m_threadPriority;
 };

@@ -46,6 +46,13 @@ PRIVATE
 )
 endif()
 
+if(PLATFORM_LINUX)
+target_link_libraries(Hawl-Core 
+PRIVATE
+	BuildSettings
+)
+endif()
+
 
 source_group("src" FILES ${SOURCE})
 source_group("include" FILES ${INCLUDE})
