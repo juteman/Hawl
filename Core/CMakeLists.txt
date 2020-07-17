@@ -16,6 +16,7 @@ set(INTERFACE
 	interface/Timer.h
 	interface/IAppBase.h
 	interface/RefCntPtr.h
+	interface/Thread.h
 )
 
 if(PLATFORM_WIN32)
