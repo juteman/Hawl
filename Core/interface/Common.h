@@ -19,7 +19,20 @@
  */
 
 #ifdef _MSC_VER
-#  define HAWL_CALLCONV __cdecl
+#  define CDECL __cdecl
 #else
-#  define HAWL_CALLCONV 
+#  define CDECL
 #endif
+
+namespace Hawl {
+class Noncopyable
+{
+public:
+  Noncopyable()  = default;
+  ~Noncopyable() = default;
+
+private:
+  Noncopyable(const Noncopyable& other) = delete;
+  Noncopyable& operator=(const Noncopyable& other) = delete;
+};
+}

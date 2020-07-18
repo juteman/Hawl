@@ -15,7 +15,7 @@ set(SOURCE
     Windows/src/WinApp.cc
 )
 
-add_library(Hawl-Window STATIC ${SOURCE} ${INTERFACE})
+add_library(Hawl-Window SHARED ${SOURCE} ${INTERFACE})
 
 target_link_libraries(Hawl-Window
 PUBLIC
@@ -38,13 +38,14 @@ endif()
 if(D3D12_SUPPORTED)
 set(INTERFACE 
     DX12/interface/Renderer.h
+    DX12/interface/DX12Device.h
 )
 
 set(SOURCE
     DX12/src/Renderer.cc
 )
 
-add_library(RendererDX12 STATIC ${SOURCE} ${INTERFACE})
+add_library(RendererDX12 SHARED ${SOURCE} ${INTERFACE})
 target_link_libraries(RendererDX12
 PUBLIC
     Hawl-Core

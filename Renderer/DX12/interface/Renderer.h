@@ -20,7 +20,6 @@
 #pragma once
 #ifndef HAWL_RENDERER_H
 #  define HAWL_RENDERER_H
-
 #  include "Common.h"
 namespace Hawl {
 
@@ -30,7 +29,7 @@ class Renderer
   /// Renderer 的API接口
 public:
   /// 初始化Renderer
-  void HAWL_CALLCONV Init();
+  void CDECL Init();
 };
 }
 #endif
