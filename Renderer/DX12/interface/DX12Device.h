@@ -35,7 +35,7 @@ struct DX12AdapterDesc
 
   DX12AdapterDesc(INT32               adapterIndexIn,
                   D3D_FEATURE_LEVEL   maxFeatureSupportedIn,
-                  DXGI_ADAPTER_DESC2& adapterDescIn)
+                  DXGI_ADAPTER_DESC3& adapterDescIn)
     : adapterIndex{ adapterIndexIn }
     , maxFeatureSupported{ maxFeatureSupportedIn }
     , adapterDesc{ adapterDescIn }
@@ -43,6 +43,7 @@ struct DX12AdapterDesc
 
   /// Index of the Adapters
   /// If not find any Adapters, will be -1
+  /// The card more power will get the small power
   INT32 adapterIndex;
 
   /// Max D3D12 feature level supported.
@@ -51,7 +52,17 @@ struct DX12AdapterDesc
   D3D_FEATURE_LEVEL maxFeatureSupported;
 
   /// Store the Adapter Information
-  DXGI_ADAPTER_DESC2 adapterDesc;
+  DXGI_ADAPTER_DESC3 adapterDesc;
+
+  /// manufacturer of the Gpu
+  GpuCard Card;
+};
+
+enum GpuCard
+{
+  NVIDA = 0,
+  AMD,
+  INTEl
 };
 
 class DX12Device : public Noncopyable
@@ -59,9 +70,20 @@ class DX12Device : public Noncopyable
 public:
   DX12Device() {}
 
+  void GetHardwareAdapter();
+  /// Craate the DXGIFactory with Debug option
+  inline void CreateDXGIFactory6(bool isDebug = false);
+
+  inline IDXGIFactory6* GetDXGIFactory6() const { return m_dxgiFactory6; }
+
 protected:
-  DX12AdapterDesc            m_adapterDesc;
-  RefCountPtr<IDXGIFactory6> m_dxgiFactory;
+  virtual void CreateDevice(bool isDebug = false);
+
+protected:
+  RefCountPtr<IDXGIFactory6> m_dxgiFactory6;
   RefCountPtr<IDXGIAdapter4> m_dxgiAdapter;
+
+  /// Descript of adapter
+  DX12AdapterDesc m_adapterDesc;
 };
 }

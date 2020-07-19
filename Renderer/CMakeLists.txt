@@ -36,6 +36,10 @@ endif()
 # DirectX12 Build Setting
 ###################################################
 if(D3D12_SUPPORTED)
+set(INCLUDE
+    DX12/include/DX12helper.h
+)
+
 set(INTERFACE 
     DX12/interface/Renderer.h
     DX12/interface/DX12Device.h
@@ -43,9 +47,10 @@ set(INTERFACE
 
 set(SOURCE
     DX12/src/Renderer.cc
+    DX12/src/DX12Device.cc
 )
 
-add_library(RendererDX12 SHARED ${SOURCE} ${INTERFACE})
+add_library(RendererDX12 SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
 target_link_libraries(RendererDX12
 PUBLIC
     Hawl-Core

@@ -27,9 +27,12 @@
 #  define HAWL_THREAD_H
 #  include "BaseType.h"
 #  include <string>
+
 #  if PLATFORM_LINUX
 #    include <pthread.h>
 typedef pid_t ThreadID;
+#  elif PLATFORM_WIN32
+#    include <Windows.h>
 #  endif
 
 namespace Hawl {
@@ -48,6 +51,8 @@ class ThreadRef
 public:
 #  if PLATFORM_LINUX
   typedef pthread_t ThreadType;
+#  elif PLATFORM_WIN32
+  typedef DWORD     ThreadType;
 #  endif
 
   /// construct func

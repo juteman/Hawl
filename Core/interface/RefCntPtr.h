@@ -154,6 +154,10 @@ public:
   inline T*       operator->() noexcept { return m_pObject; }
   inline const T* operator->() const noexcept { return m_pObject; }
 
+  /// operator  T* can Return the reference
+  operator T*() noexcept { return m_pObject; }
+  operator T*() const noexcept { return m_pObject; }
+
   bool operator==(const RefCountPtr& Ptr) const noexcept
   {
     return m_pObject == Ptr.m_pObject;
