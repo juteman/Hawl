@@ -24,6 +24,10 @@
 #  define CDECL
 #endif
 
+#define HAWL_DISABLE_COPY(TypeName)                                            \
+  TypeName(const TypeName&) = delete;                                          \
+  void operator=(const TypeName&) = delete;
+
 namespace Hawl {
 class Noncopyable
 {

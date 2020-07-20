@@ -17,6 +17,7 @@ set(INTERFACE
 	interface/IAppBase.h
 	interface/RefCntPtr.h
 	interface/Thread.h
+	interface/Algorithm/LockfreeQueue.h
 )
 
 if(PLATFORM_WIN32)
