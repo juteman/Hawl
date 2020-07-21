@@ -54,7 +54,7 @@ private:
     {}
 
     /// pointer to the next node of the Queue
-    volatile QueueNode* next;
+    std::atomic<QueueNode*> next;
 
     /// type data
     T data;
@@ -62,13 +62,19 @@ private:
 
 public:
   /// Initialize with dummy node
-  Queue() { m_head = m_tail = new QueueNode(); }
+  Queue()
+  {
+    QueueNode* dummyNode = new QueueNode();
+    m_head.store(dummyNode, std::memory_order_relaxed);
+    m_tail.store(dummyNode, std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+  }
 
   /// Release the queue list
   ~Queue()
   {
     while (m_head != nullptr) {
-      QueueNode* temp = m_head;
+      QueueNode* temp = m_head.load(std::memory_order_relaxed);
       m_head          = temp->next;
       delete temp;
     }
@@ -76,8 +82,66 @@ public:
 
   /// Adds an node to the tail of the queue.
   /// @param Item The item to add.
-  /// @return true if the node was added, false for some reason.
-  bool EnQueue(T& InData) {}
+  /// @return true if the node was added, false for some thread race
+  /// condition
+  bool EnQueue(T const& InData)
+  {
+    // Create new Node and check if create success
+    QueueNode* newNode = new QueueNode(InData);
+
+    if (nullptr == newNode)
+      return false;
+
+    /// concurrent link queue
+    while (true) {
+      QueueNode* tail = m_tail.load(std::memory_order_acquire);
+
+      QueueNode* tailNext = tail->next.load(std::memory_order_acquire);
+
+      if (tail == m_tail.load(std::memory_order_acquire))
+        [[likely]]
+        {
+          if (tailNext == nullptr) {
+            /// insert node
+            if (tail->next.compare_exchange_weak(tailNext, newNode)) {
+              /// set the tail node
+              return m_tail.compare_exchange_strong(tail, newNode);
+            }
+          }
+
+          /// if tailNext is not nullptr, fetch the Queue tails to next
+          else {
+            m_tail.compare_exchange_strong(tail, tailNext);
+          }
+        }
+    }
+  }
+
+  /// pop the element from the queue head
+  /// @param outData get the queue head element
+  /// @return true dequeue success, else some error
+  bool DeQueue(T& outData)
+  {
+    while (true) {
+      QueueNode* head     = m_head.load(std::memory_order_acquire);
+      QueueNode* tail     = m_tail.load(std::memory_order_acquire);
+      QueueNode* headNext = head->next.load(std::memory_order_acquire);
+
+      if (head == m_head.load(std::memory_order_acquire)) {
+        if (head == tail) {
+          if (headNext == nullptr)
+            return false;
+        }
+      }
+    }
+  }
+
+  /// check is lock free queue
+  /// @return true for lock free
+  bool islockfree() const
+  {
+    return m_head.is_lock_free() && m_tail.is_lock_free();
+  }
 
   /// check the queue is empty
   /// @return true if empty, false for no empty
