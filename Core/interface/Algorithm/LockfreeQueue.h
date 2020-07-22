@@ -92,7 +92,7 @@ public:
     if (nullptr == newNode)
       return false;
 
-    /// concurrent link queue
+    // concurrent link queue
     while (true) {
       QueueNode* tail = m_tail.load(std::memory_order_acquire);
 
@@ -102,14 +102,14 @@ public:
         [[likely]]
         {
           if (tailNext == nullptr) {
-            /// insert node
+            // insert node
             if (tail->next.compare_exchange_weak(tailNext, newNode)) {
-              /// set the tail node
+              // set the tail node
               return m_tail.compare_exchange_strong(tail, newNode);
             }
           }
 
-          /// if tailNext is not nullptr, fetch the Queue tails to next
+          // if tailNext is not nullptr, fetch the Queue tails to next
           else {
             m_tail.compare_exchange_strong(tail, tailNext);
           }
@@ -119,7 +119,7 @@ public:
 
   /// pop the element from the queue head
   /// @param outData get the queue head element
-  /// @return true dequeue success, else some error
+  /// @return true dequeue success, else the queue is empty
   bool DeQueue(T& outData)
   {
     while (true) {
@@ -127,25 +127,61 @@ public:
       QueueNode* tail     = m_tail.load(std::memory_order_acquire);
       QueueNode* headNext = head->next.load(std::memory_order_acquire);
 
-      if (head == m_head.load(std::memory_order_acquire)) {
-        if (head == tail) {
-          if (headNext == nullptr)
-            return false;
+      if (head == m_head.load(std::memory_order_acquire))
+        [[likely]]
+        {
+          if (head == tail) {
+            if (headNext == nullptr)
+              return false;
+
+            // if the head next is not null. must be another
+            // thread EnQeue the element. So fetch tail pointer to the next
+            m_head.compare_exchange_strong(tail, headNext);
+          }
+          else {
+            if (headNext == nullptr)
+              // it means anothor thread take the element.
+              // and the queue is empty. So just continue, and if
+              // no element again, will return false.
+              continue;
+
+            outData = headNext->data;
+            if (m_head.compare_exchange_weak(head, headNext)) {
+              free(head);
+              return true;
+            }
+          }
         }
-      }
     }
+  }
+
+  /// Get the  head  data not remove from Queue
+  /// @param outData get the data of head
+  /// @return if queue empty get false, else get true
+  bool Peek(T& outData)
+  {
+    /// if head is change by other thread use deque, fetch head to m_head again
+    /// because Peek don't change the head. it will be thread safe
+    for (auto head = m_head.load(std::memory_order_acquire); head != nullptr;
+         head      = m_head.load(std::memory_order_acquire)) {
+      outData = head->next.load();
+      if (outData)
+        return true;
+    }
+
+    return false;
   }
 
   /// check is lock free queue
   /// @return true for lock free
-  bool islockfree() const
+  bool Islockfree() const
   {
     return m_head.is_lock_free() && m_tail.is_lock_free();
   }
 
   /// check the queue is empty
   /// @return true if empty, false for no empty
-  bool IsEmpty() { return (m_head->next == nullptr); }
+  bool IsEmpty() { return (m_head.load() == m_tail.load()); }
 
 private:
   /// atomic head and  tail
