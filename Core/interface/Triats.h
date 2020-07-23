@@ -21,6 +21,7 @@
 #ifndef HAWL_TRIATS_H
 #  define HAWL_TRIATS_H
 #  include <cstdint>
+#  include <type_traits>
 namespace Hawl {
 
 /// 用作triats判断是否为Template的子类
@@ -68,6 +69,20 @@ public:
   static const bool value =
     sizeof(GCMixinMarkerCheck<T>(nullptr)) == sizeof(TrueType);
 };
+
+/// Destruct a object in memory
+/// @param pObject pointer to the object destruct
+template<typename T>
+inline void
+DestructObject(T* pObject)
+{
+  if constexpr (!std::is_trivially_destructible<T>::value) {
+    // typedef beacuse VC can't destructor object it self
+    typedef T TypeSelf;
+
+    pObject->TypeSelf::~TypeSelf();
+  }
+}
 }
 
 #endif

@@ -23,16 +23,15 @@
  */
 
 #pragma once
-#ifndef HAWL_REFCNTPTR_H
-#  define HAWL_REFCNTPTR_H
-#  include "BaseType.h"
-#  include "HIID.h"
-#  include <assert.h>
-#  include <atomic>
-#  include <type_traits>
-#  include <utility>
+#include "BaseType.h"
+#include "HIID.h"
+#include <assert.h>
+#include <atomic>
+#include <type_traits>
+#include <utility>
 
 namespace Hawl {
+namespace SmartPtr {
 
 /// 智能指针所需要的接口
 class IRefCountObject
@@ -200,7 +199,5 @@ public:
 private:
   T* m_pObject = nullptr;
 };
-
-}
-
-#endif
+} // !SmartPtr
+} // !Hawl
