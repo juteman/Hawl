@@ -31,26 +31,20 @@
 
 namespace Hawl {
 namespace SmartPtr {
-enum class PtrThreadSafeMode
-{
-  ThreadNoSafe,
-  ThreadSafe
-};
 
 /// base reference couter class
 /// include about share reference counter and the
 /// weak reference counter
-template<PtrThreadSafeMode Mode>
-class RefCntBase;
-
-/// Thread safe mode
-template<>
-class RefCntBase<PtrThreadSafeMode::ThreadSafe>
+class RefCntBase
 {
 public:
-  inline explicit RefCntBase() {}
+  inline explicit RefCntBase() noexcept
+  {
+    m_shareRefCnt.store(1);
+    m_weakRefCnt.store(1);
+  }
 
-  virtual ~RefCntBase() {}
+  virtual ~RefCntBase() noexcept {}
 
   /// Get the number of share reference count
   inline INT32 GetSharedRefCnt() const
@@ -59,41 +53,42 @@ public:
   }
 
   /// Add the number of share reference count
-  inline void AddShareRefCnt() { ++m_shareRefCnt; }
+  inline void AddShareRefCnt()
+  {
+    ++m_shareRefCnt;
+    ++m_weakRefCnt;
+  }
 
   /// add a share reference to this counter
   /// ONLY when at least one reference
-  /// @return true if the reference added success
-  bool ConditionallyAddShareRefCnt()
+  /// @return if success add shared reference return the
+  /// self pointer else return nullptr
+  inline RefCntBase* ConditionallyAddShareRefCnt()
   {
-    for (;;) {
+    for (INT32 shareRefCntRecord =
+           m_shareRefCnt.load(std::memory_order_relaxed);
+         shareRefCntRecord != 0;
+         shareRefCntRecord = m_shareRefCnt.load(std::memory_order_relaxed)) {
       // Peek the number of ShareReference
       // why use compare exchange?
       // because on the multiple thread the value will change
-      INT32 shareRefCntRecord = m_shareRefCnt.load(std::memory_order_relaxed);
-      if (shareRefCntRecord == 0)
-        [[unlikely]]
-        // if no reference, must not add a reference on it
-        return false;
-      else {
-        if (m_shareRefCnt.compare_exchange_weak(shareRefCntRecord,
-                                                shareRefCntRecord + 1))
-          [[likely]] { return true; }
-      }
+      if (m_shareRefCnt.compare_exchange_weak(shareRefCntRecord,
+                                              shareRefCntRecord + 1))
+        [[likely]] { return this; }
     }
+    return nullptr;
   }
 
   /// Release the share reference
   inline void ReleaseShareRef()
   {
-    assert(m_shareRefCnt.load(std::memory_order_relaxed) > 0);
-    if (--m_shareRefCnt == 0) {
-      // all the reference release
-      // destory the object
+    assert((m_shareRefCnt.load(std::memory_order_relaxed) > 0) &&
+           (m_weakRefCnt.load(std::memory_order_relaxed) > 0));
+    if (--m_shareRefCnt == 0)
       DestoryObject();
 
-      // no share reference. decrement weak reference counter
-      ReleaseShareRef();
+    if (--m_weakRefCnt) {
+      DestoryRefCnt();
     }
   }
 
@@ -103,11 +98,17 @@ public:
   {
     assert(m_weakRefCnt.load() > 0);
     if (--m_weakRefCnt == 0) {
-      delete this;
+      DestoryRefCnt();
     }
   }
 
-private:
+  /// Destory the contained object
+  virtual void DestoryObject() noexcept = 0;
+
+  /// Destory the this instance
+  virtual void DestoryRefCnt() noexcept = 0;
+
+protected:
   /// The number of shared references to the object.
   /// When count equal 0, the object will be destory
   std::atomic<INT32> m_shareRefCnt;
@@ -116,7 +117,7 @@ private:
   /// The count will see any shared references as one.
   std::atomic<INT32> m_weakRefCnt;
 
-  virtual void DestoryObject() = 0;
+private:
   HAWL_DISABLE_COPY(RefCntBase)
 };
 

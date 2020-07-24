@@ -16,6 +16,8 @@ set(INTERFACE
 	interface/Timer.h
 	interface/IAppBase.h
 	interface/SmartPtr/RefCntPtr.h
+	interface/SmartPtr/SharedPtr.h
+	interface/SmartPtr/ReferenceCounterBase.h
 	interface/Thread.h
 	interface/Algorithm/LockfreeQueue.h
 )
