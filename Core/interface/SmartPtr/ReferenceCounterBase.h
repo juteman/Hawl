@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <atomic>
 #include <system_error>
+#include <type_traits>
+#include <utility>
 
 namespace Hawl {
 namespace SmartPtr {
@@ -35,16 +37,17 @@ namespace SmartPtr {
 /// base reference couter class
 /// include about share reference counter and the
 /// weak reference counter
-class RefCntBase
+class RefCntUtilityBase
 {
 public:
-  inline explicit RefCntBase() noexcept
+  inline explicit RefCntUtilityBase(UINT32 shareCnt = 1,
+                                    UINT32 weakCnt  = 1) noexcept
   {
-    m_shareRefCnt.store(1);
-    m_weakRefCnt.store(1);
+    m_shareRefCnt.store(shareCnt);
+    m_weakRefCnt.store(weakCnt);
   }
 
-  virtual ~RefCntBase() noexcept {}
+  virtual ~RefCntUtilityBase() noexcept {}
 
   /// Get the number of share reference count
   inline INT32 GetSharedRefCnt() const
@@ -63,7 +66,7 @@ public:
   /// ONLY when at least one reference
   /// @return if success add shared reference return the
   /// self pointer else return nullptr
-  inline RefCntBase* ConditionallyAddShareRefCnt()
+  inline RefCntUtilityBase* ConditionallyAddShareRefCnt()
   {
     for (INT32 shareRefCntRecord =
            m_shareRefCnt.load(std::memory_order_relaxed);
@@ -74,7 +77,11 @@ public:
       // because on the multiple thread the value will change
       if (m_shareRefCnt.compare_exchange_weak(shareRefCntRecord,
                                               shareRefCntRecord + 1))
-        [[likely]] { return this; }
+        [[likely]]
+        {
+          m_weakRefCnt++;
+          return this;
+        }
     }
     return nullptr;
   }
@@ -117,9 +124,91 @@ protected:
   /// The count will see any shared references as one.
   std::atomic<INT32> m_weakRefCnt;
 
-private:
-  HAWL_DISABLE_COPY(RefCntBase)
+  HAWL_DISABLE_COPY(RefCntUtilityBase)
 };
+
+/// Deleter type of reference counter utility to
+/// delete the contained object
+template<typename T, typename DeleterType>
+class RefCntDeleter : public RefCntUtilityBase
+{
+public:
+  /// rename the type
+  typedef T ValueType;
+
+  ValueType m_value; // this type expected to be a pointer
+  Deleter   m_deleter;
+
+  RefCntDeleter(ValueType value, DeleterType deleter)
+    : m_value{ value }
+    , m_deleter{ std::move(deleter) }
+  {}
+
+  void DestoryObject()
+  {
+    m_deleter(m_value);
+    m_value = nullptr;
+  }
+
+  void DestoryRefCnt() { this->~RefCntDeleter(); }
+
+  void* GetDeleter() const noexcept { return (void*)m_deleter; }
+};
+
+/// RefCntInst is used to hold the instance of T
+/// To allocate the object and count in a single memory
+template<typename T>
+class RefCntInst : public RefCntUtilityBase
+{
+public:
+  typedef T                                                          ValueType;
+  typedef typename std::aligned_storage<sizeof(T), alignof(T)>::type StorgeType;
+
+  mutable StorgeType m_memory;
+
+  ValueType* GetValue()
+  {
+    return static_cast<ValueType*>(static_cast<void*>(&m_memory));
+  }
+
+  template<typename... Args>
+  RefCntInst(Args&&... args)
+    : RefCntUtilityBase{}
+  {
+    new (&m_memory) ValueType(std::forward<Args>(args)...);
+  }
+
+  void DestoryObject() noexcept { GetValue()->~ValueType(); }
+
+  void DestoryRefCnt() noexcept { this->~RefCntInst(); }
+
+  void GetDeleter() const noexcept { return nullptr; }
+};
+
+/// The default deleter
+template<typename T>
+struct DefaultDeleter
+{
+  inline void operator()(T* object) const { delete object; }
+};
+
+/// Create with default deleter
+template<typename ValueType>
+inline RefCntUtilityBase*
+NewDefaultRefCnt(ValueType* object)
+{
+  return new RefCntDeleter<ValueType, DefaultDeleter<ValueType>>(
+    object, DefaultDeleter<object>());
+}
+
+// Create with custom deleter
+template<typename ValueType, typename DeleterType>
+inline RefCntUtilityBase*
+NewCustomRefCnt(ValueType* object, DeleterType&& deleter)
+{
+  return new RefCntDeleter<ValueType, typename std::move<DeleterType>::Type>(
+    object, std::forward<DeleterType>(deleter));
+}
 
 } // !SmartPtr
 

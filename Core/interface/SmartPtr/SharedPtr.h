@@ -26,20 +26,98 @@
 
 #include "ReferenceCounterBase.h"
 #include <cstdlib>
+#include <type_traits>
 namespace Hawl {
 namespace SmartPtr {
-template<typename T, PtrThreadSafeMode mode>
+
+/// SharePtrTraits is to solve the problem
+/// about the operate*() return a refernce to T
+/// if T is void ,it need to return void. But not *void
+template<typename T>
+struct SharedPtrTraits
+{
+  typedef T& reference_type;
+};
+
+template<>
+struct SharedPtrTraits<void>
+{
+  typedef void reference_type;
+};
+
+template<>
+struct SharedPtrTraits<void const>
+{
+  typedef void reference_type;
+};
+
+template<>
+struct SharedPtrTraits<void volatile>
+{
+  typedef void reference_type;
+};
+
+template<>
+struct SharedPtrTraits<void const volatile>
+{
+  typedef void reference_type;
+};
+
+/// SharePtr reference-counted authoritative object pointer.
+/// It will be thread safe because the counter is atomic
+template<typename T>
 class SharedPtr
 {
 public:
-  inline SharedPtr()
-    : m_pObject{ nullptr }
-    , m_refcnt{ nullptr }
+  typedef SharedPtr<T> ThisType;
+  typedef T            ValueType;
+
+protected:
+  RefCntUtilityBase* m_pRefCnt;
+  T*                 m_pObject;
+
+public:
+  /// Init a blank SharePtr
+  SharedPtr() noexcept
+    : m_pRefCnt{ nullptr }
+    , m_pObject{ nullptr }
   {}
 
-private:
-  RefCntBase<mode>* m_refcnt;
-  T*                m_pObject;
+  SharedPtr(std::nullptr_t) noexcept
+    : m_pRefCnt{ nullptr }
+    , m_pObject{ nullptr }
+  {}
+
+  /// Take the ownership of the pointer
+  /// and set the reference count
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ValueType*>::value>::type>
+  explicit SharedPtr(U* pValue)
+    : m_pObject{ U }
+    , m_pRefCnt{ NewDefaultRefCnt(pValue) }
+  {}
+
+  /// Take the ownership of the pointer
+  /// and set the reference count with custom deleter
+  template<typename U,
+           typename DeleterType,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ValueType*>::value>::type>
+  shared_ptr(U* pValue, DeleterType&& deleter)
+    : m_pObject{ U }
+    , m_pRefCnt{ NewCustomRefCnt(pValue, std::forward<DeleterType>(deleter)) }
+  {}
+
+  template<typename DeleterType>
+  shared_ptr(std::nullptr_t, DeleterType deleter)
+    : m_pValue(nullptr)
+    , m_pRefCnt(NewCustomRefCnt(nullptr, std::forward<DeleterType>(deleter)))
+  {}
+
+  /// SharePtr counsturct with self type
+  /// need to addition of this function
+  /// TODO
 };
 } // !SmartPtr
 } //! Hawl
