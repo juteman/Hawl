@@ -34,31 +34,31 @@ namespace Hawl::SmartPtr {
 template<typename T>
 struct SharedPtrTraits
 {
-  typedef T& reference_type;
+  typedef T& referenceType;
 };
 
 template<>
 struct SharedPtrTraits<void>
 {
-  typedef void reference_type;
+  typedef void referenceType;
 };
 
 template<>
 struct SharedPtrTraits<void const>
 {
-  typedef void reference_type;
+  typedef void referenceType;
 };
 
 template<>
 struct SharedPtrTraits<void volatile>
 {
-  typedef void reference_type;
+  typedef void referenceType;
 };
 
 template<>
 struct SharedPtrTraits<void const volatile>
 {
-  typedef void reference_type;
+  typedef void referenceType;
 };
 
 /// SharePtr reference-counted authoritative object pointer.
@@ -67,8 +67,9 @@ template<typename T>
 class SharedPtr
 {
 public:
-  typedef SharedPtr<T> ThisType;
-  typedef T            ValueType;
+  typedef SharedPtr<T>                               ThisType;
+  typedef T                                          ObjectType;
+  typedef typename SharedPtrTraits<T>::referenceType ReferenceType;
 
 protected:
   RefCntUtilityBase* m_pRefCnt;
@@ -90,7 +91,7 @@ public:
   /// and set the reference count
   template<typename U,
            typename = typename std::enable_if<
-             std::is_convertible<U*, ValueType*>::value>::type>
+             std::is_convertible<U*, ObjectType*>::value>::type>
   explicit SharedPtr(U* pValue)
     : m_pRefCnt{ NewDefaultRefCnt(pValue) }
     , m_pObject{ pValue }
@@ -101,7 +102,7 @@ public:
   template<typename U,
            typename DeleterType,
            typename = typename std::enable_if<
-             std::is_convertible<U*, ValueType*>::value>::type>
+             std::is_convertible<U*, ObjectType*>::value>::type>
   SharedPtr(U* pValue, DeleterType&& deleter)
     : m_pRefCnt{ NewCustomRefCnt(pValue, std::forward<DeleterType>(deleter)) }
     , m_pObject{ pValue }
@@ -127,7 +128,7 @@ public:
   /// This function will trigger reference shared counter increments
   template<typename U,
            typename = typename std::enable_if<
-             std::is_convertible<U*, ValueType*>::value>::type>
+             std::is_convertible<U*, ObjectType*>::value>::type>
   SharedPtr(const SharedPtr<U>& sharedPtr)
     : m_pRefCnt{ sharedPtr.m_pRefCnt }
     , m_pObject{ sharedPtr.m_pObject }
@@ -139,7 +140,7 @@ public:
   /// Shares ownership of a pointer with another instance of
   /// sharedPtr while storing a potentially different pointer.
   template<typename U>
-  SharedPtr(const SharedPtr<U>& sharedPtr, ValueType* pObject) noexcept
+  SharedPtr(const SharedPtr<U>& sharedPtr, ObjectType* pObject) noexcept
     : m_pRefCnt{ sharedPtr.m_pRefCnt }
     , m_pObject{ pObject }
   {
@@ -164,6 +165,122 @@ public:
   {
     if (m_pRefCnt)
       m_pRefCnt->ReleaseSharedRef();
+  }
+
+  /// operator assignment to self type
+  SharedPtr& operator=(const SharedPtr& sharedPtr) noexcept
+  {
+    // if sharedPtr is not equal to this
+    // just swap the pointer
+    if (&sharedPtr != this)
+      ThisType(sharedPtr).Swap(*this);
+    return *this;
+  }
+
+  /// Copy another SharedPtr to this object.
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  SharedPtr& operator=(const SharedPtr<U>& sharedPtr) noexcept
+  {
+    if (!equalOwnership(sharedPtr))
+      ThisType(sharedPtr).Swap(*this);
+    return *this;
+  }
+
+  /// Copy with right reference
+  SharedPtr& operator=(SharedPtr&& sharedPtr) noexcept
+  {
+    if (&sharedPtr != this)
+      ThisType(std::move(sharedPtr)).Swap(*this);
+
+    return *this;
+  }
+
+  /// Reset and releases the owned pointer.
+  void Reset() noexcept { ThisType().Swap(*this); }
+
+  /// reset and  releases the owned pointer and takes ownership of the
+  /// passed in pointer.
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  void Reset(U* pObject)
+  {
+    ThisType(pObject).Swap(*this);
+  }
+
+  /// reset and  releases the owned pointer and takes ownership of the
+  /// passed in pointer.
+  template<typename U,
+           typename Deleter,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  void Reset(U* pObject, Deleter deleter)
+  {
+    ThisType(pObject, deleter).Swap(*this);
+  }
+
+  /// To exchange SharedPtr information
+  void Swap(ThisType& sharedPtr)
+  {
+    ObjectType* const pObject = sharedPtr.m_pObject;
+    sharedPtr.m_pObject       = m_pObject;
+    m_pObject                 = pObject;
+
+    RefCntUtilityBase* const pCntUtilityBase = sharedPtr.m_pRefCnt;
+    sharedPtr.m_pRefCnt                      = m_pRefCnt;
+    m_pRefCnt                                = pCntUtilityBase;
+  }
+
+  /// @return true if the given SharedPtr own the same T pointer that we do.
+  template<typename U>
+  bool equalOwnership(const SharedPtr<U>& sharedPtr) const
+  {
+    // Compare address of m_pRefCnt
+    return m_pRefCnt = sharedPtr.m_pRefCnt;
+  }
+
+  /// Returns the owner pointer dereferenced
+  /// @example:
+  ///  SharedPtr<int> ptr(new int(3));
+  ///  int x = *ptr;
+  ReferenceType operator*() const noexcept { return *m_pObject; }
+
+  /// Allows access to the owned pointer via ->
+  /// @example
+  ///  struct X{ void fun(); };
+  ///  SharedPtr<int> ptr(new X);
+  ///  ptr->fun();
+  ReferenceType* operator->() const noexcept
+  {
+    assert(m_pObject);
+    return m_pObject;
+  }
+
+
+  explicit operator bool() const noexcept
+  {
+      return (m_pObject != nullptr);
+  }
+
+  /// Get method
+  ///@return  the pointer of owned pointer
+  ReferenceType* Get() const noexcept { return m_pObject; }
+
+  /// Count method
+  /// @return the number of shared pointer 
+  [[nodiscard]] INT32 Count() const noexcept
+  {
+    return m_pRefCnt ? m_pRefCnt->GetSharedRefCnt() : 0;
+  }
+
+
+  /// Unique method
+  /// @return true if just one shared pointer 
+  [[nodiscard]] bool Unique() const noexcept
+  {
+      return (m_pRefCnt && (m_pRefCnt->GetSharedRefCnt() == 1));
   }
 
 
