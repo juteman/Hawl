@@ -21,8 +21,9 @@
 #include "Common.h"
 #include <atomic>
 #include <utility>
-namespace Hawl {
-namespace Algorithm {
+
+namespace Hawl::Algorithm
+{
 
 enum class QueueModel
 {
@@ -81,7 +82,7 @@ public:
   }
 
   /// Adds an node to the tail of the queue.
-  /// @param Item The item to add.
+  /// @param InData The item to add.
   /// @return true if the node was added, false for some thread race
   /// condition
   bool EnQueue(T const& InData)
@@ -135,12 +136,12 @@ public:
               return false;
 
             // if the head next is not null. must be another
-            // thread EnQeue the element. So fetch tail pointer to the next
+            // thread EnQueue the element. So fetch tail pointer to the next
             m_head.compare_exchange_strong(tail, headNext);
           }
           else {
             if (headNext == nullptr)
-              // it means anothor thread take the element.
+              // it means another thread take the element.
               // and the queue is empty. So just continue, and if
               // no element again, will return false.
               continue;
@@ -191,5 +192,4 @@ private:
   /// delete copy constructor and  assign operator
   HAWL_DISABLE_COPY(Queue)
 };
-}
 }

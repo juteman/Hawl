@@ -25,13 +25,11 @@
 #pragma once
 
 #include "ReferenceCounterBase.h"
-#include <cstdlib>
 #include <type_traits>
-namespace Hawl {
-namespace SmartPtr {
 
+namespace Hawl::SmartPtr {
 /// SharePtrTraits is to solve the problem
-/// about the operate*() return a refernce to T
+/// about the operate*() return a reference to T
 /// if T is void ,it need to return void. But not *void
 template<typename T>
 struct SharedPtrTraits
@@ -94,8 +92,8 @@ public:
            typename = typename std::enable_if<
              std::is_convertible<U*, ValueType*>::value>::type>
   explicit SharedPtr(U* pValue)
-    : m_pObject{ U }
-    , m_pRefCnt{ NewDefaultRefCnt(pValue) }
+    : m_pRefCnt{ NewDefaultRefCnt(pValue) }
+    , m_pObject{ pValue }
   {}
 
   /// Take the ownership of the pointer
@@ -104,20 +102,70 @@ public:
            typename DeleterType,
            typename = typename std::enable_if<
              std::is_convertible<U*, ValueType*>::value>::type>
-  shared_ptr(U* pValue, DeleterType&& deleter)
-    : m_pObject{ U }
-    , m_pRefCnt{ NewCustomRefCnt(pValue, std::forward<DeleterType>(deleter)) }
+  SharedPtr(U* pValue, DeleterType&& deleter)
+    : m_pRefCnt{ NewCustomRefCnt(pValue, std::forward<DeleterType>(deleter)) }
+    , m_pObject{ pValue }
   {}
 
   template<typename DeleterType>
-  shared_ptr(std::nullptr_t, DeleterType deleter)
-    : m_pValue(nullptr)
-    , m_pRefCnt(NewCustomRefCnt(nullptr, std::forward<DeleterType>(deleter)))
+  SharedPtr(std::nullptr_t, DeleterType deleter)
+    : m_pRefCnt{ NewCustomRefCnt(nullptr, std::forward<DeleterType>(deleter)) }
+    , m_pObject{ nullptr }
   {}
 
-  /// SharePtr counsturct with self type
-  /// need to addition of this function
+  /// SharePtr constructor with self type
+  /// This function will trigger reference shared counter increments
+  SharedPtr(const SharedPtr& sharedPtr)
+    : m_pRefCnt{ sharedPtr.m_pRefCnt }
+    , m_pObject{ sharedPtr.m_pObject }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddShareRefCnt();
+  }
+
+  /// SharedPtr constructor with another instance of SharedPtr
+  /// This function will trigger reference shared counter increments
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ValueType*>::value>::type>
+  SharedPtr(const SharedPtr<U>& sharedPtr)
+    : m_pRefCnt{ sharedPtr.m_pRefCnt }
+    , m_pObject{ sharedPtr.m_pObject }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddShareRefCnt();
+  }
+
+  /// Shares ownership of a pointer with another instance of
+  /// sharedPtr while storing a potentially different pointer.
+  template<typename U>
+  SharedPtr(const SharedPtr<U>& sharedPtr, ValueType* pObject) noexcept
+    : m_pRefCnt{ sharedPtr.m_pRefCnt }
+    , m_pObject{ pObject }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddShareRefCnt();
+  }
+
+  /// SharedPtr constructor with right reference
+  SharedPtr(SharedPtr&& sharedPtr) noexcept
+    : m_pRefCnt{ sharedPtr.m_pRefCnt }
+    , m_pObject{ sharedPtr.m_pObject }
+  {
+    sharedPtr.m_pObject = nullptr;
+    sharedPtr.m_pRefCnt = nullptr;
+  }
+
+  /// WeakPtr constructor
   /// TODO
+
+  /// Deconstruct
+  ~SharedPtr()
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->ReleaseSharedRef();
+  }
+
+
 };
-} // !SmartPtr
-} //! Hawl
+}

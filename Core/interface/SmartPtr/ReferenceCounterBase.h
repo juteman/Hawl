@@ -31,10 +31,9 @@
 #include <type_traits>
 #include <utility>
 
-namespace Hawl {
-namespace SmartPtr {
+namespace Hawl::SmartPtr {
 
-/// base reference couter class
+/// base reference counter class
 /// include about share reference counter and the
 /// weak reference counter
 class RefCntUtilityBase
@@ -79,7 +78,7 @@ public:
                                               shareRefCntRecord + 1))
         [[likely]]
         {
-          m_weakRefCnt++;
+          ++m_weakRefCnt;
           return this;
         }
     }
@@ -87,15 +86,15 @@ public:
   }
 
   /// Release the share reference
-  inline void ReleaseShareRef()
+  inline void ReleaseSharedRef()
   {
     assert((m_shareRefCnt.load(std::memory_order_relaxed) > 0) &&
            (m_weakRefCnt.load(std::memory_order_relaxed) > 0));
     if (--m_shareRefCnt == 0)
-      DestoryObject();
+      DestroyObject();
 
     if (--m_weakRefCnt) {
-      DestoryRefCnt();
+      DestroyRefCnt();
     }
   }
 
@@ -105,19 +104,19 @@ public:
   {
     assert(m_weakRefCnt.load() > 0);
     if (--m_weakRefCnt == 0) {
-      DestoryRefCnt();
+      DestroyRefCnt();
     }
   }
 
-  /// Destory the contained object
-  virtual void DestoryObject() noexcept = 0;
+  /// Destroy the contained object
+  virtual void DestroyObject() noexcept = 0;
 
-  /// Destory the this instance
-  virtual void DestoryRefCnt() noexcept = 0;
+  /// Destroy the this instance
+  virtual void DestroyRefCnt() noexcept = 0;
 
 protected:
   /// The number of shared references to the object.
-  /// When count equal 0, the object will be destory
+  /// When count equal 0, the object will be destroy
   std::atomic<INT32> m_shareRefCnt;
 
   /// The number of weak references to the object.
@@ -136,22 +135,23 @@ public:
   /// rename the type
   typedef T ValueType;
 
-  ValueType m_value; // this type expected to be a pointer
-  Deleter   m_deleter;
+  ValueType   m_value; // this type expected to be a pointer
+  DeleterType m_deleter;
 
   RefCntDeleter(ValueType value, DeleterType deleter)
     : m_value{ value }
     , m_deleter{ std::move(deleter) }
   {}
 
-  void DestoryObject()
+  void DestroyObject() noexcept override
   {
     m_deleter(m_value);
     m_value = nullptr;
   }
 
-  void DestoryRefCnt() { this->~RefCntDeleter(); }
+  void DestroyRefCnt() noexcept override { this->~RefCntDeleter(); }
 
+  // ReSharper disable once CppCStyleCast
   void* GetDeleter() const noexcept { return (void*)m_deleter; }
 };
 
@@ -178,11 +178,11 @@ public:
     new (&m_memory) ValueType(std::forward<Args>(args)...);
   }
 
-  void DestoryObject() noexcept { GetValue()->~ValueType(); }
+  void DestroyObject() noexcept override { GetValue()->~ValueType(); }
 
-  void DestoryRefCnt() noexcept { this->~RefCntInst(); }
+  void DestroyRefCnt() noexcept override { this->~RefCntInst(); }
 
-  void GetDeleter() const noexcept { return nullptr; }
+  void* GetDeleter() const noexcept { return nullptr; }
 };
 
 /// The default deleter
@@ -198,7 +198,7 @@ inline RefCntUtilityBase*
 NewDefaultRefCnt(ValueType* object)
 {
   return new RefCntDeleter<ValueType, DefaultDeleter<ValueType>>(
-    object, DefaultDeleter<object>());
+    object, DefaultDeleter<ValueType>());
 }
 
 // Create with custom deleter
@@ -206,10 +206,8 @@ template<typename ValueType, typename DeleterType>
 inline RefCntUtilityBase*
 NewCustomRefCnt(ValueType* object, DeleterType&& deleter)
 {
-  return new RefCntDeleter<ValueType, typename std::move<DeleterType>::Type>(
+  return new RefCntDeleter<ValueType,
+                           typename std::remove_reference_t<DeleterType>::Type>(
     object, std::forward<DeleterType>(deleter));
 }
-
-} // !SmartPtr
-
-} // !Hawl
+}

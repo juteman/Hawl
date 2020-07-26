@@ -25,8 +25,9 @@
 #  include <errno.h>
 #  include <pthread.h>
 #  include <string.h>
-namespace Hawl {
-namespace Linux {
+
+namespace Hawl::Linux
+{
 /// Linux pthread read and write mutex class
 class RWLock
 {
@@ -67,7 +68,5 @@ public:
 private:
   pthread_rwlock_t m_RWmutex;
 };
-
-}
 }
 #endif

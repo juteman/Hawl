@@ -24,14 +24,13 @@
 
 #pragma once
 #include "BaseType.h"
-#include "HIID.h"
 #include <assert.h>
 #include <atomic>
 #include <type_traits>
 #include <utility>
 
-namespace Hawl {
-namespace SmartPtr {
+namespace Hawl::SmartPtr
+{
 
 /// 智能指针所需要的接口
 class IRefCountObject
@@ -135,13 +134,13 @@ public:
     return *this = Ptr.GetReference();
   }
 
-  RefCountPtr& operator=(RefCountPtr&& Ptr)
+  RefCountPtr& operator=(RefCountPtr&& Ptr) noexcept
   {
     if (this != &Ptr) {
       if (m_pObject)
         m_pObject->Release();
 
-      m_pObject     = Ptr.m_pObejct;
+      m_pObject     = Ptr.m_pObject;
       Ptr.m_pObject = nullptr;
     }
     return *this;
@@ -199,5 +198,4 @@ public:
 private:
   T* m_pObject = nullptr;
 };
-} // !SmartPtr
-} // !Hawl
+} 
