@@ -116,7 +116,7 @@ public:
 
   /// SharePtr constructor with self type
   /// This function will trigger reference shared counter increments
-  SharedPtr(const SharedPtr& sharedPtr)
+  [[maybe_unused]] SharedPtr(const SharedPtr& sharedPtr)
     : m_pRefCnt{ sharedPtr.m_pRefCnt }
     , m_pObject{ sharedPtr.m_pObject }
   {
@@ -183,7 +183,7 @@ public:
              std::is_convertible<U*, ObjectType*>::value>::type>
   SharedPtr& operator=(const SharedPtr<U>& sharedPtr) noexcept
   {
-    if (!equalOwnership(sharedPtr))
+    if (!EqualOwnership(sharedPtr))
       ThisType(sharedPtr).Swap(*this);
     return *this;
   }
@@ -235,7 +235,7 @@ public:
 
   /// @return true if the given SharedPtr own the same T pointer that we do.
   template<typename U>
-  bool equalOwnership(const SharedPtr<U>& sharedPtr) const
+  bool EqualOwnership(const SharedPtr<U>& sharedPtr) const
   {
     // Compare address of m_pRefCnt
     return m_pRefCnt = sharedPtr.m_pRefCnt;
@@ -258,31 +258,198 @@ public:
     return m_pObject;
   }
 
-
-  explicit operator bool() const noexcept
-  {
-      return (m_pObject != nullptr);
-  }
+  explicit operator bool() const noexcept { return (m_pObject != nullptr); }
 
   /// Get method
   ///@return  the pointer of owned pointer
   ReferenceType* Get() const noexcept { return m_pObject; }
 
   /// Count method
-  /// @return the number of shared pointer 
+  /// @return the number of shared pointer
   [[nodiscard]] INT32 Count() const noexcept
   {
     return m_pRefCnt ? m_pRefCnt->GetSharedRefCnt() : 0;
   }
 
-
   /// Unique method
-  /// @return true if just one shared pointer 
+  /// @return true if just one shared pointer
   [[nodiscard]] bool Unique() const noexcept
   {
-      return (m_pRefCnt && (m_pRefCnt->GetSharedRefCnt() == 1));
+    return (m_pRefCnt && (m_pRefCnt->GetSharedRefCnt() == 1));
   }
 
+protected:
+  /// TODO: some operater overloading
+};
 
+template<typename T>
+class WeakPtr
+{
+public:
+  typedef WeakPtr<T> ThisType;
+  typedef T          ObjectType;
+
+public:
+  WeakPtr() noexcept
+    : m_pObject{ nullptr }
+    , m_pRefCnt{ nullptr }
+  {}
+
+  /// Constructor with self type
+  WeakPtr(const ThisType& weakPtr) noexcept
+    : m_pObject{ weakPtr.m_pObject }
+    , m_pRefCnt{ weakPtr.m_pRefCnt }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddWeakReference();
+  }
+
+  /// Move constructor with self type
+  WeakPtr(const ThisType&& weakPtr) noexcept
+    : m_pObject{ weakPtr.m_pObject }
+    , m_pRefCnt{ weakPtr.m_pRefCnt }
+  {
+    weakPtr.m_pObject = nullptr;
+    weakPtr.m_pRefCnt = nullptr;
+  }
+
+  /// Constructor
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  WeakPtr(const WeakPtr<U>& weakPtr) noexcept
+    : m_pObject{ weakPtr.m_pObject }
+    , m_pRefCnt{ weakPtr.m_pRefCnt }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddWeakReference();
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  WeakPtr(const WeakPtr<U>&& weakPtr) noexcept
+    : m_pObject{ weakPtr.m_pObject }
+    , m_pRefCnt{ weakPtr.m_pRefCnt }
+  {
+    weakPtr.m_pObject = nullptr;
+    weakPtr.m_pRefCnt = nullptr;
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  WeakPtr(const SharedPtr<U>& sharedPtr)
+    : m_pObject{ sharedPtr.m_pObject }
+    , m_pRefCnt{ sharedPtr.m_pRefCnt }
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->AddWeakReference();
+  }
+
+  ~WeakPtr()
+  {
+    if (m_pRefCnt)
+      m_pRefCnt->ReleaseWeakReference();
+  }
+
+  ThisType& operator=(const ThisType& weakPtr) noexcept
+  {
+    Assign(weakPtr);
+    return *this;
+  }
+
+  ThisType& operator=(const ThisType&& weakPtr) noexcept
+  {
+    WeakPtr(std::move(weakPtr)).Swap(*this);
+    return *this;
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  ThisType operator=(const WeakPtr<U>& weakPtr) noexcept
+  {
+    Assign(weakPtr);
+    return *this;
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  ThisType operator=(const WeakPtr<U>&& weakPtr) noexcept
+  {
+    WeakPtr(std::move(weakPtr)).Swap(*this);
+    return *this;
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  ThisType operator=(const SharedPtr<U>& sharedPtr) noexcept
+  {
+    if (m_pRefCnt != sharedPtr.m_pRefCnt) {
+      if (m_pRefCnt)
+        m_pRefCnt->ReleaseWeakReference();
+
+      m_pObject = sharedPtr.m_pObject;
+      m_pRefCnt = sharedPtr.m_pRefCnt;
+      if (m_pRefCnt)
+        m_pRefCnt->ReleaseWeakReference();
+    }
+    return *this;
+  }
+
+  SharedPtr<T> lock() const noexcept
+  {
+    SharedPtr<T> temp;
+    temp.m_pRefCnt =
+      m_pRefCnt ? m_pRefCnt->ConditionallyAddShareRefCnt() : m_pRefCnt;
+    if (temp.m_pRefCnt)
+      temp.m_pObject = m_pObject;
+    return temp;
+  }
+
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  void Assign(const WeakPtr<U>& weakPtr)
+  {
+    if (m_pRefCnt != weakPtr.m_pRefCnt) {
+      if (m_pRefCnt)
+        m_pRefCnt->ReleaseWeakReference();
+
+      m_pObject = weakPtr.m_pObject;
+      m_pRefCnt = weakPtr.m_pRefCnt;
+      if (m_pRefCnt)
+        m_pRefCnt->ReleaseWeakReference();
+    }
+  }
+
+  /// Swap the weakPtr
+  void Swap(ThisType& weakPtr)
+  {
+    ObjectType* const pObject = weakPtr.m_pObject;
+    weakPtr.m_pObject         = m_pObject;
+    m_pObject                 = pObject;
+
+    RefCntUtilityBase* const pCntUtilityBase = weakPtr.m_pRefCnt;
+    weakPtr.m_pRefCnt                        = m_pRefCnt;
+    m_pRefCnt                                = pCntUtilityBase;
+  }
+
+protected:
+  /// Weak owned pointer
+  ObjectType* m_pObject;
+  /// Reference count for ownd pointer
+  RefCntUtilityBase* m_pRefCnt;
+
+  /// Set other type of WeakPtr and SharedPtr
+  /// as friend class
+  template<typename U>
+  friend class WeakPtr;
+
+  template<typename U>
+  friend class SharedPtr;
 };
 }
