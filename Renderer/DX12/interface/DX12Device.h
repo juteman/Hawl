@@ -21,7 +21,7 @@
 #pragma once
 #include "BaseType.h"
 #include "Common.h"
-#include "RefCntPtr.h"
+#include "SmartPtr/RefCntPtr.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 

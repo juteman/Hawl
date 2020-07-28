@@ -29,10 +29,9 @@
 #include <type_traits>
 #include <utility>
 
-namespace Hawl::SmartPtr
-{
+namespace Hawl::SmartPtr {
 
-/// 智能指针所需要的接口
+/// RefCnt Interface example
 class IRefCountObject
 {
 public:
@@ -67,7 +66,8 @@ private:
   mutable std::atomic<UINT32> m_refCounter;
 };
 
-///@note 一个类型实现了AddRef 和 Release的时候可使用此只能指针
+///@note A type implement the method addRef() and Release() can use this
+/// Is designed to instead of ComPtr for DXGI in Direct12
 template<typename T>
 class RefCountPtr
 {
@@ -198,4 +198,4 @@ public:
 private:
   T* m_pObject = nullptr;
 };
-} 
+}

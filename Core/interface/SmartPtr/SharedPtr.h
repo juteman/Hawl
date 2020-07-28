@@ -25,12 +25,20 @@
 #pragma once
 
 #include "ReferenceCounterBase.h"
+#include <cstdio>
 #include <type_traits>
 
 namespace Hawl::SmartPtr {
+
+template<typename T>
+class SharedPtr;
+
+template<typename T>
+class WeakPtr;
 /// SharePtrTraits is to solve the problem
 /// about the operate*() return a reference to T
 /// if T is void ,it need to return void. But not *void
+
 template<typename T>
 struct SharedPtrTraits
 {
@@ -158,7 +166,22 @@ public:
   }
 
   /// WeakPtr constructor
-  /// TODO
+  template<typename U,
+           typename = typename std::enable_if<
+             std::is_convertible<U*, ObjectType*>::value>::type>
+  explicit SharedPtr(const WeakPtr<U>& weakPtr) noexcept
+    : m_pObject{ weakPtr.m_pObject }
+    , m_pRefCnt{ weakPtr.m_pRefCnt
+                   ? weakPtr.m_pRefCnt->ConditionallyAddShareRefCnt()
+                   : weakPtr.m_pRefCnt }
+  {
+    if (!m_pRefCnt) {
+      /// @note note sure there right here
+      m_pObject = nullptr;
+      ///
+      throw stderr;
+    }
+  }
 
   /// Deconstruct
   ~SharedPtr()
@@ -279,6 +302,10 @@ public:
   }
 
 protected:
+  template<typename U>
+  friend class SharedPtr;
+  template<typename U>
+  friend class WeakPtr;
   /// TODO: some operater overloading
 };
 
