@@ -33,7 +33,7 @@
 
 # ignore directory of this project
 build/
-
+cmake-build-debug/
 # ignore editor setting and language server config 
 *.vscode
 .clangd/

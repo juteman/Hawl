@@ -46,8 +46,17 @@ public:
   /// Add a number to a counter
   /// @param value number to be added
   /// @return the newer counter number
-  INT32 Add(INT32 value){
+  INT32 Add(INT32 value)
+  {
+    m_counter.fetch_add(value, std::memory_order_relaxed);
+  }
 
+  /// Sub a number to a counter
+  /// @param value number to be sub
+  /// @return the newer counter number
+  INT32 Sub(INT32 value)
+  {
+    m_counter.fetch_sub(value, std::memory_order_relaxed);
   }
 
   /// Get the current counter number
