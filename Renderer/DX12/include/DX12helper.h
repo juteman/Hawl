@@ -19,32 +19,61 @@
  */
 
 #pragma once
-#include "BaseType.h"
 #include <string>
+#include <comdef.h>
 #include <windows.h>
+
+
+/**
+ * \brief This function convert string to wstring 
+ * \param str  standard string to be convert
+ * \return return the string convert to wstring
+ */
+inline std::wstring AnsiToWString(const std::string& str)
+{
+    WCHAR buffer[512];
+    MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
+    return std::wstring(buffer);
+}
 
 class DX12Exception
 {
-public:
-  DX12Exception() = default;
-  DX12Exception(HRESULT hr, const char* code, const char* filename, UINT32 line)
-    : m_err{ hr }
-    , m_code{ code }
-    , m_file{ filename }
-    , m_line{ line } {};
+  public:
+    DX12Exception() = default;
+    DX12Exception(HRESULT             hr,
+                  const std::wstring &functionName,
+                  const std::wstring &filename,
+                  int                 lineNumber);
 
-  HRESULT     m_err = S_OK;
-  const char* m_code;
-  const char* m_file;
-  UINT32      m_line;
+    std::wstring ToString() const
+    {
+        _com_error err{ errCode };
+        std::wstring msg = err.ErrorMessage();
+
+        return functionName + L" failed in " + fileName + L"; line " + std::to_wstring(lineNumber) + L"; error: " + msg;
+    }
+
+    HRESULT      errCode = S_OK;
+    std::wstring functionName;
+    std::wstring fileName;
+    INT32       lineNumber = -1;
 };
 
+inline DX12Exception::DX12Exception(HRESULT             hr,
+                                    const std::wstring &functionName,
+                                    const std::wstring &filename,
+                                    int                 lineNumber)
+    : errCode{hr}, functionName{functionName}, fileName{filename}, lineNumber{lineNumber}
+{
+}
+
 #ifndef CHECK_DX12_RESULT
-#  define CHECK_DX12_RESULT(x)                                                 \
-    {                                                                          \
-      HRESULT hr = (x);                                                        \
-      if (FAILED(hr)) {                                                        \
-        throw DX12Exception(hr, L#x, __FILE__, __LINE__, nullptr);             \
-      }                                                                        \
+#define CHECK_DX12_RESULT(x)                                                                       \
+    {                                                                                              \
+        HRESULT hr = (x);                                                                          \
+        if (FAILED(hr))                                                                            \
+        {   std::wstring wfn = AnsiToWString(__FILE__);                                                                                       \
+            throw DX12Exception(hr, L#x, wfn, __LINE__);                                      \
+        }                                                                                          \
     }
 #endif

@@ -20,10 +20,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#include "Renderer.h"
-
+#pragma once
 
 namespace Hawl {
+enum
+{
+	MAX_GPUS = 10,
+  MAX_GPU_VENDOR_STRING_LENGTH = 64
+};
 
+typedef enum GPUPresetLevel
+{
+	GPU_PRESET_NONE = 0,
+	GPU_PRESET_OFFICE,    //This means GPU unsupported
+	GPU_PRESET_LOW,
+	GPU_PRESET_MEDIUM,
+	GPU_PRESET_HIGH,
+	GPU_PRESET_ULTRA,
+	GPU_PRESET_COUNT
+} GPUPresetLevel;
 }

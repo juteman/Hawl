@@ -18,11 +18,11 @@
  *
  */
 #pragma once
-#ifndef HAWL_RENDERER_H
-#  define HAWL_RENDERER_H
-#  include "Common.h"
+#include "Common.h"
 namespace Hawl {
+#ifndef RENDERER_CUSTOM_MAX
 
+#endif
 /// Renderer 主要渲染 API 封装
 class Renderer
 {
@@ -32,4 +32,3 @@ public:
   void CDECL Init();
 };
 }
-#endif

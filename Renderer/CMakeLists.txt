@@ -38,6 +38,7 @@ endif()
 if(D3D12_SUPPORTED)
 set(INCLUDE
     DX12/include/DX12helper.h
+    include/RenderDesc.h
 )
 
 set(INTERFACE 
@@ -60,5 +61,8 @@ PRIVATE
 target_include_directories(RendererDX12
 PUBLIC
     DX12/interface
+Private
+    DX12/include/
+    include/
 )
 endif()
