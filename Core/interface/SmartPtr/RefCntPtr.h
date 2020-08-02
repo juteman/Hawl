@@ -78,15 +78,16 @@ class AtomicRefCountObject : public IRefCountObject
     mutable std::atomic<UINT32> m_refCounter;
 };
 
-///@note A type implement the method addRef() and Release() can use this
-/// Is designed to instead of ComPtr for DXGI in Direct12
+/**
+ * \brief A type implement the method addRef() and Release() can use this Is designed to instead of
+ * ComPtr for DXGI in Direct12
+ * \tparam T Direct  factory to Used
+ */
 template <typename T>
 class RefCountPtr
 {
   public:
-    inline RefCountPtr() noexcept
-    {
-    }
+    inline RefCountPtr() noexcept = default;
 
     explicit RefCountPtr(T *pObject, bool IsAddRef = true) noexcept : m_pObject{pObject}
     {
@@ -208,7 +209,7 @@ class RefCountPtr
         return &m_pObject;
     }
 
-    T** GetAddressOf()
+    T **GetAddressOf()
     {
         return &m_pObject;
     }
@@ -223,7 +224,7 @@ class RefCountPtr
         return Ptr.m_pObject != nullptr;
     }
 
-    bool IsValid() const
+    [[nodiscard]] bool IsValid() const
     {
         return m_pObject != nullptr;
     }
@@ -252,4 +253,4 @@ class RefCountPtr
   private:
     T *m_pObject = nullptr;
 };
-} // namespace Hawl::SmartPtr
+} 

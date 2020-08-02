@@ -39,6 +39,7 @@ void DX12Device::CreateDevice(bool isDebug)
 
 void DX12Device::GetHardwareAdapter()
 {
+    // Enum the adapter by Gpu power
     for (UINT32 i = 0;
          m_dxgiFactory6->EnumAdapterByGpuPreference(
              i,
@@ -50,9 +51,10 @@ void DX12Device::GetHardwareAdapter()
 
         CHECK_DX12_RESULT(m_dxgiAdapter4->GetDesc3(&desc));
 
+        // No soft render
         if (!(desc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))
         {
-
+            // if support level Dx11 , the choose the adapter
             if (SUCCEEDED(D3D12CreateDevice(
                     m_dxgiAdapter4.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)))
             {
@@ -62,6 +64,8 @@ void DX12Device::GetHardwareAdapter()
         }
     }
 
+    // Else no adapter match
+    // TODO May choose soft render here
     if (!m_dxgiAdapter4)
     {
         MessageBox(nullptr, L"Can't not find Adapter support Dx12.", nullptr, 0);
