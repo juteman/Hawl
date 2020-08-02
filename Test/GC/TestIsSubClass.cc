@@ -1,4 +1,4 @@
-#include <GC/Triats.h>
+#include <Triats.h>
 #include <iostream>
 using namespace Hawl;
 
@@ -15,7 +15,6 @@ class DerivedTwo : public Basev2<int, int>
 int
 main()
 {
-  DerivedSingle single;
   std::cout << IsSubclassOfTemplate<DerivedSingle, Base1>::value << std::endl;
   std::cout
     << IsSubclassOfTemplate<std::remove_cv<DerivedTwo>::type, Basev2>::value

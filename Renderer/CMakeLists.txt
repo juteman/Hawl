@@ -15,9 +15,9 @@ set(SOURCE
     Windows/src/WinApp.cc
 )
 
-add_library(Hawl-Window SHARED ${SOURCE} ${INTERFACE})
+add_library(Hawl-Window ${SOURCE} ${INTERFACE})
 
-target_link_libraries(Hawl-Window
+target_link_libraries(Hawl-Window 
 PUBLIC
     Hawl-Core
 PRIVATE
@@ -51,12 +51,15 @@ set(SOURCE
     DX12/src/DX12Device.cc
 )
 
-add_library(RendererDX12 SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
+add_library(RendererDX12 ${SOURCE} ${INCLUDE} ${INTERFACE})
 target_link_libraries(RendererDX12
 PUBLIC
     Hawl-Core
 PRIVATE
     BuildSettings
+    "d3d12.lib"
+    "dxgi.lib" 
+    "d3dcompiler.lib"
 )
 target_include_directories(RendererDX12
 PUBLIC

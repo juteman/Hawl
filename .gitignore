@@ -43,3 +43,4 @@ out/
 .ccls-cache/
 .idea/
 Folder.DotSettings
+CMakeSettings.json

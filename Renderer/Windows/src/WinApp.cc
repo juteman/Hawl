@@ -28,7 +28,7 @@ namespace Hawl {
 
 WindowsApp::WindowsApp()
 {
-  m_instance = GetModuleHandle(NULL);
+  m_instance = GetModuleHandle(nullptr);
 }
 
 void
@@ -165,4 +165,4 @@ WindowsApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-} // end namespace
+}

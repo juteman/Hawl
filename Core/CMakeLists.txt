@@ -33,7 +33,7 @@ set(SOURCE
 	src/Linux/Timer.cc
 )
 endif()
-add_library(Hawl-Core SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
+add_library(Hawl-Core ${SOURCE} ${INCLUDE} ${INTERFACE})
 
 target_include_directories(Hawl-Core 
 PRIVATE

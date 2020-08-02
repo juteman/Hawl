@@ -19,11 +19,11 @@
  */
 
 #pragma once
-#include "BaseType.h"
 #include "Common.h"
 #include "SmartPtr/RefCntPtr.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <vector>
 
 namespace Hawl
 {
@@ -35,36 +35,18 @@ inline D3D_FEATURE_LEVEL DxFeatureLevel[4] = {
     D3D_FEATURE_LEVEL_11_0,
 };
 
-enum GpuCard
-{
-    NVIDIA = 0,
-    AMD,
-    INTEl
-};
-
 struct DX12AdapterDesc
 {
-    DX12AdapterDesc() : adapterIndex{-1}, maxFeatureSupported{static_cast<D3D_FEATURE_LEVEL>(0)}
-    {
-    }
-
-    DX12AdapterDesc(INT32 &adapterIndexIn, D3D_FEATURE_LEVEL &maxFeatureSupportedIn, DXGI_ADAPTER_DESC3 &adapterDescIn)
-        : adapterIndex{adapterIndexIn}, maxFeatureSupported{maxFeatureSupportedIn}, adapterDesc{adapterDescIn}
-    {
-    }
-
-    /// Index of the Adapters
-    /// If not find any Adapters, will be -1
-    /// The card more power will get the small power
-    INT32 adapterIndex;
-
     /// Max D3D12 feature level supported.
     /// If not supported or not find any adapter,
     /// it will be 0.
     D3D_FEATURE_LEVEL maxFeatureSupported;
 
     /// Store the Adapter Information
-    DXGI_ADAPTER_DESC3 adapterDesc{};
+    DXGI_ADAPTER_DESC3 info;
+
+    /// Store the  output info
+    std::vector<DXGI_OUTPUT_DESC> outputInfo;
 };
 
 class DX12Device
@@ -74,8 +56,20 @@ class DX12Device
     DX12Device() = default;
     virtual ~DX12Device() = default;
 
+    /**
+     * \brief Get the best Adapter to created
+     */
     void GetHardwareAdapter();
 
+    /**
+     * \brief Log the adapter information
+     */
+    void LogAdapter() const;
+
+    /**
+     * \brief print the adapter output information
+     */
+    void LogAdapterOutPut();
     /**
      * \brief Create IDXGIFactory6 assign to class member
      * \param isDebug is in debug mode
@@ -95,8 +89,10 @@ class DX12Device
     virtual void CreateDevice(bool isDebug = false);
 
     SmartPtr::RefCountPtr<IDXGIFactory6> m_dxgiFactory6;
-    SmartPtr::RefCountPtr<IDXGIAdapter4> m_dxgiAdapter;
+    SmartPtr::RefCountPtr<IDXGIAdapter4> m_dxgiAdapter4;
+    SmartPtr::RefCountPtr<IDXGIDevice4> m_device4;
 
-    DX12AdapterDesc m_adapterDesc;
+  public:
+    DX12AdapterDesc adapterDesc;
 };
 } // namespace Hawl
