@@ -23,50 +23,62 @@
 #include "Common.h"
 #include <atomic>
 
-namespace Hawl {
+namespace Hawl
+{
 /// Class use reference counting to ensure thread safe
 class RefCntThreadSafe
 {
-public:
-  RefCntThreadSafe() { m_counter.store(0); }
+  public:
+    RefCntThreadSafe()
+    {
+        m_counter.store(0);
+    }
 
-  RefCntThreadSafe(const RefCntThreadSafe& other)
-  {
-    m_counter = other.m_counter;
-  }
+    RefCntThreadSafe(const RefCntThreadSafe &other)
+    {
+        m_counter = other.m_counter;
+    }
 
-  /// Increment the counter by 1
-  /// @return the newer counter number
-  INT32 Increment() { return ++m_counter; }
+    /// Increment the counter by 1
+    /// @return the newer counter number
+    INT32 Increment()
+    {
+        return ++m_counter;
+    }
 
-  /// Decrement the counter by 1
-  /// @return the newer counter number
-  INT32 Decrement() { return --m_counter; }
+    /// Decrement the counter by 1
+    /// @return the newer counter number
+    INT32 Decrement()
+    {
+        return --m_counter;
+    }
 
-  /// Add a number to a counter
-  /// @param value number to be added
-  /// @return the newer counter number
-  INT32 Add(INT32 value)
-  {
-    m_counter.fetch_add(value, std::memory_order_relaxed);
-  }
+    /// Add a number to a counter
+    /// @param value number to be added
+    /// @return the newer counter number
+    INT32 Add(INT32 value)
+    {
+        return m_counter.fetch_add(value, std::memory_order_relaxed);
+    }
 
-  /// Sub a number to a counter
-  /// @param value number to be sub
-  /// @return the newer counter number
-  INT32 Sub(INT32 value)
-  {
-    m_counter.fetch_sub(value, std::memory_order_relaxed);
-  }
+    /// Sub a number to a counter
+    /// @param value number to be sub
+    /// @return the newer counter number
+    INT32 Sub(INT32 value)
+    {
+        return m_counter.fetch_sub(value, std::memory_order_relaxed);
+    }
 
-  /// Get the current counter number
-  UINT32 GetCnt() { return m_counter.load(std::memory_order_relaxed); }
+    /// Get the current counter number
+    UINT32 GetCnt()
+    {
+        return m_counter.load(std::memory_order_relaxed);
+    }
 
-private:
-  /// counter for thread safe
-  volatile std::atomic<INT32> m_counter;
+  private:
+    /// counter for thread safe
+    volatile std::atomic<INT32> m_counter{};
 
-  void operator=(const RefCntThreadSafe&) = delete;
+    void operator=(const RefCntThreadSafe &) = delete;
 };
-
 }
