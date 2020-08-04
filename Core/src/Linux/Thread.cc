@@ -3,42 +3,19 @@
 
 namespace Hawl {
 
-bool
-HawlThread::Create(size_t         stackSize,
-                   ThreadHandle*  threadHandle,
-                   ThreadPriority priority)
+bool HawlThread::Create(ThreadHandle *threadHandle, size_t stackSize, ThreadPriority threadPriority)
 {
-  pthread_attr_t attributes;
-  pthread_attr_init(&attributes);
+    // initialize pthread attribute
+    pthread_attr_t attributes;
+    pthread_attr_init(&attributes);
 
-  // pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+    // if set the stack size is not 0
+    // set the stack size
+    // else the thread stack size is the default stack size (linux 8192K)
+    if(stackSize > 0)
+        pthread_attr_setstacksize(&attributes, stackSize);
 
-  if (stackSize == 0) {
-#if !defined(THREAD_SANITIZER)
-    return 0;
-#else
-    return 2 * (1 << 23); // 2 times the default stack size on Linux
-#endif
-  }
-
-  // set the stack size
-  if (stackSize > 0)
-    pthread_attr_setstacksize(&attributes, stackSize);
-
-  /// TODO Create thread with func event
-  return 0; // need to return
+    pthread_t handle;
+    // TODO Create thread model here
 }
-
-ThreadHandle
-HawlThread::GetCurrentHandle()
-{
-  return ThreadHandle(pthread_self());
-}
-
-ThreadRef
-HawlThread::GetThreadRef()
-{
-  return ThreadRef(pthread_self());
-}
-
 }

@@ -19,46 +19,58 @@
  */
 
 #pragma once
-#ifndef HAWL_LINUX_CRITICALSECTION_H
-#  define HAWL_LINUX_CRITICALSECTION_H
-#  include "BaseType.h"
-#  include <pthread.h>
-namespace Hawl {
-namespace Linux {
+#include "BaseType.h"
+#include "Common.h"
+#include <pthread.h>
+namespace Hawl
+{
+namespace Linux
+{
 /// Linux pthread critical section Class
 class CriticalSection
 {
-public:
-  /// disable copy & copy construction
-  CriticalSection(const CriticalSection&) = delete;
-  CriticalSection& operator=(const CriticalSection&) = delete;
+    HAWL_DISABLE_COPY(CriticalSection)
+  public:
+    /// set the Mutex attributes
+    inline CriticalSection()
+    {
+        pthread_mutexattr_t mutexAttributes;
+        pthread_mutexattr_init(&mutexAttributes);
+        // set the mutex as recursive
+        pthread_mutexattr_settype(&mutexAttributes, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&m_mutex, &mutexAttributes);
+        pthread_mutexattr_destroy(&mutexAttributes);
+    }
 
-  /// set the Mutex attributes
-  inline CriticalSection()
-  {
-    pthread_mutexattr_t mutexAttributes;
-    pthread_mutexattr_init(&mutexAttributes);
-    // set the mutex as recursive
-    pthread_mutexattr_settype(&mutexAttributes, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&m_mutex, &mutexAttributes);
-    pthread_mutexattr_destroy(&mutexAttributes);
-  }
+    inline ~CriticalSection()
+    {
+        pthread_mutex_destroy(&m_mutex);
+    }
 
-  inline ~CriticalSection() { pthread_mutex_destroy(&m_mutex); }
+    /// lock the critical section
+    inline void Lock()
+    {
+        pthread_mutex_lock(&m_mutex);
+    }
 
-  /// lock the critical section
-  inline void Lock() { pthread_mutex_lock(&m_mutex); }
+    /**
+     * \brief try to take a lock
+     * \return True if success take a lock
+     */
+    inline bool TryLock()
+    {
+        return 0 == pthread_mutex_trylock(&m_mutex);
+    }
 
-  /// try lock
-  inline INT TryLock() { pthread_mutex_trylock(&m_mutex); }
+    /// release the critical section
+    inline void Unlock()
+    {
+        pthread_mutex_unlock(&m_mutex);
+    }
 
-  /// release the critical section
-  inline void Unlock() { pthread_mutex_unlock(&m_mutex); }
-
-private:
-  pthread_mutex_t m_mutex;
+  private:
+    pthread_mutex_t m_mutex;
 };
 
-} // !Linux
-} // !Hawl
-#endif
+} // namespace Linux
+} // namespace Hawl

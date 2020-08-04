@@ -81,4 +81,4 @@ class RefCntThreadSafe
 
     void operator=(const RefCntThreadSafe &) = delete;
 };
-}
+} // namespace Hawl
