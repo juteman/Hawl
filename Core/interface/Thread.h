@@ -26,19 +26,24 @@
 #include "BaseType.h"
 #include "Common.h"
 #include <string>
-
+#include <thread>
+#include "Algorithm/LockfreeQueue.h"
 namespace Hawl
 {
-// Set the Thread Id on different platform
-#if PLATFORM_WIN32
-typedef DWORD ThreadId;
-typedef void *ThreadHandle;
-#elif PLATFORM_LINUX
-typedef pthread_t ThreadId;
-typedef pthread_t ThreadHandle;
-#endif
+typedef std::jthread Thread;
 
-enum class ThreadPriority
+class Task
+{
+    HAWL_DISABLE_COPY(Task)
+  public:
+    Task() = default;
+    virtual ~Task() = default;
+
+    /// Real work thread to run
+    virtual void run() = 0;
+};
+
+enum class ThreadPriority : int
 {
     Lowest = 0,
     Low,
@@ -47,30 +52,55 @@ enum class ThreadPriority
     Highest,
 };
 
-class HawlThread
+/// Set the priority of thread
+static bool SetThreadPriority(Thread &thread, ThreadPriority priority);
+
+class ThreadPool
 {
-    HAWL_DISABLE_COPY(HawlThread)
+  private:
+    using Queue = Algorithm::LockFreeQueue<Task*>;
+
   public:
-    HawlThread() = default;
+    virtual ~ThreadPool() = default;
 
     /**
-     * \brief Get the current thread ID
+     * \brief Specify the thread number size and priority of thread the create thread pool
+     * \param numOfThreads the number of thread to use in the pool
+     * \param stackSize the size of stack of thread pool (default as 32k)
+     * \param threadPriority priority in the pool thread
+     * \return true for success create thread pool
      */
-    static ThreadId GetThreadId();
+    virtual bool Create(UINT32         numOfThreads,
+                        UINT32         stackSize = (32 * 1024),
+                        ThreadPriority threadPriority = ThreadPriority::Normal) = 0;
 
     /**
-     * \brief Get the current thread handle
+     * \brief Clean all the thread in pool and destroy the pool
      */
-    static ThreadHandle GetHandle();
+    virtual void Destroy() = 0;
 
     /**
-     * \brief Create a new thread
-     * \param threadHandle handle used to get created thread handle
-     * \param stackSize 0 to use default stack size
-     * \param threadPriority the priority of the thread
-     * \return True if success create thread, else for some error
+     * \brief If have free thread, dispatch task to thread
+     * \param task work need to be done
      */
-    static bool Create(ThreadHandle* threadHandle, size_t stackSize, ThreadPriority threadPriority);
+    virtual void AddTask(Task *task) = 0;
+
+    /**
+     * \brief Retract the previously task
+     * \param task try to retract
+     */
+    virtual void RetractTask(Task *task) = 0;
+
+    /**
+     * \brief Allocate a thread pool
+     * @return a new thread pool
+     */
+    static ThreadPool* Allocate();
+
+  protected:
+
+
 };
+
 
 } // namespace Hawl

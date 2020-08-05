@@ -29,14 +29,4 @@
   void operator=(const TypeName&) = delete;
 
 namespace Hawl {
-class Noncopyable
-{
-public:
-  Noncopyable()  = default;
-  ~Noncopyable() = default;
-
-private:
-  Noncopyable(const Noncopyable& other) = delete;
-  Noncopyable& operator=(const Noncopyable& other) = delete;
-};
 }

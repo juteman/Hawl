@@ -33,10 +33,10 @@ enum class QueueModel
 
 /// lock free queue implement
 template<typename T>
-class Queue
+class LockFreeQueue
 {
 private:
-  /// Queue node implement
+  /// LockFreeQueue node implement
   struct QueueNode
   {
     /// construct node with null
@@ -54,7 +54,7 @@ private:
       , data{ std::move(InData) }
     {}
 
-    /// pointer to the next node of the Queue
+    /// pointer to the next node of the LockFreeQueue
     std::atomic<QueueNode*> next;
 
     /// type data
@@ -63,7 +63,7 @@ private:
 
 public:
   /// Initialize with dummy node
-  Queue()
+  LockFreeQueue()
   {
     QueueNode* dummyNode = new QueueNode();
     m_head.store(dummyNode, std::memory_order_relaxed);
@@ -72,7 +72,7 @@ public:
   }
 
   /// Release the queue list
-  ~Queue()
+  ~LockFreeQueue()
   {
     while (m_head != nullptr) {
       QueueNode* temp = m_head.load(std::memory_order_relaxed);
@@ -110,7 +110,7 @@ public:
             }
           }
 
-          // if tailNext is not nullptr, fetch the Queue tails to next
+          // if tailNext is not nullptr, fetch the LockFreeQueue tails to next
           else {
             m_tail.compare_exchange_strong(tail, tailNext);
           }
@@ -156,7 +156,7 @@ public:
     }
   }
 
-  /// Get the  head  data not remove from Queue
+  /// Get the  head  data not remove from LockFreeQueue
   /// @param outData get the data of head
   /// @return if queue empty get false, else get true
   bool Peek(T& outData)
@@ -190,6 +190,6 @@ private:
   std::atomic<QueueNode*> m_tail;
 
   /// delete copy constructor and  assign operator
-  HAWL_DISABLE_COPY(Queue)
+  HAWL_DISABLE_COPY(LockFreeQueue)
 };
 }
