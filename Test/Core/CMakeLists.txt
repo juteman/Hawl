@@ -11,5 +11,8 @@ if (PLATFORM_LINUX)
     add_executable(ThreadTest Linux/ThreadTest.cc)
 endif (PLATFORM_LINUX)
 
+add_executable(tbb-test tbb/TbbTest.cc)
+target_link_libraries(tbb-test tbb)
+
 target_link_libraries(TimerTest Hawl-Core)
 target_link_libraries(ThreadTest Hawl-Core)
