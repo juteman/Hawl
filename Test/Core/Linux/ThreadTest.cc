@@ -1,6 +1,4 @@
-#include "Thread.h"
 #include <iostream>
-using namespace Hawl;
 
 void PrintFun()
 {
@@ -9,5 +7,5 @@ void PrintFun()
 
 int main()
 {
-
+    return 0;
 }

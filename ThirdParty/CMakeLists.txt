@@ -15,10 +15,10 @@
 #add_subdirectory(EASTL)
 
 ############################################################
-# config the mathfu 
+# config the mathfu
 ############################################################
 #set(MATHFU_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mathfu" CACHE INTERNAL "location of mathfu")
-#set(MATHFU_DIR_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/mathfu/include" 
+#set(MATHFU_DIR_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/mathfu/include"
 #   CACHE INTERNAL "location of mathfu head file")
 #set(mathfu_build_benchmarks OFF CACHE INTERNAL "")
 #set(mathfu_build_tests OFF CACHE INTERNAL "")
@@ -37,3 +37,8 @@
 # add_subdirectory(ozz-animation)
 # set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 
+############################################################
+# config the tbb lib
+############################################################
+set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
+add_subdirectory(tbb)

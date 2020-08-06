@@ -1,24 +1,25 @@
-# Hawl 渲染引擎
-目标是集成Dx12 和 Vulkan 这两种现代API的渲染引擎
+# Hawl
 
+A rendering engine support modern api (in development)
 
-## 计划实现 TODOLIST
-### 基础设施
-- [x] 高精度低精度Timer 封装。 TODO：后期准备采用linux内核时间轮类似算法实现tick定时器 (进行中)
-- [x] 智能指针(已更新SharedPtr)
-- [ ] 线程池实现 (进行中)
-- [ ] Log 封装
-- [ ] 内存跟踪
-- [ ] 跨平台
+## TODOLIST
+### Base facility
+- [x] high resolution timer
+- [x] Smart Pointer (now have ptr like comptr, atomic share ptr)
+- [x] Thread Pool (Now used [intel tbb](https://github.com/oneapi-src/oneTBB) for parallel programming) 
+- [ ] cross platform
 
-### 窗体
-- [x] Windows 窗体封装
-- [ ] Linux 窗体封装
+### Window
+- [x] Win32 Window start
+- [ ] Linux Window
 
 ### Renderer
-- [ ] DX12 封装 (进行中)
-- [ ] Vulkan 封装
+- [ ] DX12 support (In progress)
+- [ ] Vulkan support
 
-### 待定
-- [ ] 加入反射
-- [ ] 尝试加入GC，(并发标记摧毁)
+### UI
+- [ ] add ui facility
+
+### To be determined
+- [ ] add reflection in c++
+- [ ] add GC 

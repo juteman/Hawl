@@ -23,27 +23,16 @@
  */
 
 #pragma once
+#include "Algorithm/LockfreeQueue.h"
 #include "BaseType.h"
 #include "Common.h"
 #include <string>
 #include <thread>
-#include "Algorithm/LockfreeQueue.h"
 namespace Hawl
 {
 typedef std::jthread Thread;
 
-class Task
-{
-    HAWL_DISABLE_COPY(Task)
-  public:
-    Task() = default;
-    virtual ~Task() = default;
-
-    /// Real work thread to run
-    virtual void run() = 0;
-};
-
-enum class ThreadPriority : int
+enum class Priority : int
 {
     Lowest = 0,
     Low,
@@ -52,13 +41,23 @@ enum class ThreadPriority : int
     Highest,
 };
 
-/// Set the priority of thread
-static bool SetThreadPriority(Thread &thread, ThreadPriority priority);
+class Task
+{
+    HAWL_DISABLE_COPY(Task)
+  public:
+    Task() = default;
+    virtual ~Task() = default;
+
+    virtual void run() = 0;
+
+  protected:
+    Priority taskPriority = Priority::Normal;
+};
 
 class ThreadPool
 {
   private:
-    using Queue = Algorithm::LockFreeQueue<Task*>;
+    using Queue = Algorithm::LockFreeQueue<Task *>;
 
   public:
     virtual ~ThreadPool() = default;
@@ -70,9 +69,7 @@ class ThreadPool
      * \param threadPriority priority in the pool thread
      * \return true for success create thread pool
      */
-    virtual bool Create(UINT32         numOfThreads,
-                        UINT32         stackSize = (32 * 1024),
-                        ThreadPriority threadPriority = ThreadPriority::Normal) = 0;
+    virtual bool Create(UINT32 numOfThreads, UINT32 stackSize = (32 * 1024)) = 0;
 
     /**
      * \brief Clean all the thread in pool and destroy the pool
@@ -95,12 +92,9 @@ class ThreadPool
      * \brief Allocate a thread pool
      * @return a new thread pool
      */
-    static ThreadPool* Allocate();
-
-  protected:
-
-
+    static ThreadPool *Allocate();
 };
+
 
 
 } // namespace Hawl
