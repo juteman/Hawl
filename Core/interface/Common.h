@@ -19,14 +19,30 @@
  */
 
 #ifdef _MSC_VER
-#  define CDECL __cdecl
+#define CDECL __cdecl
 #else
-#  define CDECL
+#define CDECL
 #endif
 
-#define HAWL_DISABLE_COPY(TypeName)                                            \
-  TypeName(const TypeName&) = delete;                                          \
-  void operator=(const TypeName&) = delete;
+#define HAWL_DISABLE_COPY(TypeName)                                                                \
+    TypeName(const TypeName &) = delete;                                                           \
+    void operator=(const TypeName &) = delete;
 
-namespace Hawl {
+#ifndef ArraySize
+#define ArraySize(a) (sizeof(a) / sizeof(a[0]))
+#endif
+
+#define SafeDelete(a)                                                                              \
+    {                                                                                              \
+        delete a;                                                                                  \
+        a = nullptr;                                                                               \
+    }
+#define SafeDeleteArray(a)                                                                         \
+    {                                                                                              \
+        delete[] a;                                                                                \
+        a = nullptr;                                                                               \
+    }
+
+namespace Hawl
+{
 }

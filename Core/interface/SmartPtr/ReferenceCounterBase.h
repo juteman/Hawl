@@ -94,7 +94,7 @@ class RefCntUtilityBase
         if (--m_shareRefCnt == 0)
             DestroyObject();
 
-        if (--m_weakRefCnt)
+        if (--m_weakRefCnt==0)
         {
             DestroyRefCnt();
         }

@@ -123,7 +123,7 @@ class SharedPtr
 
     /// SharePtr constructor with self type
     /// This function will trigger reference shared counter increments
-    [[maybe_unused]] SharedPtr(const SharedPtr &sharedPtr)
+    SharedPtr(const SharedPtr &sharedPtr)
         : m_pRefCnt{sharedPtr.m_pRefCnt}, m_pObject{sharedPtr.m_pObject}
     {
         if (m_pRefCnt)

@@ -19,21 +19,13 @@
  */
 
 #pragma once
-#include "Common.h"
-#include "SmartPtr/RefCntPtr.h"
-#include <d3d12.h>
-#include <dxgi1_6.h>
+#include "Renderer.h"
 #include <vector>
 
 namespace Hawl
 {
 
-inline D3D_FEATURE_LEVEL DxFeatureLevel[4] = {
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0,
-};
+
 
 struct DX12AdapterDesc
 {

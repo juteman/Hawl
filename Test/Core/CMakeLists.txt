@@ -9,10 +9,11 @@ endif (PLATFORM_WIN32)
 if (PLATFORM_LINUX)
     add_executable(TimerTest Linux/TimerTest.cc)
     add_executable(ThreadTest Linux/ThreadTest.cc)
+    target_link_libraries(ThreadTest Hawl-Core)
 endif (PLATFORM_LINUX)
-
+    
 add_executable(tbb-test tbb/TbbTest.cc)
 target_link_libraries(tbb-test tbb)
 
 target_link_libraries(TimerTest Hawl-Core)
-target_link_libraries(ThreadTest Hawl-Core)
+

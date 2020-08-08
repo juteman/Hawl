@@ -18,10 +18,34 @@
  *
  */
 #pragma once
-#include "Common.h"
-#include <d3d12.h>
-#include "SmartPtr/RefCntPtr.h"
-#include <dxgi1_6.h>
-namespace Hawl {
+#include "Renderer.h"
+namespace Hawl
+{
+/**
+ * \brief Fence Class is used to synchronize the GPU and CPU
+ */
+class DX12Fence
+{
+    DX12Fence() : m_fenceValue(0)
+    {
+    }
 
-}
+  public:
+    ~DX12Fence();
+
+    /**
+     * \brief Get the handle of fence
+     * \return return the internal handle
+     */
+    SmartPtr::RefCountPtr<ID3D12Fence1> &GetHandle()
+    {
+        return m_fence1;
+    }
+
+  private:
+    UINT                                m_frameIndex;
+    HANDLE                              m_fenceEvent;
+    SmartPtr::RefCountPtr<ID3D12Fence1> m_fence1;
+    UINT64                              m_fenceValue;
+};
+} // namespace Hawl

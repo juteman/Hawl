@@ -1,25 +1,21 @@
 #include "DX12Device.h"
 #include "BaseType.h"
 #include "DX12helper.h"
-#include "RenderDesc.h"
 #include <Windows.h>
+#include <string>
 #include <d3d12.h>
 #include <iostream>
 #include <vector>
 namespace Hawl
 {
-typedef struct GpuDesc
-{
-    IDXGIAdapter4 *                   pGPU = nullptr;
-    D3D_FEATURE_LEVEL                 MaxSupportFeatureLevel = static_cast<D3D_FEATURE_LEVEL>(0);
-    D3D12_FEATURE_DATA_D3D12_OPTIONS  featureDataOptions;
-    D3D12_FEATURE_DATA_D3D12_OPTIONS1 FeatureDataOptions1;
-    char                              venderID[MAX_GPU_VENDOR_STRING_LENGTH];
-    char                              deviceID[MAX_GPU_VENDOR_STRING_LENGTH];
-    char                              revisionId[MAX_GPU_VENDOR_STRING_LENGTH];
-    char                              name[MAX_GPU_VENDOR_STRING_LENGTH];
-    GPUPresetLevel                    preset;
-} GpuDesc;
+// Feature Level List of Direct3D
+const static D3D_FEATURE_LEVEL D3DFeatureLevels[] = {
+    D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_0,
+    D3D_FEATURE_LEVEL_11_1,
+    D3D_FEATURE_LEVEL_11_0,
+};
+
 
 void DX12Device::CreateDXGIFactory6(bool isDebug)
 {
@@ -30,11 +26,31 @@ void DX12Device::CreateDXGIFactory6(bool isDebug)
 
 void DX12Device::CreateDevice(bool isDebug)
 {
+
+    auto CreateMaxFeatureLevel = [&](const D3D_FEATURE_LEVEL *pFeatureLevels,
+                                     UINT32                   featureLevelCount) -> bool {
+        for (uint32_t i = 0; i < featureLevelCount; i++)
+        {
+            if (SUCCEEDED(D3D12CreateDevice(m_dxgiAdapter4.Get(),
+                                            pFeatureLevels[i],
+                                            IID_PPV_ARGS(m_device4.InitAndGetAddressOf()))))
+            {
+                adapterDesc.maxFeatureSupported = pFeatureLevels[i];
+                return true;
+            }
+        }
+
+        return false;
+    };
+    // Create the factory and get the 
     CreateDXGIFactory6(isDebug);
     GetHardwareAdapter();
-    CHECK_DX12_RESULT(D3D12CreateDevice(m_dxgiAdapter4.Get(),
-                                        D3D_FEATURE_LEVEL_11_0,
-                                        IID_PPV_ARGS(m_device4.InitAndGetAddressOf())))
+    bool result = CreateMaxFeatureLevel(D3DFeatureLevels, ArraySize(D3DFeatureLevels));
+    if(result && m_device4 !=nullptr)
+    {
+        // TODO should be instead of logger 
+        std::cout << "success create device" << std::endl;
+    }
 }
 
 void DX12Device::GetHardwareAdapter()
@@ -68,7 +84,7 @@ void DX12Device::GetHardwareAdapter()
     // TODO May choose soft render here
     if (!m_dxgiAdapter4)
     {
-        MessageBox(nullptr, L"Can't not find Adapter support Dx12.", nullptr, 0);
+        // TODO log here
         exit(0);
     }
 }
