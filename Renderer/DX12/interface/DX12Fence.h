@@ -42,6 +42,12 @@ class DX12Fence
         return m_fence1;
     }
 
+
+    /**
+     * \brief Create fence 
+     */
+    void Create();
+
   private:
     UINT                                m_frameIndex;
     HANDLE                              m_fenceEvent;

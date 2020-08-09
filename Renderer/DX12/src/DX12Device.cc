@@ -2,9 +2,9 @@
 #include "BaseType.h"
 #include "DX12helper.h"
 #include <Windows.h>
-#include <string>
 #include <d3d12.h>
 #include <iostream>
+#include <string>
 #include <vector>
 namespace Hawl
 {
@@ -15,7 +15,6 @@ const static D3D_FEATURE_LEVEL D3DFeatureLevels[] = {
     D3D_FEATURE_LEVEL_11_1,
     D3D_FEATURE_LEVEL_11_0,
 };
-
 
 void DX12Device::CreateDXGIFactory6(bool isDebug)
 {
@@ -42,13 +41,13 @@ void DX12Device::CreateDevice(bool isDebug)
 
         return false;
     };
-    // Create the factory and get the 
+    // Create the factory and get the
     CreateDXGIFactory6(isDebug);
     GetHardwareAdapter();
     bool result = CreateMaxFeatureLevel(D3DFeatureLevels, ArraySize(D3DFeatureLevels));
-    if(result && m_device4 !=nullptr)
+    if (result && m_device4 != nullptr)
     {
-        // TODO should be instead of logger 
+        // TODO should be instead of logger
         std::cout << "success create device" << std::endl;
     }
 }

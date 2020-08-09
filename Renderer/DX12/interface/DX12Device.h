@@ -82,7 +82,7 @@ class DX12Device
 
     SmartPtr::RefCountPtr<IDXGIFactory6> m_dxgiFactory6;
     SmartPtr::RefCountPtr<IDXGIAdapter4> m_dxgiAdapter4;
-    SmartPtr::RefCountPtr<IDXGIDevice4> m_device4;
+    SmartPtr::RefCountPtr<ID3D12Device4> m_device4;
 
   public:
     DX12AdapterDesc adapterDesc;

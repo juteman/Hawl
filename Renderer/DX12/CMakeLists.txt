@@ -10,6 +10,7 @@ set(INTERFACE
 set(SOURCE
     src/Renderer.cc
     src/DX12Device.cc
+    src/DX12Fence.cc
 )
 
 add_library(RendererDX12 ${SOURCE} ${INCLUDE} ${INTERFACE})
