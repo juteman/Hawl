@@ -20,7 +20,8 @@ set(INTERFACE
         interface/SmartPtr/ReferenceCounterBase.h
         interface/Thread.h
         interface/Algorithm/LockfreeQueue.h
-        interface/Thread/RefCntThreadSafe.h)
+        interface/Thread/RefCntThreadSafe.h
+        interface/Logger.h)
 
 if (PLATFORM_WIN32)
     set(SOURCE
