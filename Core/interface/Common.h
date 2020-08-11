@@ -17,7 +17,8 @@
  *  limitations under the License.
  *
  */
-
+#pragma once
+#include <string>
 #ifdef _MSC_VER
 #define CDECL __cdecl
 #else
@@ -45,4 +46,15 @@
 
 namespace Hawl
 {
-}
+/**
+ * \brief Get the current execute program name
+ * \return the name of program
+ */
+const std::string &GetExecutableFilename();
+
+/**
+ * \brief Get the parent path of execute program
+ * \return the program current path
+ */
+const std::string &GetExecutablePath();
+} // namespace Hawl

@@ -26,14 +26,14 @@ set(INTERFACE
 if (PLATFORM_WIN32)
     set(SOURCE
             src/Windows/Timer.cc
-            )
+            src/Logger.cc)
 endif ()
 
 if (PLATFORM_LINUX)
     set(SOURCE
             src/Linux/Timer.cc
             src/Linux/Thread.cc
-            )
+            src/Logger.cc src/Linux/Linux.cc)
 endif ()
 add_library(Hawl-Core ${SOURCE} ${INCLUDE} ${INTERFACE})
 
