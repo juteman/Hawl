@@ -1,3 +1,6 @@
 [submodule "ThirdParty/tbb"]
 	path = ThirdParty/tbb
 	url = https://github.com/juteman/tbb
+[submodule "ThirdParty/spdlog"]
+	path = ThirdParty/spdlog
+	url = git@github.com:gabime/spdlog.git

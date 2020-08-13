@@ -33,6 +33,12 @@ const std::string &GetExecutableFilename()
     return filename;
 }
 
+const std::string &GetExecutableName()
+{
+    static std::string file;
+    file = std::filesystem::path(program_invocation_name).stem();
+    return file;
+}
 
 const std::string &GetExecutablePath()
 {

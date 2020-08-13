@@ -53,8 +53,15 @@ namespace Hawl
 const std::string &GetExecutableFilename();
 
 /**
+ * \brief Get the absolute name of program
+ * \return
+ */
+const std::string &GetExecutableName();
+
+/**
  * \brief Get the parent path of execute program
  * \return the program current path
  */
 const std::string &GetExecutablePath();
+
 } // namespace Hawl
