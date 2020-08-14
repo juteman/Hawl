@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <atomic>
 #include <iostream>
-#include <unistd.h>
+#include "Logger.h"
 using namespace std;
 using namespace Hawl;
 int
@@ -14,7 +14,7 @@ main()
   while (true) {
     FLOAT32 deltaTime = hTimer.GetSeconds(false);
     if (deltaTime >= fixedDeltaTime) {
-      cout << deltaTime << endl;
+      Logger::info("{}", deltaTime);
       hTimer.Reset();
     }
   }

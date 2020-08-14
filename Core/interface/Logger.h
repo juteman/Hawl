@@ -24,92 +24,11 @@
 
 #pragma once
 #include "Common.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/spdlog.h"
 #include <string>
-
 namespace Hawl
 {
-class Logger
-{
-    HAWL_DISABLE_COPY(Logger)
-  public:
-    enum class Level
-    {
-        INFO = 0,
-        WARNING = 1,
-        ERROR = 2,
-        FATAL = 3,
-        DISABLED = -1
-    };
-
-    /**
-     * \brief Shutdown the logger and close the logger file
-     */
-    static void Shutdown();
-
-    /**
-     * \brief Set the log file with path and name
-     * \param filename the file with path name
-     * \return true if set the path
-     */
-    static bool SetLogFile(const std::string &filename);
-
-    /**
-     * \brief Get the file name with Log
-     * \return return the path and name with log file
-     */
-    static const std::string &GetLogFile();
-
-  private:
-    /**
-     * \brief log the message to the log
-     * \param level logging level
-     * \param msg logging message to the file
-     */
-    static void Log(Level level, const std::string &msg);
-
-    /**
-     * add friend log function
-     */
-    friend void LogInfo(const std::string &msg);
-    friend void LogWarn(const std::string &msg);
-    friend void LogError(const std::string &msg);
-    friend void LogFatal(const std::string &msg);
-};
-
-/**
- * \brief log message with information level
- * \param msg message to log
- */
-inline void LogInfo(const std::string &msg)
-{
-    Logger::Log(Logger::Level::INFO, msg);
-}
-
-/**
- * \brief log message with warning level
- * \param msg message to log
- */
-inline void LogWarn(const std::string &msg)
-{
-    Logger::Log(Logger::Level::WARNING, msg);
-}
-
-/**
- * \brief log message with error level
- * \param msg message to log
- */
-inline void LogError(const std::string &msg)
-{
-    Logger::Log(Logger::Level::ERROR, msg);
-}
-
-/**
- * \brief log message with fatal level
- * \param msg message to log
- */
-inline void LogFatal(const std::string &msg)
-{
-    Logger::Log(Logger::Level::FATAL, msg);
-}
-
+namespace Logger = spdlog;
 } // namespace Hawl

@@ -53,9 +53,11 @@ if (PLATFORM_WIN32)
 endif ()
 
 if (PLATFORM_LINUX)
-    target_link_libraries(Hawl-Core
-            PRIVATE
+    target_link_libraries(Hawl-Core PRIVATE
             BuildSettings
+            )
+    target_link_libraries(Hawl-Core PUBLIC
+            spdlog
             )
 endif ()
 

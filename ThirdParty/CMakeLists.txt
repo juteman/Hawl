@@ -42,3 +42,8 @@
 ############################################################
 set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
 add_subdirectory(tbb)
+
+############################################################
+# config the spdlog lib for logging system
+############################################################
+add_subdirectory(spdlog)
