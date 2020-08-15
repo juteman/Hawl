@@ -19,17 +19,16 @@
  */
 
 #pragma once
-#include <string>
 #include <comdef.h>
+#include <string>
 #include <windows.h>
 
-
 /**
- * \brief This function convert string to wstring 
+ * \brief This function convert string to wstring
  * \param str  standard string to be convert
  * \return return the string convert to wstring
  */
-inline std::wstring AnsiToWString(const std::string& str)
+inline std::wstring AnsiToWString(const std::string &str)
 {
     WCHAR buffer[512];
     MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
@@ -47,16 +46,13 @@ class DX12Exception
 
     std::wstring ToString() const
     {
-        _com_error err{ errCode };
-        std::wstring msg = err.ErrorMessage();
-
-        return functionName + L" failed in " + fileName + L"; line " + std::to_wstring(lineNumber) + L"; error: " + msg;
+        return functionName + L" failed in " + fileName + L"; line " + std::to_wstring(lineNumber);
     }
 
     HRESULT      errCode = S_OK;
     std::wstring functionName;
     std::wstring fileName;
-    INT32       lineNumber = -1;
+    INT32        lineNumber = -1;
 };
 
 inline DX12Exception::DX12Exception(HRESULT             hr,
@@ -72,8 +68,9 @@ inline DX12Exception::DX12Exception(HRESULT             hr,
     {                                                                                              \
         HRESULT hr = (x);                                                                          \
         if (FAILED(hr))                                                                            \
-        {   std::wstring wfn = AnsiToWString(__FILE__);                                                                                       \
-            throw DX12Exception(hr, L#x, wfn, __LINE__);                                      \
+        {                                                                                          \
+            std::wstring wfn = AnsiToWString(__FILE__);                                            \
+            throw DX12Exception(hr, L#x, wfn, __LINE__);                                           \
         }                                                                                          \
     }
 #endif

@@ -19,7 +19,7 @@
  */
 
 #pragma once
-#include "Renderer.h"
+#include "IRenderer.h"
 #include <vector>
 
 namespace Hawl

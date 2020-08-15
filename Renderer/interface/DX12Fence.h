@@ -18,7 +18,7 @@
  *
  */
 #pragma once
-#include "Renderer.h"
+#include "IRenderer.h"
 namespace Hawl
 {
 /**
@@ -42,9 +42,8 @@ class DX12Fence
         return m_fence1;
     }
 
-
     /**
-     * \brief Create fence 
+     * \brief Create fence
      */
     void Create();
 

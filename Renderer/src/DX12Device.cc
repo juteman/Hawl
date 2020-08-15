@@ -1,6 +1,6 @@
 #include "DX12Device.h"
 #include "BaseType.h"
-#include "DX12helper.h"
+#include "DX12Helper.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <iostream>

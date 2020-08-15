@@ -17,11 +17,16 @@
  *  limitations under the License.
  *
  */
-#pragma once
-#include "Common.h"
-#include <d3d12.h>
-#include "SmartPtr/RefCntPtr.h"
-#include <dxgi1_6.h>
-namespace Hawl {
 
-}
+#pragma once
+#include "SmartPtr/RefCntPtr.h"
+#include <d3d12.h>
+#include <dxgi1_6.h>
+
+namespace Hawl
+{
+using Factory6Handle = SmartPtr::RefCountPtr<IDXGIFactory6>;
+using Adapter4Handle = SmartPtr::RefCountPtr<IDXGIAdapter4>;
+using DeviceHandle = SmartPtr::RefCountPtr<ID3D12Device>;
+using Device4Handle = SmartPtr::RefCountPtr<ID3D12Device4>;
+} // namespace Hawl

@@ -8,5 +8,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ############################################################
 add_subdirectory(ThirdParty)
 add_subdirectory(Core)
+add_subdirectory(Window)
 add_subdirectory(Renderer)
 add_subdirectory(Test)

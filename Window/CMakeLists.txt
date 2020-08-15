@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.6) 
+project(Hawl-Window CXX)
 add_definitions(-DUNICODE -D_UNICODE)
 set(INTERFACE 
     interface/WinApp.h
