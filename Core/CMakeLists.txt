@@ -49,17 +49,20 @@ if (PLATFORM_WIN32)
             PRIVATE
             BuildSettings
             winmm
+            PUBLIC
+            spdlog
             )
 endif ()
 
 if (PLATFORM_LINUX)
     target_link_libraries(Hawl-Core PRIVATE
             BuildSettings
-            )
-    target_link_libraries(Hawl-Core PUBLIC
+            PUBLIC
             spdlog
             )
+
 endif ()
+           
 
 
 source_group("src" FILES ${SOURCE})

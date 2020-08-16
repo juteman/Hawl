@@ -8,21 +8,18 @@ set(INCLUDE
 endif()
 set(INTERFACE 
     interface/IRenderer.h
-    interface/DX12Device.h
-    interface/DX12Fence.h)
+ )
 
 set(SOURCE
-    src/Renderer.cc
-    src/DX12Device.cc
-    src/DX12Fence.cc
+    src/DX12/DX12Device.cc
 )
 
 add_library(RendererDX12 ${SOURCE} ${INCLUDE} ${INTERFACE})
 target_link_libraries(RendererDX12
 PUBLIC
     Hawl-Core
-PRIVATE
     BuildSettings
+PRIVATE
     "d3d12.lib"
     "dxgi.lib" 
     "d3dcompiler.lib"

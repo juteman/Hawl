@@ -19,14 +19,14 @@
  */
 
 #pragma once
-#include "SmartPtr/RefCntPtr.h"
+#include <wrl/client.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
 namespace Hawl
 {
-using Factory6Handle = SmartPtr::RefCountPtr<IDXGIFactory6>;
-using Adapter4Handle = SmartPtr::RefCountPtr<IDXGIAdapter4>;
-using DeviceHandle = SmartPtr::RefCountPtr<ID3D12Device>;
-using Device4Handle = SmartPtr::RefCountPtr<ID3D12Device4>;
+using Factory6Handle = Microsoft::WRL::ComPtr<IDXGIFactory6>;
+using Adapter4Handle = Microsoft::WRL::ComPtr<IDXGIAdapter4>;
+using DeviceHandle = Microsoft::WRL::ComPtr<ID3D12Device>;
+using Device4Handle = Microsoft::WRL::ComPtr<ID3D12Device4>;
 } // namespace Hawl

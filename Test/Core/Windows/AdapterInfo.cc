@@ -1,9 +1,9 @@
-#include "DX12Device.h"
+#include "IRenderer.h"
 
 int main(int argc, char *argv[])
 {
-    Hawl::DX12Device testAdapter;
-    testAdapter.CreateDXGIFactory6();
-    testAdapter.GetHardwareAdapter();
-    testAdapter.LogAdapter();
+    Hawl::Renderer test;
+    test.Init();
+    test.CreateDevice();
+    return 0;
 }

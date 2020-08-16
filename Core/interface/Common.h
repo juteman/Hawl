@@ -20,7 +20,7 @@
 #pragma once
 #include <string>
 #ifdef _MSC_VER
-#define CDECL __cdecl
+#define HAWLCALL __cdecl
 #else
 #define CDECL
 #endif

@@ -27,6 +27,7 @@
 #include "spdlog/async.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/fmt/bin_to_hex.h"
 #include <string>
 namespace Hawl
 {

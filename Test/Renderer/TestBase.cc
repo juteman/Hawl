@@ -1,5 +1,4 @@
 #include "WinApp.h"
-#include <iostream>
 
 int main()
 {

@@ -102,8 +102,7 @@ class RefCountPtr
     }
 
     template <typename U>
-    explicit RefCountPtr(const RefCountPtr<U> &Ptr)
-        : m_pObject{static_cast<T *>(Ptr.GetReference())}
+    explicit RefCountPtr(const RefCountPtr<U> &Ptr) : m_pObject{static_cast<T *>(Ptr.Get())}
     {
         if (m_pObject)
             m_pObject->AddRef();
@@ -122,18 +121,19 @@ class RefCountPtr
 
     RefCountPtr &operator=(T *pObject) noexcept
     {
-        if (m_pObject != pObject)
+        // Call AddRef before Release, in case the new reference is the same as the old reference.
+        T *oldObj = m_pObject;
+        m_pObject = pObject;
+        if (m_pObject)
         {
-            if (m_pObject)
-                m_pObject->Release();
-
-            m_pObject = pObject;
-
-            if (m_pObject)
-                m_pObject->AddRef();
+            m_pObject->AddRef();
         }
-
+        if (oldObj)
+        {
+            oldObj->Release();
+        }
         return *this;
+
     }
 
     RefCountPtr &operator=(const RefCountPtr &Ptr) noexcept
@@ -144,7 +144,7 @@ class RefCountPtr
     template <typename U>
     RefCountPtr &operator=(const RefCountPtr<U> &Ptr)
     {
-        return *this = Ptr.GetReference();
+        return *this = Ptr.Get();
     }
 
     RefCountPtr &operator=(RefCountPtr &&Ptr) noexcept
@@ -224,7 +224,7 @@ class RefCountPtr
         return Ptr.m_pObject != nullptr;
     }
 
-    [[nodiscard]] bool IsValid() const
+    bool IsValid() const
     {
         return m_pObject != nullptr;
     }
@@ -253,4 +253,4 @@ class RefCountPtr
   private:
     T *m_pObject = nullptr;
 };
-} 
+} // namespace Hawl::SmartPtr
