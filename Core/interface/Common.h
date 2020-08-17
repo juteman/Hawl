@@ -22,7 +22,7 @@
 #ifdef _MSC_VER
 #define HAWLCALL __cdecl
 #else
-#define CDECL
+#define HAWLCALL
 #endif
 
 #define HAWL_DISABLE_COPY(TypeName)                                                                \

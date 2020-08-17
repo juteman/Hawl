@@ -24,6 +24,10 @@
 #include "DX12/DX12Handle.h"
 #endif
 
+#if VULKAN_SUPPORTED
+
+#endif
+
 namespace Hawl
 {
 
