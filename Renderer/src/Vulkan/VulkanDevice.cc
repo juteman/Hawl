@@ -3,6 +3,7 @@
  *
  * This file is part of ReForge
  * (see https://github.com/juteman/Hawl).
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,3 +21,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+#include "IRenderer.h"
+namespace Hawl
+{
+void Renderer::Init(bool isDebug)
+{
+    // Set the render desc api to vulkan
+    m_rendererDesc.rendererApi = VULKAN;
+}
+}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(Hawl-Core CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-include(platform.cmake)
+
 
 if (PLATFORM_LINUX)
     set(INCLUDE

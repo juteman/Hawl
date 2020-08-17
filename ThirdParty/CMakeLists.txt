@@ -26,18 +26,6 @@
 
 
 ############################################################
-# config the ozz-animation
-############################################################
-# set(OZZANIMA "${CMAKE_CURRENT_SOURCE_DIR}/ozz-animation" CACHE INTERNAL "location of ozzanimation")
-# set(ozz_build_samples OFF CACHE INTERNAL "")
-# set(ozz_build_tools OFF CACHE INTERNAL "")
-# set(ozz_build_howtos OFF CACHE INTERNAL "")
-# set(ozz_build_msvc_rt_dll  OFF CACHE INTERNAL "")
-# set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
-# add_subdirectory(ozz-animation)
-# set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
-
-############################################################
 # config the tbb lib
 ############################################################
 set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
@@ -47,3 +35,8 @@ add_subdirectory(tbb)
 # config the spdlog lib for logging system
 ############################################################
 add_subdirectory(spdlog)
+
+############################################################
+# config the volk for
+############################################################
+add_subdirectory(volk)

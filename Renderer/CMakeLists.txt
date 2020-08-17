@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(Hawl-Render CXX)
 set(INTERFACE
         interface/IRenderer.h
-        )
+    interface/RenderInfo.h)
 
 if (D3D12_SUPPORTED)
     set(INCLUDE
@@ -27,7 +27,7 @@ if (D3D12_SUPPORTED)
     target_include_directories(RendererDX12
             PUBLIC
             interface/
-            Private
+            PRIVATE
             include/
             )
 endif ()
@@ -46,8 +46,16 @@ if (VULKAN_SUPPORTED)
             PUBLIC
             Hawl-Core
             BuildSettings
-            ${Vulkan_LIBRARIES}
+            PRIVATE
+            volk
     )
+
+    target_include_directories(RendererVulkan
+            PUBLIC
+            interface/
+            PRIVATE
+            include/
+            )
 
 
 endif ()

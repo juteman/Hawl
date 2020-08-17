@@ -18,40 +18,40 @@
  *
  */
 #pragma once
-#include "Common.h"
-#include "RenderInfo.h"
-#if D3D12_SUPPORTED
-#include "DX12/DX12Handle.h"
-#endif
-
-#if VULKAN_SUPPORTED
-#if PLATFORM_LINUX
-#define VK_USE_PLATFORM_XLIB_KHR
-#endif
-#include "volk.h"
-#endif
-
 namespace Hawl
 {
+    /**
+     * \brief Which render api to use
+     */
+    typedef enum RendererApi
+    {
+        D3D12,
+        VULKAN
+    } RendererApi;
 
+    /**
+     * \brief Refers to a form of shader hardware in a graphical processing unit (GPU) where all of
+     * the shader stages in the rendering pipeline
+     * https://en.wikipedia.org/wiki/High-Level_Shading_Language
+     */
+    enum ShaderModel
+    {
+        SHADER_MODEL_5_1,
+        SHADER_MODEL_6_0,
+        SHADER_MODEL_6_1,
+        SHADER_MODEL_6_2,
+        SHADER_MODEL_6_3,
+        SHADER_MODEL_6_4,
+        SHADER_MODEL_6_5
+    };
 
-
-class Renderer
-{
-  public:
-    void HAWLCALL Init(bool isDebug = false);
-    void HAWLCALL CreateDevice(bool isDebug = false);
-
-  private:
-    RendererDesc m_rendererDesc = {};
+    struct RendererDesc
+    {
+        RendererApi rendererApi;
+        ShaderModel shaderModel;
 #if D3D12_SUPPORTED
-    Factory6Handle m_factory6;
-    Adapter4Handle m_adapter4;
-    Device4Handle  m_device4;
-#elif VULKAN_SUPPORTED
-    VkInstance                   m_vkInstance;
-    VkPhysicalDevice             m_vkPhysicalDevice;
-    VkDevice                     m_vkDevice;
+        D3D_FEATURE_LEVEL maxFeatureLevel;
 #endif
+    };
+
 };
-} // namespace Hawl
