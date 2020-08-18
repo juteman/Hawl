@@ -33,6 +33,19 @@
 #define ArraySize(a) (sizeof(a) / sizeof(a[0]))
 #endif
 
+// Add C export define
+#if PLATFORM_WIN32
+#define HAWL_EXPORT __declspec(dllexport)
+#define HAWL_IMPORT __declspec(dllimport)
+#else
+#define HAWL_EXPORT __attribute__((visibility("default")))
+#define HAWL_IMPORT
+#endif
+
+#ifdef __cplusplus
+#define HAWL_C_API extern "C"
+#endif
+
 #define SafeDelete(a)                                                                              \
     {                                                                                              \
         delete a;                                                                                  \

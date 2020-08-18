@@ -23,12 +23,17 @@
 #if D3D12_SUPPORTED
 #include "DX12/DX12Handle.h"
 #endif
-
 #if VULKAN_SUPPORTED
 #if PLATFORM_LINUX
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
 #include "volk.h"
+#endif
+
+#ifdef RENDERER_SHARED
+#define HAWLRENDERERAPI  HAWL_C_API HAWL_EXPORT
+#else
+#define HAWLRENDERERAPI
 #endif
 
 namespace Hawl
@@ -55,3 +60,7 @@ class Renderer
 #endif
 };
 } // namespace Hawl
+
+HAWLRENDERERAPI HAWLCALL Hawl::Renderer* RendererCreate();
+HAWLRENDERERAPI void HAWLCALL RendererInit();
+HAWLRENDERERAPI void HAWLCALL RendererDelete(Hawl::Renderer* renderer);

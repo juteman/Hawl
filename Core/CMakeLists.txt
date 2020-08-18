@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(Hawl-Core CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
+set(HAWL_SHARED )
 
 if (PLATFORM_LINUX)
     set(INCLUDE
@@ -35,7 +35,8 @@ if (PLATFORM_LINUX)
             src/Linux/Thread.cc
             src/Linux/Linux.cc)
 endif ()
-add_library(Hawl-Core ${SOURCE} ${INCLUDE} ${INTERFACE})
+add_library(Hawl-Core SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
+
 
 target_include_directories(Hawl-Core
         PRIVATE
@@ -43,6 +44,7 @@ target_include_directories(Hawl-Core
         PUBLIC
         interface
         )
+
 
 if (PLATFORM_WIN32)
     target_link_libraries(Hawl-Core
