@@ -22,11 +22,30 @@
  * under the License.
  */
 #include "IRenderer.h"
+#include "volk.h"
+#include "Logger.h"
 namespace Hawl
 {
 void Renderer::Init(bool isDebug)
 {
     // Set the render desc api to vulkan
     m_rendererDesc.rendererApi = VULKAN;
+
+    // TODO here need nvapi or ags
+
+    // Load the vulkan library
+    VkResult vkResult = volkInitialize();
+    if(vkResult != VK_SUCCESS)
+    {
+        Logger::error("Failed to initialize the vulkan");
+        //TODO Here should not be return but raise a exception
+        throw std::runtime_error("Failed to initialize the vulkan");
+    }
+    CreateInstance();
+}
+
+void Renderer::CreateInstance(bool isDebug)
+{
+
 }
 }

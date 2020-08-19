@@ -28,7 +28,7 @@ HAWLRENDERERAPI HAWLCALL Hawl::Renderer* RendererCreate()
     return new Hawl::Renderer;
 }
 
-HAWLRENDERERAPI void HAWLCALL RendererDelete(Hawl::Renderer* renderer)
+HAWLRENDERERAPI  HAWLCALL void RendererDelete(Hawl::Renderer* renderer)
 {
     if(renderer != nullptr)
     {

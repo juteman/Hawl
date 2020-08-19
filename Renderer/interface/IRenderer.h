@@ -31,7 +31,7 @@
 #endif
 
 #ifdef RENDERER_SHARED
-#define HAWLRENDERERAPI  HAWL_C_API HAWL_EXPORT
+#define HAWLRENDERERAPI HAWL_C_API HAWL_EXPORT
 #else
 #define HAWLRENDERERAPI
 #endif
@@ -39,13 +39,11 @@
 namespace Hawl
 {
 
-
-
 class Renderer
 {
   public:
+
     void HAWLCALL Init(bool isDebug = false);
-    void HAWLCALL CreateDevice(bool isDebug = false);
 
   private:
     RendererDesc m_rendererDesc = {};
@@ -54,13 +52,24 @@ class Renderer
     Adapter4Handle m_adapter4;
     Device4Handle  m_device4;
 #elif VULKAN_SUPPORTED
-    VkInstance                   m_vkInstance;
-    VkPhysicalDevice             m_vkPhysicalDevice;
-    VkDevice                     m_vkDevice;
+    VkInstance       m_vkInstance;
+    VkPhysicalDevice m_vkPhysicalDevice;
+    VkDevice         m_vkDevice;
+#endif
+
+  private:
+    // Render function which is export public
+#if D3D12_SUPPORTED
+    void CreateDevice(bool isDebug = false);
+#elif VULKAN_SUPPORTED
+    void CreateInstance(bool isDebug = false);
 #endif
 };
 } // namespace Hawl
 
-HAWLRENDERERAPI HAWLCALL Hawl::Renderer* RendererCreate();
-HAWLRENDERERAPI void HAWLCALL RendererInit();
-HAWLRENDERERAPI void HAWLCALL RendererDelete(Hawl::Renderer* renderer);
+/*************************************************************************************
+ * Export Renderer class method so can use other language binding
+ *************************************************************************************/
+HAWLRENDERERAPI HAWLCALL Hawl::Renderer *RendererCreate();
+HAWLRENDERERAPI HAWLCALL void            RendererInit(Hawl::Renderer *renderer);
+HAWLRENDERERAPI HAWLCALL void            RendererDelete(Hawl::Renderer *renderer);
