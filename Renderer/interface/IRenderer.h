@@ -42,8 +42,7 @@ namespace Hawl
 class Renderer
 {
   public:
-
-    void HAWLCALL Init(bool isDebug = false);
+    void HAWLCALL Init(const char *appName, bool isDebug = false);
 
   private:
     RendererDesc m_rendererDesc = {};
@@ -62,7 +61,7 @@ class Renderer
 #if D3D12_SUPPORTED
     void CreateDevice(bool isDebug = false);
 #elif VULKAN_SUPPORTED
-    void CreateInstance(bool isDebug = false);
+    void CreateInstance(const char *appName, bool isDebug = false);
 #endif
 };
 } // namespace Hawl

@@ -22,11 +22,13 @@
  * under the License.
  */
 #include "IRenderer.h"
-#include "volk.h"
 #include "Logger.h"
+#include "volk.h"
+#include <BaseType.h>
+#include <vector>
 namespace Hawl
 {
-void Renderer::Init(bool isDebug)
+void Renderer::Init(const char *appName, bool isDebug)
 {
     // Set the render desc api to vulkan
     m_rendererDesc.rendererApi = VULKAN;
@@ -35,17 +37,44 @@ void Renderer::Init(bool isDebug)
 
     // Load the vulkan library
     VkResult vkResult = volkInitialize();
-    if(vkResult != VK_SUCCESS)
+    if (vkResult != VK_SUCCESS)
     {
         Logger::error("Failed to initialize the vulkan");
-        //TODO Here should not be return but raise a exception
+        // TODO Here should not be return but raise a exception
         throw std::runtime_error("Failed to initialize the vulkan");
     }
-    CreateInstance();
+    CreateInstance(appName);
 }
 
-void Renderer::CreateInstance(bool isDebug)
+void Renderer::CreateInstance(const char *appName, bool isDebug)
 {
+    UINT32 layoutCount{0};
+    UINT32 extensionCount{0};
 
+    // Get the layout count and layout count
+    vkEnumerateInstanceLayerProperties(&layoutCount, nullptr);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    std::vector<VkLayerProperties>     layers(layoutCount);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    // Enumerate the properties to the vector
+    vkEnumerateInstanceLayerProperties(&layoutCount, layers.data());
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+
+    // log the vkinstance layer and extension layer
+    for (const auto &layer : layers)
+        Logger::info("{} vkinstance layer", layer.layerName);
+
+    for (const auto &ext : extensions)
+        Logger::info("{} extension layer", ext.extensionName);
+
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = appName;
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "Hawl Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_1;
+
+    // TODO Get the Created info
 }
-}
+} // namespace Hawl
