@@ -28,6 +28,7 @@
 #include <vector>
 namespace Hawl
 {
+
 void Renderer::Init(const char *appName, bool isDebug)
 {
     // Set the render desc api to vulkan
@@ -48,8 +49,10 @@ void Renderer::Init(const char *appName, bool isDebug)
 
 void Renderer::CreateInstance(const char *appName, bool isDebug)
 {
-    UINT32 layoutCount{0};
-    UINT32 extensionCount{0};
+    UINT32                          layoutCount{0};
+    UINT32                          extensionCount{0};
+    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+    const bool                      enableValidationLayers = isDebug ? true : false;
 
     // Get the layout count and layout count
     vkEnumerateInstanceLayerProperties(&layoutCount, nullptr);
@@ -62,7 +65,9 @@ void Renderer::CreateInstance(const char *appName, bool isDebug)
 
     // log the vkinstance layer and extension layer
     for (const auto &layer : layers)
+    {
         Logger::info("{} vkinstance layer", layer.layerName);
+    }
 
     for (const auto &ext : extensions)
         Logger::info("{} extension layer", ext.extensionName);
@@ -75,6 +80,20 @@ void Renderer::CreateInstance(const char *appName, bool isDebug)
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
 
-    // TODO Get the Created info
+    // TODO Get the Extensions in create info
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+    if (enableValidationLayers)
+    {
+        createInfo.enabledLayerCount = static_cast<UINT32>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
+
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &m_vkInstance);
 }
 } // namespace Hawl
