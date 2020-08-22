@@ -21,6 +21,7 @@
 #include "Common.h"
 #include "RenderInfo.h"
 #if D3D12_SUPPORTED
+#include <vector>
 #include "DX12/DX12Handle.h"
 #endif
 #if VULKAN_SUPPORTED
@@ -31,7 +32,7 @@
 #endif
 
 #ifdef RENDERER_SHARED
-#define HAWLRENDERERAPI HAWL_C_API HAWL_EXPORT
+#define HAWLRENDERERAPI HAWL_C_API HAWL_EXPORT FORCEINLINE
 #else
 #define HAWLRENDERERAPI
 #endif
@@ -42,14 +43,15 @@ namespace Hawl
 class Renderer
 {
   public:
-    void HAWLCALL Init(const char *appName, bool isDebug = false);
-
+    void Init(const char *name, bool isDebug = false);
+    void AddCommandQueue(bool isDebug = false);
   private:
     RendererDesc m_rendererDesc = {};
 #if D3D12_SUPPORTED
     Factory6Handle m_factory6;
     Adapter4Handle m_adapter4;
     Device4Handle  m_device4;
+    std::vector<CommandQueueHandle> m_cmdQueue;
 #elif VULKAN_SUPPORTED
     VkInstance       m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
@@ -60,15 +62,9 @@ class Renderer
     // Render function which is export public
 #if D3D12_SUPPORTED
     void CreateDevice(bool isDebug = false);
+    void CreateDescriptorHeaps(bool isDebug = false);
 #elif VULKAN_SUPPORTED
-    void CreateInstance(const char *appName, bool isDebug = false);
+    void             CreateInstance(const char *appName, bool isDebug = false);
 #endif
 };
 } // namespace Hawl
-
-/*************************************************************************************
- * Export Renderer class method so can use other language binding
- *************************************************************************************/
-HAWLRENDERERAPI HAWLCALL Hawl::Renderer *RendererCreate();
-HAWLRENDERERAPI HAWLCALL void            RendererInit(Hawl::Renderer *renderer);
-HAWLRENDERERAPI HAWLCALL void            RendererDelete(Hawl::Renderer *renderer);

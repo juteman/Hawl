@@ -1,8 +1,8 @@
-#include "WinApp.h"
+#include "Renderer.inl"
 
 int main()
 {
-  Hawl::WindowsApp testApp;
-  testApp.Run();
-  return 0;
+    Hawl::Renderer* handle = RendererCreate();
+    RendererInit(handle,"test name");
+    RendererDelete(handle);
 }

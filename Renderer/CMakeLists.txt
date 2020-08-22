@@ -5,7 +5,8 @@ option(HAWL_BUILD_RENDERDER_SHARED "Enable building share library" ON)
 
 set(INTERFACE
     interface/IRenderer.h
-    interface/RenderInfo.h)
+    interface/RenderInfo.h
+    interface/Renderer.inl)
 
 if (D3D12_SUPPORTED)
     set(INCLUDE
@@ -14,14 +15,14 @@ if (D3D12_SUPPORTED)
         )
 
     set(SOURCE
-        src/Renderer.inl
         src/DX12/DX12Device.cc
+        src/DX12/DX12CommandQueue.cc
         )
     if (HAWL_BUILD_RENDERDER_SHARED)
-        add_library(RendererDX12 SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
+        add_library(RendererDX12 ${SOURCE} ${INCLUDE} ${INTERFACE})
         target_compile_definitions(BuildSettings
             INTERFACE
-            RENDERER_SHARED)
+            RENDERER_SHARED=TRUE)
     endif ()
     target_link_libraries(RendererDX12
         PUBLIC
@@ -35,7 +36,6 @@ if (D3D12_SUPPORTED)
     target_include_directories(RendererDX12
         PUBLIC
         interface/
-        PRIVATE
         include/
         )
 endif ()

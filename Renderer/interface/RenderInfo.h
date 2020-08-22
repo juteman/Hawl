@@ -18,6 +18,8 @@
  *
  */
 #pragma once
+#include <d3dcommon.h>
+
 namespace Hawl
 {
     /**

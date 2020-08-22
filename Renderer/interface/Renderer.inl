@@ -21,13 +21,31 @@
  * under the License.
  */
 
+#pragma once
 #include "IRenderer.h"
 
+/**
+ * \brief Create Renderer Handle
+ * \return return a Renderer class pointer
+ */
 HAWLRENDERERAPI Hawl::Renderer *RendererCreate()
 {
     return new Hawl::Renderer;
 }
 
+/**
+ * \brief See Hawl::Renderer::init
+ * \param renderer Renderer class pointer
+ */
+HAWLRENDERERAPI void RendererInit(Hawl::Renderer *renderer, const char *renderName)
+{
+    renderer->Init();
+}
+
+/**
+ * \brief Delete Handle
+ * \param renderer pointer to be free
+ */
 HAWLRENDERERAPI void RendererDelete(Hawl::Renderer *renderer)
 {
     if (renderer != nullptr)

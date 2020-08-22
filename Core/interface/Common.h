@@ -37,9 +37,11 @@
 #if PLATFORM_WIN32
 #define HAWL_EXPORT __declspec(dllexport)
 #define HAWL_IMPORT __declspec(dllimport)
+#define FORCEINLINE __forceinline
 #else
 #define HAWL_EXPORT __attribute__((visibility("default")))
 #define HAWL_IMPORT
+#define FORCEINLINE __attribute__((always_inline))
 #endif
 
 #ifdef __cplusplus

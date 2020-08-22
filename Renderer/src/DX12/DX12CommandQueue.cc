@@ -23,16 +23,34 @@
 
 #include "IRenderer.h"
 
-HAWLRENDERERAPI Hawl::Renderer *RendererCreate()
+namespace Hawl
 {
-    return new Hawl::Renderer;
+typedef enum D3D12_COMMAND_QUEUE_TYPE
+{
+    D3D12_COMMAND_QUEUE_TYPE_COPY,
+    D3D12_COMMAND_QUEUE_TYPE_COMPUTE,
+    D3D12_COMMAND_QUEUE_TYPE_DIRECT,
+    D3D12_COMMAND_QUEUE_TYPE_COUNT
+} D3D12_COMMAND_QUEUE_TYPE;
+
+void Renderer::AddCommandQueue(bool isDebug)
+{
+    // lambda function to get the Command Queue type
+    auto GetQueueType = [&](D3D12_COMMAND_QUEUE_TYPE type) {
+        switch (type)
+        {
+        case D3D12_COMMAND_QUEUE_TYPE_COPY:
+            return D3D12_COMMAND_LIST_TYPE_COPY;
+        case D3D12_COMMAND_QUEUE_TYPE_COMPUTE:
+            return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+        case D3D12_COMMAND_QUEUE_TYPE_DIRECT:
+            return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        default:
+            throw std::exception("Unknown command queue type");
+        }
+    };
+
+
 }
 
-HAWLRENDERERAPI void RendererDelete(Hawl::Renderer *renderer)
-{
-    if (renderer != nullptr)
-    {
-        delete renderer;
-        renderer = nullptr;
-    }
-}
+} // namespace Hawl

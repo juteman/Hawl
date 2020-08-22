@@ -117,8 +117,6 @@ if(MSVC)
     set(DEBUG_MACROS REFORGE_DEVELOPMENT REFORGE_DEBUG)
     target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:DEBUG>:${DEBUG_MACROS}>")
 else()
-    # Todo: use __attribute__((always_inline)), but it needs to be defined in a header file
-    target_compile_definitions(BuildSettings INTERFACE __forceinline=inline)
 
     set(DEBUG_MACROS _DEBUG DEBUG REFORGE_DEVELOPMENT REFORGE_DEBUG)
     set(RELEASE_MACROS NDEBUG)

@@ -39,6 +39,16 @@ const static D3D_FEATURE_LEVEL D3DFeatureLevels[] = {
     D3D_FEATURE_LEVEL_11_0,
 };
 
+
+typedef enum D3D12_DESCRIPTOR_HEAP_TYPE
+{
+    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0,
+    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+    D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+    D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+    D3D12_DESCRIPTOR_HEAP_TYPE_NUM_COUNT
+} D3D12_DESCRIPTOR_HEAP_TYPE;
+
 /**
  * \brief Log the adapter information
  * \param desc3  description struct
@@ -54,7 +64,7 @@ void LogAdapter(DXGI_ADAPTER_DESC3 desc3)
     Logger::info("{}", desc3.DedicatedVideoMemory);
 }
 
-void Renderer::Init(bool isDebug)
+void Renderer::Init(const char* name, bool isDebug)
 {
     m_rendererDesc.rendererApi = D3D12;
     const UINT32 flags = isDebug ? DXGI_CREATE_FACTORY_DEBUG : 0;
@@ -101,5 +111,14 @@ void Renderer::CreateDevice(bool isDebug)
         }
     }
 }
+
+void Renderer::CreateDescriptorHeaps(bool isDebug)
+{
+    for (UINT32 i = 0; i< D3D12_DESCRIPTOR_HEAP_TYPE_NUM_COUNT; i++)
+    {
+        
+    }
+}
+
 
 } // namespace Hawl

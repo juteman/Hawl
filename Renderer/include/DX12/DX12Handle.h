@@ -29,4 +29,5 @@ using Factory6Handle = Microsoft::WRL::ComPtr<IDXGIFactory6>;
 using Adapter4Handle = Microsoft::WRL::ComPtr<IDXGIAdapter4>;
 using DeviceHandle = Microsoft::WRL::ComPtr<ID3D12Device>;
 using Device4Handle = Microsoft::WRL::ComPtr<ID3D12Device4>;
+using CommandQueueHandle = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
 } // namespace Hawl
