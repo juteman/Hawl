@@ -68,7 +68,7 @@ void Renderer::Init(const char* name, bool isDebug)
 {
     m_rendererDesc.rendererApi = D3D12;
     const UINT32 flags = isDebug ? DXGI_CREATE_FACTORY_DEBUG : 0;
-    CHECK_DX12_RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&m_factory6)));
+    CHECK_DX12_RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&m_factory6)))
     CreateDevice(isDebug);
 }
 
@@ -97,7 +97,7 @@ void Renderer::CreateDevice(bool isDebug)
     {
         DXGI_ADAPTER_DESC3 desc{};
 
-        CHECK_DX12_RESULT(m_adapter4->GetDesc3(&desc));
+        CHECK_DX12_RESULT(m_adapter4->GetDesc3(&desc))
 
         // No soft render
         if (!(desc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))

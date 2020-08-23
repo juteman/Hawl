@@ -39,7 +39,7 @@ HAWLRENDERERAPI Hawl::Renderer *RendererCreate()
  */
 HAWLRENDERERAPI void RendererInit(Hawl::Renderer *renderer, const char *renderName)
 {
-    renderer->Init();
+    renderer->Init(renderName, false);
 }
 
 /**

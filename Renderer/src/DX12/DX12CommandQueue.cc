@@ -21,13 +21,15 @@
  * under the License.
  */
 
+#include "DX12/DX12Helper.h"
 #include "IRenderer.h"
+#include "Logger.h"
 
 namespace Hawl
 {
 typedef enum D3D12_COMMAND_QUEUE_TYPE
 {
-    D3D12_COMMAND_QUEUE_TYPE_COPY,
+    D3D12_COMMAND_QUEUE_TYPE_COPY = 0,
     D3D12_COMMAND_QUEUE_TYPE_COMPUTE,
     D3D12_COMMAND_QUEUE_TYPE_DIRECT,
     D3D12_COMMAND_QUEUE_TYPE_COUNT
@@ -50,7 +52,15 @@ void Renderer::AddCommandQueue(bool isDebug)
         }
     };
 
-
+    for (UINT32 i = 0; i < D3D12_COMMAND_QUEUE_TYPE_COUNT; i++)
+    {
+        D3D12_COMMAND_QUEUE_DESC desc{};
+        desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        desc.Type = GetQueueType(static_cast<D3D12_COMMAND_QUEUE_TYPE>(i));
+        CommandQueueHandle queue;
+        CHECK_DX12_RESULT(m_device4->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)))
+        m_cmdQueue.push_back(queue);
+    }
 }
 
 } // namespace Hawl
