@@ -28,6 +28,7 @@
 #include "Common.h"
 #include <string>
 #include <thread>
+#include <vector>
 namespace Hawl
 {
 typedef std::jthread Thread;
@@ -41,23 +42,40 @@ enum class Priority : int
     Highest,
 };
 
-class Task
+
+struct Task
 {
     HAWL_DISABLE_COPY(Task)
-  public:
     Task() = default;
     virtual ~Task() = default;
-
     virtual void run() = 0;
-
-  protected:
     Priority taskPriority = Priority::Normal;
 };
 
+
 class ThreadPool
 {
+
   private:
-    using Queue = Algorithm::LockFreeQueue<Task *>;
+    using Queue = Algorithm::LockFreeQueue<Task* >;
+
+  protected:
+    const UINT MaxThreadCount = std::thread::hardware_concurrency() / 2;
+    Queue TaskQueue;
+    std::vector<std::thread> m_threads;
+
+    void TaskRunner()
+    {
+        while (!TaskQueue.IsEmpty())
+        {
+            Task* realTask;
+            // If DeQueue return error here, the task queue is empty
+            if(!TaskQueue.DeQueue(realTask))
+                break;
+            realTask->run();
+            //TODO notify on thread here
+        }
+    }
 
   public:
     virtual ~ThreadPool() = default;
@@ -65,11 +83,10 @@ class ThreadPool
     /**
      * \brief Specify the thread number size and priority of thread the create thread pool
      * \param numOfThreads the number of thread to use in the pool
-     * \param stackSize the size of stack of thread pool (default as 32k)
      * \param threadPriority priority in the pool thread
      * \return true for success create thread pool
      */
-    virtual bool Create(UINT32 numOfThreads, UINT32 stackSize = (32 * 1024)) = 0;
+    virtual bool Create(UINT32 numOfThreads, Priority threadPriority);
 
     /**
      * \brief Clean all the thread in pool and destroy the pool
@@ -87,12 +104,6 @@ class ThreadPool
      * \param task try to retract
      */
     virtual void RetractTask(Task *task) = 0;
-
-    /**
-     * \brief Allocate a thread pool
-     * @return a new thread pool
-     */
-    static ThreadPool *Allocate();
 };
 
 

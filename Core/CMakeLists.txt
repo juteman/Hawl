@@ -32,9 +32,13 @@ endif ()
 if (PLATFORM_LINUX)
     set(SOURCE
             src/Linux/Timer.cc
-            src/Linux/Thread.cc
+        src/Thread.cc
             src/Linux/Linux.cc)
 endif ()
+
+set(SOURCE
+    src/Thread.cc
+    )
 add_library(Hawl-Core ${SOURCE} ${INCLUDE} ${INTERFACE})
 
 
