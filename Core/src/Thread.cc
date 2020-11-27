@@ -11,6 +11,7 @@ bool ThreadPool::Create(UINT32 numOfThreads, Priority threadPriority)
 
     for(int i; i < numOfThreads; i++)
         m_threads.push_back(std::thread( [this]{ this->TaskRunner(); } ));
+    return true;
 }
 
 } // namespace Hawl

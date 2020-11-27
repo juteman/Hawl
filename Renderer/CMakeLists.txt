@@ -51,12 +51,7 @@ if (VULKAN_SUPPORTED)
             src/Renderer.inl
             src/Vulkan/VulkanInstance.cpp
             )
-    if (HAWL_BUILD_RENDERDER_SHARED)
-        add_library(RendererVulkan SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
-        target_compile_definitions(BuildSettings
-                INTERFACE
-                RENDERER_SHARED)
-    endif ()
+    add_library(RendererVulkan ${SOURCE} ${INCLUDE} ${INTERFACE})
     target_link_libraries(RendererVulkan
             PUBLIC
             Hawl-Core
@@ -71,6 +66,4 @@ if (VULKAN_SUPPORTED)
             PRIVATE
             include/
             )
-
-
 endif ()

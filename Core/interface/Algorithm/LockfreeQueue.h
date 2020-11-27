@@ -27,169 +27,178 @@ namespace Hawl::Algorithm
 
 enum class QueueModel
 {
-  SPSC,
-  MPMC
+    SPSC,
+    MPMC
 };
 
 /// lock free queue implement
-template<typename T>
+template <typename T>
 class LockFreeQueue
 {
-private:
-  /// LockFreeQueue node implement
-  struct QueueNode
-  {
-    /// construct node with null
-    QueueNode()
-      : next{ nullptr }
-    {}
-
-    explicit QueueNode(const T& InData)
-      : next{ nullptr }
-      , data{ InData }
-    {}
-
-    explicit QueueNode(const T&& InData)
-      : next{ nullptr }
-      , data{ std::move(InData) }
-    {}
-
-    /// pointer to the next node of the LockFreeQueue
-    std::atomic<QueueNode*> next;
-
-    /// type data
-    T data;
-  };
-
-public:
-  /// Initialize with dummy node
-  LockFreeQueue()
-  {
-    QueueNode* dummyNode = new QueueNode();
-    m_head.store(dummyNode, std::memory_order_relaxed);
-    m_tail.store(dummyNode, std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-  }
-
-  /// Release the queue list
-  ~LockFreeQueue()
-  {
-    while (m_head != nullptr) {
-      QueueNode* temp = m_head.load(std::memory_order_relaxed);
-      m_head          = temp->next;
-      delete temp;
-    }
-  }
-
-  /// Adds an node to the tail of the queue.
-  /// @param InData The item to add.
-  /// @return true if the node was added, false for some thread race
-  /// condition
-  bool EnQueue(T const& InData)
-  {
-    // Create new Node and check if create success
-    QueueNode* newNode = new QueueNode(InData);
-
-    if (nullptr == newNode)
-      return false;
-
-    // concurrent link queue
-    while (true) {
-      QueueNode* tail = m_tail.load(std::memory_order_acquire);
-
-      QueueNode* tailNext = tail->next.load(std::memory_order_acquire);
-
-      if (tail == m_tail.load(std::memory_order_acquire))
-        [[likely]]
+  private:
+    /// LockFreeQueue node implement
+    struct QueueNode
+    {
+        /// construct node with null
+        QueueNode() : next{nullptr}
         {
-          if (tailNext == nullptr) {
-            // insert node
-            if (tail->next.compare_exchange_weak(tailNext, newNode)) {
-              // set the tail node
-              return m_tail.compare_exchange_strong(tail, newNode);
-            }
-          }
+        }
 
-          // if tailNext is not nullptr, fetch the LockFreeQueue tails to next
-          else {
-            m_tail.compare_exchange_strong(tail, tailNext);
-          }
+        explicit QueueNode(const T &InData) : next{nullptr}, data{InData}
+        {
+        }
+
+        explicit QueueNode(const T &&InData) : next{nullptr}, data{std::move(InData)}
+        {
+        }
+
+        /// pointer to the next node of the LockFreeQueue
+        std::atomic<QueueNode *> next;
+
+        /// type data
+        T data;
+    };
+
+  public:
+    /// Initialize with dummy node
+    LockFreeQueue()
+    {
+        QueueNode *dummyNode = new QueueNode();
+        m_head.store(dummyNode, std::memory_order_relaxed);
+        m_tail.store(dummyNode, std::memory_order_relaxed);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+    }
+
+    /// Release the queue list
+    ~LockFreeQueue()
+    {
+        while (m_head != nullptr)
+        {
+            QueueNode *temp = m_head.load(std::memory_order_relaxed);
+            m_head = temp->next.load();
+            delete temp;
         }
     }
-  }
 
-  /// pop the element from the queue head
-  /// @param outData get the queue head element
-  /// @return true dequeue success, else the queue is empty
-  bool DeQueue(T& outData)
-  {
-    while (true) {
-      QueueNode* head     = m_head.load(std::memory_order_acquire);
-      QueueNode* tail     = m_tail.load(std::memory_order_acquire);
-      QueueNode* headNext = head->next.load(std::memory_order_acquire);
+    /// Adds an node to the tail of the queue.
+    /// @param InData The item to add.
+    /// @return true if the node was added, false for some thread race
+    /// condition
+    bool EnQueue(T const &InData)
+    {
+        // Create new Node and check if create success
+        QueueNode *newNode = new QueueNode(InData);
 
-      if (head == m_head.load(std::memory_order_acquire))
-        [[likely]]
+        if (nullptr == newNode)
+            return false;
+
+        // concurrent link queue
+        while (true)
         {
-          if (head == tail) {
-            if (headNext == nullptr)
-              return false;
+            QueueNode *tail = m_tail.load(std::memory_order_acquire);
 
-            // if the head next is not null. must be another
-            // thread EnQueue the element. So fetch tail pointer to the next
-            m_head.compare_exchange_strong(tail, headNext);
-          }
-          else {
-            if (headNext == nullptr)
-              // it means another thread take the element.
-              // and the queue is empty. So just continue, and if
-              // no element again, will return false.
-              continue;
+            QueueNode *tailNext = tail->next.load(std::memory_order_acquire);
 
-            outData = headNext->data;
-            if (m_head.compare_exchange_weak(head, headNext)) {
-              free(head);
-              return true;
+            if (tail == m_tail.load(std::memory_order_acquire)) [[likely]]
+            {
+                if (tailNext == nullptr)
+                {
+                    // insert node
+                    if (tail->next.compare_exchange_weak(tailNext, newNode))
+                    {
+                        // set the tail node
+                        return m_tail.compare_exchange_strong(tail, newNode);
+                    }
+                }
+
+                // if tailNext is not nullptr, fetch the LockFreeQueue tails to next
+                else
+                {
+                    m_tail.compare_exchange_strong(tail, tailNext);
+                }
             }
-          }
         }
     }
-  }
 
-  /// Get the  head  data not remove from LockFreeQueue
-  /// @param outData get the data of head
-  /// @return if queue empty get false, else get true
-  bool Peek(T& outData)
-  {
-    /// if head is change by other thread use deque, fetch head to m_head again
-    /// because Peek don't change the head. it will be thread safe
-    for (auto head = m_head.load(std::memory_order_acquire); head != nullptr;
-         head      = m_head.load(std::memory_order_acquire)) {
-      outData = head->next.load();
-      if (outData)
-        return true;
+    /// pop the element from the queue head
+    /// @param outData get the queue head element
+    /// @return true dequeue success, else the queue is empty
+    bool DeQueue(T &outData)
+    {
+        while (true)
+        {
+            QueueNode *head = m_head.load(std::memory_order_acquire);
+            QueueNode *tail = m_tail.load(std::memory_order_acquire);
+            QueueNode *headNext = head->next.load(std::memory_order_acquire);
+
+            if (head == m_head.load(std::memory_order_acquire)) [[likely]]
+            {
+                if (head == tail)
+                {
+                    if (headNext == nullptr)
+                        return false;
+
+                    // if the head next is not null. must be another
+                    // thread EnQueue the element. So fetch tail pointer to the next
+                    m_head.compare_exchange_strong(tail, headNext);
+                }
+                else
+                {
+                    if (headNext == nullptr)
+                        // it means another thread take the element.
+                        // and the queue is empty. So just continue, and if
+                        // no element again, will return false.
+                        continue;
+
+                    outData = headNext->data;
+                    if (m_head.compare_exchange_weak(head, headNext))
+                    {
+                        free(head);
+                        return true;
+                    }
+                }
+            }
+        }
     }
 
-    return false;
-  }
+    /// Get the  head  data not remove from LockFreeQueue
+    /// @param outData get the data of head
+    /// @return if queue empty get false, else get true
+    bool Peek(T &outData)
+    {
+        /// if head is change by other thread use deque, fetch head to m_head again
+        /// because Peek don't change the head. it will be thread safe
+        for (auto head = m_head.load(std::memory_order_acquire); head != nullptr;
+             head = m_head.load(std::memory_order_acquire))
+        {
+            outData = head->next.load();
+            if (outData)
+                return true;
+        }
 
-  /// check is lock free queue
-  /// @return true for lock free
-  bool Islockfree() const
-  {
-    return m_head.is_lock_free() && m_tail.is_lock_free();
-  }
+        return false;
+    }
 
-  /// check the queue is empty
-  /// @return true if empty, false for no empty
-  bool IsEmpty() { return (m_head.load() == m_tail.load()); }
+    /// check is lock free queue
+    /// @return true for lock free
+    bool Islockfree() const
+    {
+        return m_head.is_lock_free() && m_tail.is_lock_free();
+    }
 
-private:
-  /// atomic head and  tail
-  std::atomic<QueueNode*> m_head;
-  std::atomic<QueueNode*> m_tail;
+    /// check the queue is empty
+    /// @return true if empty, false for no empty
+    bool IsEmpty()
+    {
+        return (m_head.load() == m_tail.load());
+    }
 
-  /// delete copy constructor and  assign operator
-  HAWL_DISABLE_COPY(LockFreeQueue)
+  private:
+    /// atomic head and  tail
+    std::atomic<QueueNode *> m_head;
+    std::atomic<QueueNode *> m_tail;
+
+    /// delete copy constructor and  assign operator
+    HAWL_DISABLE_COPY(LockFreeQueue)
 };
-}
+} // namespace Hawl::Algorithm

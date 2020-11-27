@@ -57,6 +57,7 @@ if (PLATFORM_WIN32)
             winmm
             PUBLIC
             spdlog
+            EASTL
             )
 endif ()
 
@@ -65,6 +66,7 @@ if (PLATFORM_LINUX)
             BuildSettings
             PUBLIC
             spdlog
+            EASTL
             )
 
 endif ()

@@ -18,7 +18,10 @@
  *
  */
 #pragma once
+
+#if D3D12_SUPPORTED
 #include <d3dcommon.h>
+#endif
 
 namespace Hawl
 {
