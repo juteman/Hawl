@@ -11,8 +11,7 @@
 ############################################################
 # config the EASTL
 ############################################################
-#set(EASTL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/EASTL" CACHE INTERNAL "location of EASTL")
-#add_subdirectory(EASTL)
+add_subdirectory(EASTL)
 
 ############################################################
 # config the mathfu
