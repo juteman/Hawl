@@ -20,7 +20,13 @@
 #pragma once
 
 #include "volk.h"
+#include "BaseType.h"
 #include "Common.h"
+#include <vector>
+#include "EASTL/vector.h"
+#include "EASTL/string.h"
+
+
 namespace Hawl
 {
 
@@ -28,10 +34,13 @@ class VulkanInstance
 {
     VulkanInstance();
 
-    void Create();
+    VkResult Init();
+
+    VkResult Create(const eastl::string& appName, eastl::vector<eastl::string> UserDefinedInstanceLayer);
 
   private:
     VkInstance mVkInstance;
+
 };
 
 } // namespace Hawl
