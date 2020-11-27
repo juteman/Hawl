@@ -36,6 +36,11 @@ add_subdirectory(tbb)
 add_subdirectory(spdlog)
 
 ############################################################
-# config the volk for
+# config the volk
 ############################################################
 add_subdirectory(volk)
+
+############################################################
+# config the Vulkan header
+############################################################
+add_subdirectory(Vulkan-Headers)

@@ -10,3 +10,6 @@
 [submodule "ThirdParty/EASTL"]
 	path = ThirdParty/EASTL
 	url = https://github.com/electronicarts/EASTL.git
+[submodule "ThirdParty/Vulkan-Headers"]
+	path = ThirdParty/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
