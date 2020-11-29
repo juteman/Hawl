@@ -38,6 +38,7 @@ if(PLATFORM_WIN32)
     if(MSVC)
         if(NOT CMAKE_SYSTEM_VERSION STREQUAL "8.1")
             set(D3D12_SUPPORTED TRUE CACHE INTERNAL "D3D12 is supported on Win32 platform")
+             set(VULKAN_SUPPORTED TRUE CACHE INTERNAL "D3D12 is supported on Win32 platform")
         endif()
     else()
         message(FATAL_ERROR "Use MSVC on windows!")
@@ -88,7 +89,7 @@ if(MSVC)
     # - w4100 - unreferenced formal parameter
     # - w4505 - unreferenced local function has been removed
     # - w4201 - nonstandard extension used: nameless struct/union
-    target_compile_options(BuildSettings INTERFACE /W4 /wd4100 /wd4505 /wd4201)
+    target_compile_options(BuildSettings INTERFACE /W4 /wd4100 /wd4505 /wd4201 /experimental:module)
     # In all release modes also:
     # - disable w4189 - local variable is initialized but not referenced
     # - Disable RTTI (/GR-)
@@ -118,23 +119,23 @@ if(MSVC)
     target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:DEBUG>:${DEBUG_MACROS}>")
 else()
 
-    set(DEBUG_MACROS _DEBUG DEBUG REFORGE_DEVELOPMENT REFORGE_DEBUG)
+    set(DEBUG_MACROS _DEBUG DEBUG)
     set(RELEASE_MACROS NDEBUG)
 
     foreach(DBG_CONFIG ${DEBUG_CONFIGURATIONS})
-        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${DBG_CONFIG}>:${DEBUG_MACROS}>")
+        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${DBG_CONFIG}>:${DEBUG_MACROS}>" /experimental:module)
     endforeach()
 
     foreach(REL_CONFIG ${RELEASE_CONFIGURATIONS})
-        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${REL_CONFIG}>:${RELEASE_MACROS}>")
+        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${REL_CONFIG}>:${RELEASE_MACROS}>" /experimental:module)
     endforeach()
 endif(MSVC)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(WHOLE_ARCHIVE_FLAG "-Wl,--whole-archive")
-    set(NO_WHOLE_ARCHIVE_FLAG "-Wl,--no-whole-archive")
+    set(WHOLE_ARCHIVE_FLAG "-Wl,--whole-archive -fmodules")
+    set(NO_WHOLE_ARCHIVE_FLAG "-Wl,--no-whole-archive -fmodules")
 else()
-    set(WHOLE_ARCHIVE_FLAG "")
-    set(NO_WHOLE_ARCHIVE_FLAG "")
+    set(WHOLE_ARCHIVE_FLAG "-fmodules")
+    set(NO_WHOLE_ARCHIVE_FLAG "-fmodules")
 endif()

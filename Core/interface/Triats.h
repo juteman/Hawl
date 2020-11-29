@@ -34,9 +34,9 @@ class IsSubclassOfTemplate
   typedef int8_t  TrueType;
   typedef int32_t FalseType;
 
-  /// 这里定义了重载函数，交给编译器重载，若果传入的指针
-  /// 所指向的类型为B<W...>或继承类型则选择的重载函数的
-  /// 返回类型为TrueType,否则则为FalseType
+  // 这里定义了重载函数，交给编译器重载，若果传入的指针
+  // 所指向的类型为B<W...>或继承类型则选择的重载函数的
+  // 返回类型为TrueType,否则则为FalseType
   template<typename... W>
   static TrueType  SubclassCheck(B<W...>*);
   static FalseType SubclassCheck(...);

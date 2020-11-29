@@ -31,7 +31,6 @@
 #include <vector>
 namespace Hawl
 {
-typedef std::jthread Thread;
 
 enum class Priority : int
 {

@@ -17,13 +17,13 @@
  *  limitations under the License.
  *
  */
-#include "Vulkan/VulkanInstance.h"
+#include "VulkanInstance.h"
 #include "Logger.h"
-
+#include "vulkan/vulkan.h"
 namespace Hawl
 {
 // clang-format off
-eastl::vector<eastl::string> InstanceExtension
+eastl::vector<eastl::string> instanceExtension
 {
     VK_KHR_SURFACE_EXTENSION_NAME,
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
@@ -46,8 +46,8 @@ eastl::vector<eastl::string> InstanceExtension
     VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 #endif
     VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
-        // To legally use HDR formats
     VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
+        // To legally use HDR formats
         /************************************************************************/
         // VR Extensions
         /************************************************************************/
@@ -124,7 +124,7 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
                 break;
             }
 
-            Logger::info("{} vkinstace layer is missing", userDefinedInstanceLayer[i]);
+            Logger::info("{} vkinstace layer is missing", userDefinedInstanceLayer[i].data());
             i = (int)(userDefinedInstanceLayer.erase(userDefinedInstanceLayer.begin() + i) -
                       userDefinedInstanceLayer.begin());
         }

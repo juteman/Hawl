@@ -5,7 +5,7 @@ if (PLATFORM_WIN32)
     add_executable(TestBase TestBase.cc)
     target_link_libraries(TestBase
             PUBLIC
-            RendererDX12
+            RendererVulkan
             BuildSettings
             )
 endif ()

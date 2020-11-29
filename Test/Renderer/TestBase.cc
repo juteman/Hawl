@@ -1,8 +1,5 @@
-#include "Renderer.inl"
+#include "iosfwd"
 
 int main()
 {
-    Hawl::Renderer* handle = RendererCreate();
-    RendererInit(handle,"test name");
-    RendererDelete(handle);
 }
