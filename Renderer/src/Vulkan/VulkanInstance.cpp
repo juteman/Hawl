@@ -130,7 +130,7 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
         }
     }
 
-    VkInstanceCreateInfo createInfo{};
+    //VkInstanceCreateInfo createInfo{};
 
     return VK_SUCCESS;
 }

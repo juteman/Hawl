@@ -16,4 +16,4 @@ add_subdirectory(Window)
 endif()
 add_subdirectory(Renderer)
 
-# add_subdirectory(Test)
+add_subdirectory(Test)
