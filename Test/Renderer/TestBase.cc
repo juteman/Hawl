@@ -1,6 +1,6 @@
-#include "volk.h"
 #include "BaseType.h"
 #include "Logger.h"
+#include "volk.h"
 #include <vector>
 using namespace Hawl;
 
@@ -16,12 +16,23 @@ int main()
     std::vector<VkLayerProperties>     layers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, layers.data());
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-    for (const auto& extension : extensions) {
-        Logger::info("extension name {}", extension.extensionName);
+
+    for (const auto &ext : extensions)
+    {
+        Logger::info("{} | Extension Properties", ext.extensionName);
     }
+
+    UINT32 count = 0;
     for (const auto &layer : layers)
     {
         Logger::info("{} vkinstance layer", layer.layerName);
+        vkEnumerateInstanceExtensionProperties(layer.layerName, &count, nullptr);
+        std::vector<VkExtensionProperties> exts(count);
+        vkEnumerateInstanceExtensionProperties(layer.layerName, &count, extensions.data());
+        for (const auto &ext : exts)
+        {
+            Logger::info("{}", ext.extensionName);
+        }
     }
     return 0;
 }

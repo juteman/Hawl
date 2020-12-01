@@ -24,12 +24,7 @@
 #include <vector>
 #include "DX12/DX12Handle.h"
 #endif
-#if VULKAN_SUPPORTED
-#if PLATFORM_LINUX
-#define VK_USE_PLATFORM_XLIB_KHR
-#endif
-#include "volk.h"
-#endif
+
 
 #ifdef RENDERER_SHARED
 #define HAWLRENDERERAPI HAWL_C_API HAWL_EXPORT FORCEINLINE

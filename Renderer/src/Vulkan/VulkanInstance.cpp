@@ -18,12 +18,15 @@
  *
  */
 #include "VulkanInstance.h"
+#include "EASTL/algorithm.h"
+#include "EASTL/sort.h"
 #include "Logger.h"
-#include "vulkan/vulkan.h"
+#include "VulkanHelper.h"
+
 namespace Hawl
 {
 // clang-format off
-eastl::vector<eastl::string> instanceExtension
+eastl::vector<eastl::string> baseInstanceExtensions
 {
     VK_KHR_SURFACE_EXTENSION_NAME,
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
@@ -66,21 +69,13 @@ VulkanInstance::VulkanInstance() : mVkInstance(VK_NULL_HANDLE)
 {
 }
 
-VkResult VulkanInstance::Init()
+void VulkanInstance::Init()
 {
-    VkResult vkResult = volkInitialize();
-    if (vkResult != VK_SUCCESS)
-    {
-        Logger::error("Failed to initialize the vulkan");
-    }
-    return vkResult;
+    CHECK_VULKAN_RESULT(volkInitialize())
 }
 
-VkResult VulkanInstance::Create(const eastl::string &        appName,
-                                eastl::vector<eastl::string> userDefinedInstanceLayer)
+inline VkResult CreateVKAppInfo(VkApplicationInfo &appInfo, const eastl::string &appName)
 {
-
-    VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pEngineName = "HAWL";
     appInfo.pApplicationName = appName.data();
@@ -90,48 +85,88 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
     {
         return VK_ERROR_INITIALIZATION_FAILED;
     }
+
+    return VK_SUCCESS;
+}
+
+VkResult VulkanInstance::Create(const eastl::string &        appName,
+                                eastl::vector<eastl::string> userDefinedInstanceLayer,
+                                eastl::vector<eastl::string> userDefinedInstanceExtension,
+                                const VkAllocationCallbacks *pUserDefinedAllocator)
+{
     using namespace eastl;
+    VkApplicationInfo applicationInfo{};
+    // Init the application info
+    auto CreateVKAppInfo = [&]() {
+        applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        applicationInfo.pEngineName = "HAWL";
+        applicationInfo.pApplicationName = appName.data();
+        applicationInfo.apiVersion = volkGetInstanceVersion();
+        // if apiVersion is 0, get version failed
+        if (applicationInfo.apiVersion == 0)
+        {
+            return VK_ERROR_INITIALIZATION_FAILED;
+        }
+
+        return VK_SUCCESS;
+    };
+
+    auto CreateInstanceExtension = [&](vector<string> &extensions) {
+        UINT32 extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        vector<VkExtensionProperties> supportExtensions(extensionCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, supportExtensions.data());
+
+        // set the union to extension for user define extension and base extensions
+        sort(userDefinedInstanceExtension.begin(), userDefinedInstanceExtension.end());
+        sort(baseInstanceExtensions.begin(), baseInstanceExtensions.end());
+        set_union(userDefinedInstanceExtension.begin(),
+                  userDefinedInstanceExtension.end(),
+                  baseInstanceExtensions.begin(),
+                  baseInstanceExtensions.end(),
+                  back_inserter(extensions));
+
+        // If extension not contains in enum support extension
+        bool findExt;
+        for (int i = 0; i < extensions.size(); i++)
+        {
+            findExt = false;
+            for (const auto& supportExtension : supportExtensions)
+            {
+                if (extensions[i].compare(supportExtension.extensionName) == 0)
+                {
+                    findExt = true;
+                    break;
+                }
+            }
+
+            if (findExt == false)
+            {
+                i = extensions.erase(extensions.begin() + i) - extensions.begin();
+            }
+        }
+    };
+
+    CHECK_VULKAN_RESULT(CreateVKAppInfo())
+
 
     // Layer and extension
-    vector<string> instanceExtensionLoad{};
+    vector<string> extensions;
+    CreateInstanceExtension(extensions);
     UINT32         layerCount = 0;
     UINT32         extensionCount = 0;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
     vector<VkLayerProperties>     layers(layerCount);
-    vector<VkExtensionProperties> extensions(extensionCount);
 
-    vkEnumerateInstanceLayerProperties(&layerCount, layers.data());
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-    for (const auto &layer : layers)
-    {
-        Logger::info("{} vkinstance layer", layer.layerName);
-    }
+    VkInstanceCreateInfo createInfo{};
 
-    for (const auto &ext : extensions)
-    {
-        Logger::info("{} extension layer", ext.extensionName);
-    }
-
-    for (int i = 0; i < userDefinedInstanceLayer.size(); i++)
-    {
-        for (const auto layer : layers)
-        {
-            if (userDefinedInstanceLayer[i].compare(layer.layerName) == 0)
-            {
-                break;
-            }
-
-            Logger::info("{} vkinstace layer is missing", userDefinedInstanceLayer[i].data());
-            i = (int)(userDefinedInstanceLayer.erase(userDefinedInstanceLayer.begin() + i) -
-                      userDefinedInstanceLayer.begin());
-        }
-    }
-
-    //VkInstanceCreateInfo createInfo{};
-
+    createInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+    createInfo.pApplicationInfo = &applicationInfo;
     return VK_SUCCESS;
 }
 

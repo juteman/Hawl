@@ -42,7 +42,10 @@ class DX12Exception
     DX12Exception(HRESULT             hr,
                   const std::wstring &functionName,
                   const std::wstring &filename,
-                  int                 lineNumber);
+                  int                 lineNumber)
+        : errCode{hr}, functionName{functionName}, fileName{filename}, lineNumber{lineNumber}
+    {
+    }
 
     std::wstring ToString() const
     {
@@ -54,14 +57,6 @@ class DX12Exception
     std::wstring fileName;
     INT32        lineNumber = -1;
 };
-
-inline DX12Exception::DX12Exception(HRESULT             hr,
-                                    const std::wstring &functionName,
-                                    const std::wstring &filename,
-                                    int                 lineNumber)
-    : errCode{hr}, functionName{functionName}, fileName{filename}, lineNumber{lineNumber}
-{
-}
 
 #ifndef CHECK_DX12_RESULT
 #define CHECK_DX12_RESULT(x)                                                                       \
