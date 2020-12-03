@@ -111,9 +111,10 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
         return VK_SUCCESS;
     };
 
-    auto CreateInstanceExtension = [&](vector<string> &extensions) {
+    auto CreateInstanceExtension = [&](vector<const char *> &extensions) {
         UINT32 extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        CHECK_VULKAN_RESULT(
+            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr))
         vector<VkExtensionProperties> supportExtensions(extensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, supportExtensions.data());
 
@@ -131,9 +132,9 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
         for (int i = 0; i < extensions.size(); i++)
         {
             findExt = false;
-            for (const auto& supportExtension : supportExtensions)
+            for (const auto &supportExtension : supportExtensions)
             {
-                if (extensions[i].compare(supportExtension.extensionName) == 0)
+                if (strcmp(extensions[i], supportExtension.extensionName) == 0)
                 {
                     findExt = true;
                     break;
@@ -145,29 +146,54 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
                 i = extensions.erase(extensions.begin() + i) - extensions.begin();
             }
         }
+        return VK_SUCCESS;
+    };
+
+    auto CreateInstanceLayer = [&](vector<const char *> &layers) {
+        UINT32 layerCount = 0;
+        CHECK_VULKAN_RESULT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
+        vector<VkLayerProperties> supportLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, supportLayers.data());
+        vector<string> supportLayersName;
+
+        for (const auto &supportLayer : supportLayers)
+        {
+            supportLayersName.push_back(supportLayer.layerName);
+        }
+
+        sort(supportLayersName.begin(), supportLayersName.end());
+        sort(userDefinedInstanceLayer.begin(), userDefinedInstanceLayer.end());
+
+        set_intersection(supportLayersName.begin(),
+                         supportLayersName.end(),
+                         userDefinedInstanceLayer.begin(),
+                         userDefinedInstanceLayer.end(),
+                         layers);
+        return VK_SUCCESS;
     };
 
     CHECK_VULKAN_RESULT(CreateVKAppInfo())
 
-
     // Layer and extension
-    vector<string> extensions;
-    CreateInstanceExtension(extensions);
-    UINT32         layerCount = 0;
-    UINT32         extensionCount = 0;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    vector<const char *> extensions;
+    vector<const char *> layers;
+    CHECK_VULKAN_RESULT(CreateInstanceExtension(extensions))
+    CHECK_VULKAN_RESULT(CreateInstanceLayer(layers))
 
-    vector<VkLayerProperties>     layers(layerCount);
-
-
+    // set create info
     VkInstanceCreateInfo createInfo{};
 
     createInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.pApplicationInfo = &applicationInfo;
-    return VK_SUCCESS;
+    createInfo.enabledLayerCount = static_cast<UINT32>(layers.size());
+    createInfo.ppEnabledLayerNames = layers.empty() ? nullptr : layers.data();
+    createInfo.enabledExtensionCount = static_cast<UINT32>(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.empty() ? nullptr : extensions.data();
+
+    VkResult result = vkCreateInstance(&createInfo, pUserDefinedAllocator, &mVkInstance);
+    return result;
 }
 
 } // namespace Hawl
