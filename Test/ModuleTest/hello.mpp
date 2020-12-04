@@ -1,0 +1,10 @@
+#include <vector>
+export module hello;
+using namespace std;
+
+export namespace hello {
+void say() {
+    vector<int> testInt;
+
+}
+}
