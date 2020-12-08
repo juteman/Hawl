@@ -38,7 +38,7 @@ class VulkanInstance
     VkResult Create(const eastl::string &        appName,
                     eastl::vector<eastl::string> UserDefinedInstanceLayer,
                     eastl::vector<eastl::string> UserDefinedInstanceExtension,
-                    const VkAllocationCallbacks* pUserDefinedAllocator);
+                    const VkAllocationCallbacks *pUserDefinedAllocator);
 
     FORCEINLINE VkInstance GetInstance()
     {
