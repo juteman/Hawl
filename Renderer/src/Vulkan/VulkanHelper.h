@@ -25,12 +25,13 @@ class VulkanException
 {
   public:
     VulkanException() = default;
-    VulkanException(VkResult             result,
+    VulkanException(VkResult &           result,
                     const eastl::string &functionName,
                     const eastl::string &filename,
                     int                  lineNumber)
         : errCode(result), functionName(functionName), fileName(filename), lineNumber(lineNumber)
     {
+
     }
 
     eastl::string ToString() const
@@ -38,7 +39,7 @@ class VulkanException
         return functionName + " failed in " + fileName + "; line " + eastl::to_string(lineNumber);
     }
 
-    VkResult      errCode;
+    VkResult      errCode = VK_SUCCESS;
     eastl::string functionName;
     eastl::string fileName;
     int           lineNumber = -1;
@@ -50,7 +51,7 @@ class VulkanException
         VkResult result = (x);                                                                     \
         if (result != VK_SUCCESS)                                                                  \
         {                                                                                          \
-            throw VulkanException(result, #x, __FILE__, __LINE__);                                \
+            throw VulkanException(result, #x, __FILE__, __LINE__);                                 \
         }                                                                                          \
     }
 #endif
