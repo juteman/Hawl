@@ -21,7 +21,7 @@
  * under the License.
  */
 
-#include "DX12/DX12Helper.h"
+#include "DX12Helper.h"
 #include "IRenderer.h"
 #include "Logger.h"
 

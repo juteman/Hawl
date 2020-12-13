@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include "EASTL/string.h"
 #include <comdef.h>
 #include <string>
 #include <windows.h>
@@ -69,3 +70,24 @@ class DX12Exception
         }                                                                                          \
     }
 #endif
+
+// clang-format off
+#define to_string_case(a) case a: return #a;
+inline std::string D3DFeatureLevelToString (D3D_FEATURE_LEVEL featureLevel)
+{
+    switch (featureLevel)
+    {
+        to_string_case(D3D_FEATURE_LEVEL_9_1)
+        to_string_case(D3D_FEATURE_LEVEL_9_2)
+        to_string_case(D3D_FEATURE_LEVEL_9_3)
+        to_string_case(D3D_FEATURE_LEVEL_10_0)
+        to_string_case(D3D_FEATURE_LEVEL_10_1)
+        to_string_case(D3D_FEATURE_LEVEL_11_0)
+        to_string_case(D3D_FEATURE_LEVEL_11_1)
+        to_string_case(D3D_FEATURE_LEVEL_12_0)
+        to_string_case(D3D_FEATURE_LEVEL_12_1)
+        default:  return "D3D FEATURE LEVEL UNDEFINED";
+    }
+}
+#undef to_string_case
+// clang-format on

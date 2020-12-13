@@ -21,24 +21,15 @@
  * under the License.
  */
 #include "BaseType.h"
-#include "DX12/DX12Helper.h"
-#include "IRenderer.h"
+#include "DX12Handle.h"
+#include "DX12Helper.h"
+#include "EASTL/array.h"
 #include "Logger.h"
-
 #include <Windows.h>
-#include <array>
 #include <d3d12.h>
 #include <string>
 namespace Hawl
 {
-// Feature Level List of Direct3D
-const static D3D_FEATURE_LEVEL D3DFeatureLevels[] = {
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0,
-};
-
 
 typedef enum D3D12_DESCRIPTOR_HEAP_TYPE
 {
@@ -53,35 +44,38 @@ typedef enum D3D12_DESCRIPTOR_HEAP_TYPE
  * \brief Log the adapter information
  * \param desc3  description struct
  */
-void LogAdapter(DXGI_ADAPTER_DESC3 desc3)
+void LogAdapter(DXGI_ADAPTER_DESC1 desc1)
 {
     // Convert wstring to string
-    std::wstring      convert = desc3.Description;
+    std::wstring      convert = desc1.Description;
     const std::string desc(convert.begin(), convert.end());
     Logger::info("{}", desc);
-    Logger::info("{}", desc3.DeviceId);
-    Logger::info("{}", desc3.VendorId);
-    Logger::info("{}", desc3.DedicatedVideoMemory);
+    Logger::info("{}", desc1.DeviceId);
+    Logger::info("{}", desc1.VendorId);
+    Logger::info("{}", desc1.DedicatedVideoMemory);
 }
 
-void Renderer::Init(const char* name, bool isDebug)
-{
-    m_rendererDesc.rendererApi = D3D12;
-    const UINT32 flags = isDebug ? DXGI_CREATE_FACTORY_DEBUG : 0;
-    CHECK_DX12_RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&m_factory6)))
-    CreateDevice(isDebug);
-}
 
-void Renderer::CreateDevice(bool isDebug)
+DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedFeatureLevel)
 {
-    auto CreateMaxFeatureLevel = [&](const D3D_FEATURE_LEVEL *pFeatureLevels,
-                                     UINT32                   featureLevelCount) -> bool {
+    const static eastl::array<D3D_FEATURE_LEVEL, 4> D3DFeatureLevels{{D3D_FEATURE_LEVEL_12_1,
+                                                                      D3D_FEATURE_LEVEL_12_0,
+                                                                      D3D_FEATURE_LEVEL_11_1,
+                                                                      D3D_FEATURE_LEVEL_11_0}};
+
+    AdapterHandle     adapterHandle;
+    DeviceHandle      deviceHandle;
+    D3D_FEATURE_LEVEL selectedFeatureLevel;
+
+    auto CreateMaxFeatureLevel = [&](const eastl::array<D3D_FEATURE_LEVEL, 4>& featureLevelArray,
+                                     UINT32                             featureLevelCount) -> bool {
         for (uint32_t i = 0; i < featureLevelCount; i++)
         {
-            if (SUCCEEDED(D3D12CreateDevice(
-                    m_adapter4.Get(), pFeatureLevels[i], IID_PPV_ARGS(&m_device4))))
+            if (SUCCEEDED(D3D12CreateDevice(adapterHandle.Get(),
+                                            featureLevelArray[i],
+                                            IID_PPV_ARGS(deviceHandle.GetAddressOf()))))
             {
-                m_rendererDesc.maxFeatureLevel = pFeatureLevels[i];
+                selectedFeatureLevel = featureLevelArray[i];
                 return true;
             }
         }
@@ -89,36 +83,60 @@ void Renderer::CreateDevice(bool isDebug)
         return false;
     };
 
-    // Enum the adapter by Gpu power
-    for (UINT32 i = 0; m_factory6->EnumAdapterByGpuPreference(
-                           i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&m_adapter4)) !=
+    bool bSelectedAdapter = false;
+
+    for (UINT32 i = 0; pFactory6->EnumAdapterByGpuPreference(
+                           i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapterHandle)) !=
                        DXGI_ERROR_NOT_FOUND;
          i++)
     {
-        DXGI_ADAPTER_DESC3 desc{};
+        DXGI_ADAPTER_DESC1 desc{};
 
-        CHECK_DX12_RESULT(m_adapter4->GetDesc3(&desc))
+        CHECK_DX12_RESULT(adapterHandle->GetDesc1(&desc))
 
         // No soft render
         if (!(desc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))
         {
-            // if support level Dx11 , the choose the adapter
-            if (CreateMaxFeatureLevel(D3DFeatureLevels, ArraySize(D3DFeatureLevels)))
-            {
-                LogAdapter(desc);
-                break;
-            }
+            bSelectedAdapter = true;
+            LogAdapter(desc);
+            break;
         }
     }
+
+    if (!bSelectedAdapter)
+    {
+        // If no GPU was found, just select the first and select default adapter device
+        Logger::warn(
+            "Could not find a GPU matching conditions specified in environment variables.");
+        CHECK_DX12_RESULT(pFactory6->EnumAdapters1(0, adapterHandle.GetAddressOf()));
+    }
+
+    if (requestedFeatureLevel == 0)
+    {
+        CreateMaxFeatureLevel(D3DFeatureLevels, D3DFeatureLevels.size());
+    }
+    else
+    {
+        D3D12CreateDevice(adapterHandle.Get(), requestedFeatureLevel, IID_PPV_ARGS(deviceHandle.GetAddressOf()));
+        selectedFeatureLevel = requestedFeatureLevel;
+    }
+
+    if(deviceHandle.Get() != nullptr)
+    {
+        Logger::info("Successfully created device with feature level: {}", D3DFeatureLevelToString(selectedFeatureLevel));
+        return deviceHandle;
+    }
+
+    Logger::error("Failed created D3D device");
+    return nullptr;
 }
 
-void Renderer::CreateDescriptorHeaps(bool isDebug)
+
+ISwapChain3Handle CreateSwapChain()
 {
-    for (UINT32 i = 0; i< D3D12_DESCRIPTOR_HEAP_TYPE_NUM_COUNT; i++)
-    {
-        
-    }
+    
 }
+
 
 
 } // namespace Hawl

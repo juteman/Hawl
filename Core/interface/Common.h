@@ -59,6 +59,9 @@
         a = nullptr;                                                                               \
     }
 
+
+#define CODE_TO_STRING(x)  #x
+
 namespace Hawl
 {
 /**

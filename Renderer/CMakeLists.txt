@@ -3,7 +3,7 @@ project(Hawl-Render CXX)
 
 
 if (D3D12_SUPPORTED)
-    file(GLOB SOURCE_DX12 "src/Vulkan/*.cpp" "src/Vulkan/*.h")
+    file(GLOB SOURCE_DX12 "src/DX12/*.cpp" "src/DX12/*.h")
 
     add_library(RendererDX12 ${SOURCE_DX12})
     target_link_libraries(RendererDX12
