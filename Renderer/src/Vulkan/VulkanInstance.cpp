@@ -57,12 +57,6 @@ eastl::vector<eastl::string> baseInstanceExtensions
         /************************************************************************/
     VK_KHR_DISPLAY_EXTENSION_NAME,
     VK_EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME,
-        /************************************************************************/
-        // Multi GPU Extensions
-        /************************************************************************/
-#if VK_KHR_device_group_creation
-    VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME,
-#endif
 };
 // clang-format on
 

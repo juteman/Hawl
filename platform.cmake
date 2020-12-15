@@ -115,24 +115,27 @@ if(MSVC)
     # target_compile_options(Diligent-BuildSettings INTERFACE "$<$<CONFIG:RELEASE>:/Ot>")
     # does not work as expected
 
-    set(DEBUG_MACROS REFORGE_DEVELOPMENT REFORGE_DEBUG)
+    set(DEBUG_MACROS HAWL_DEVELOPMENT HAWL_DEBUG)
     target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:DEBUG>:${DEBUG_MACROS}>")
 else()
 
-    set(DEBUG_MACROS _DEBUG DEBUG)
+    set(DEBUG_MACROS HAWL_DEVELOPMENT HAWL_DEBUG)
     set(RELEASE_MACROS NDEBUG)
 
     foreach(DBG_CONFIG ${DEBUG_CONFIGURATIONS})
-        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${DBG_CONFIG}>:${DEBUG_MACROS}>" /experimental:module)
+        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${DBG_CONFIG}>:${DEBUG_MACROS}>")
     endforeach()
 
     foreach(REL_CONFIG ${RELEASE_CONFIGURATIONS})
-        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${REL_CONFIG}>:${RELEASE_MACROS}>" /experimental:module)
+        target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${REL_CONFIG}>:${RELEASE_MACROS}>")
     endforeach()
 endif(MSVC)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
     CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(DEBUG_MACROS HAWL_DEVELOPMENT HAWL_DEBUG)
+    set(RELEASE_MACROS NDEBUG)
+    target_compile_definitions(BuildSettings INTERFACE "$<$<CONFIG:${REL_CONFIG}>:${RELEASE_MACROS}>")
     set(WHOLE_ARCHIVE_FLAG "-Wl,--whole-archive -fmodules")
     set(NO_WHOLE_ARCHIVE_FLAG "-Wl,--no-whole-archive -fmodules")
 else()
