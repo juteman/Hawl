@@ -28,6 +28,7 @@
 #include <Windows.h>
 #include <d3d12.h>
 #include <string>
+#include "Device.h"
 namespace Hawl
 {
 
@@ -132,9 +133,11 @@ DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedF
 }
 
 
-ISwapChain3Handle CreateSwapChain()
+ISwapChain3Handle CreateSwapChain(IDXGIFactory6 *pFactory6, const Window* pWindow, ID3D12CommandQueue* pCommandQueue)
 {
-    
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc1{};
+
+
 }
 
 

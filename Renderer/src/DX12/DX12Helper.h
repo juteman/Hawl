@@ -23,40 +23,45 @@
 #include <comdef.h>
 #include <string>
 #include <windows.h>
+#include <exception>
+#include <utility>
+#include <d3d12.h>
 
 /**
  * \brief This function convert string to wstring
  * \param str  standard string to be convert
  * \return return the string convert to wstring
  */
-inline std::wstring AnsiToWString(const std::string &str)
+inline eastl::wstring AnsiToWString(const eastl::string &str)
 {
     WCHAR buffer[512];
     MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
-    return std::wstring(buffer);
+    return eastl::wstring(buffer);
 }
 
 class DX12Exception : std::exception
 {
-  public:
+public:
     DX12Exception() = default;
-    DX12Exception(HRESULT             hr,
-                  const std::wstring &functionName,
-                  const std::wstring &filename,
-                  int                 lineNumber)
-        : errCode{hr}, functionName{functionName}, fileName{filename}, lineNumber{lineNumber}
+
+    DX12Exception(HRESULT        hr,
+                  eastl::wstring functionName,
+                  eastl::wstring filename,
+                  int            lineNumber)
+        : errCode{hr}, functionName{std::move(functionName)}, fileName{std::move(filename)}, lineNumber{lineNumber}
     {
     }
 
-    std::wstring ToString() const
+    eastl::wstring ToString() const
     {
-        return functionName + L" failed in " + fileName + L"; line " + std::to_wstring(lineNumber);
+        return functionName + L" failed in " + fileName + L"; line " +
+               eastl::to_wstring(lineNumber);
     }
 
-    HRESULT      errCode = S_OK;
-    std::wstring functionName;
-    std::wstring fileName;
-    INT32        lineNumber = -1;
+    HRESULT        errCode = S_OK;
+    eastl::wstring functionName;
+    eastl::wstring fileName;
+    INT32          lineNumber = -1;
 };
 
 #ifndef CHECK_DX12_RESULT
@@ -65,29 +70,31 @@ class DX12Exception : std::exception
         HRESULT hr = (x);                                                                          \
         if (FAILED(hr))                                                                            \
         {                                                                                          \
-            std::wstring wfn = AnsiToWString(__FILE__);                                            \
+            eastl::wstring wfn = AnsiToWString(__FILE__);                                            \
             throw DX12Exception(hr, L#x, wfn, __LINE__);                                           \
         }                                                                                          \
     }
 #endif
 
 // clang-format off
-#define to_string_case(a) case a: return #a;
-inline std::string D3DFeatureLevelToString (D3D_FEATURE_LEVEL featureLevel)
+#define TO_STRING_CASE(a) case a: return #a;
+
+inline eastl::string D3DFeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {
-        to_string_case(D3D_FEATURE_LEVEL_9_1)
-        to_string_case(D3D_FEATURE_LEVEL_9_2)
-        to_string_case(D3D_FEATURE_LEVEL_9_3)
-        to_string_case(D3D_FEATURE_LEVEL_10_0)
-        to_string_case(D3D_FEATURE_LEVEL_10_1)
-        to_string_case(D3D_FEATURE_LEVEL_11_0)
-        to_string_case(D3D_FEATURE_LEVEL_11_1)
-        to_string_case(D3D_FEATURE_LEVEL_12_0)
-        to_string_case(D3D_FEATURE_LEVEL_12_1)
-        default:  return "D3D FEATURE LEVEL UNDEFINED";
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_9_1)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_9_2)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_9_3)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_10_0)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_10_1)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_11_0)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_11_1)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_12_0)
+    TO_STRING_CASE(D3D_FEATURE_LEVEL_12_1)
+    default:
+        return "D3D FEATURE LEVEL UNDEFINED";
     }
 }
-#undef to_string_case
+#undef TO_STRING_CASE
 // clang-format on
