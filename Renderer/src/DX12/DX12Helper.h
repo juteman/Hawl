@@ -36,7 +36,7 @@ inline std::wstring AnsiToWString(const std::string &str)
     return std::wstring(buffer);
 }
 
-class DX12Exception
+class DX12Exception : std::exception
 {
   public:
     DX12Exception() = default;
