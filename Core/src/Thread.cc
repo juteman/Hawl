@@ -2,7 +2,7 @@
 #include "Logger.h"
 namespace Hawl
 {
-bool ThreadPool::Create(UINT32 numOfThreads, Priority threadPriority)
+bool ThreadPool::Create(uint32 numOfThreads, Priority threadPriority)
 {
     if(numOfThreads > MaxThreadCount)
     {

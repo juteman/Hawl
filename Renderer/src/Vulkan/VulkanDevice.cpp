@@ -21,7 +21,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#include "IRenderer.h"
+#include "Renderer.h"
 #include "Logger.h"
 #include "volk.h"
 #include <BaseType.h>
@@ -55,8 +55,8 @@ namespace Hawl {
     };
 
 //    void Renderer::CreateInstance(const char *appName, bool isDebug) {
-//        UINT32 layoutCount{0};
-//        UINT32 extensionCount{0};
+//        uint32 layoutCount{0};
+//        uint32 extensionCount{0};
 //        const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 //        const bool enableValidationLayers = isDebug ? true : false;
 //
@@ -90,7 +90,7 @@ namespace Hawl {
 //        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 //        createInfo.pApplicationInfo = &appInfo;
 //        if (enableValidationLayers) {
-//            createInfo.enabledLayerCount = static_cast<UINT32>(validationLayers.size());
+//            createInfo.enabledLayerCount = static_cast<uint32>(validationLayers.size());
 //            createInfo.ppEnabledLayerNames = validationLayers.data();
 //        } else {
 //            createInfo.enabledLayerCount = 0;
@@ -108,7 +108,7 @@ namespace Hawl {
     VkPhysicalDevice selectBestDevice(const eastl::vector<VkPhysicalDevice>& devices)
     {
         VkPhysicalDevice selectedDevice = VK_NULL_HANDLE;
-        UINT64 BiggestMemory = 0;
+        uint64 BiggestMemory = 0;
 
         for (const VkPhysicalDevice& device : devices)
         {
@@ -116,8 +116,8 @@ namespace Hawl {
             vkGetPhysicalDeviceMemoryProperties(device, &properties);
 
             // Get local memory size from device
-            UINT64 deviceMemory = 0;
-            for (UINT32 i = 0; i < properties.memoryHeapCount; i++)
+            uint64 deviceMemory = 0;
+            for (uint32 i = 0; i < properties.memoryHeapCount; i++)
             {
                 if ((properties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) > 0)
                 {
@@ -138,7 +138,7 @@ namespace Hawl {
     }
 
     static eastl::vector<VkLayerProperties> EnumerateInstanceLayerProperties() {
-        UINT32 layerCount = 0;
+        uint32 layerCount = 0;
         CHECK_VULKAN_RESULT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
         eastl::vector<VkLayerProperties> supportLayerProperties(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, supportLayerProperties.data());
@@ -191,7 +191,7 @@ namespace Hawl {
 
 
     static eastl::vector<VkExtensionProperties> EnumInstanceExtensions() {
-        UINT32 extensionCount = 0;
+        uint32 extensionCount = 0;
         CHECK_VULKAN_RESULT(
                 vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr))
         eastl::vector<VkExtensionProperties> supportExtensions(extensionCount);
@@ -245,9 +245,9 @@ namespace Hawl {
         // init create info
         VkInstanceCreateInfo instanceCreateInfo = {};
         instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instanceCreateInfo.enabledLayerCount = UINT32(enableLayers.size());
+        instanceCreateInfo.enabledLayerCount = uint32(enableLayers.size());
         instanceCreateInfo.ppEnabledLayerNames = enableLayers.data();
-        instanceCreateInfo.enabledExtensionCount = UINT32(enableExtensions.size());
+        instanceCreateInfo.enabledExtensionCount = uint32(enableExtensions.size());
         instanceCreateInfo.ppEnabledExtensionNames = enableExtensions.data();
 
         VkInstance instance;
@@ -258,7 +258,7 @@ namespace Hawl {
 
     VkPhysicalDevice InitPhysicalDevice(VkInstance instance, VulkanDeviceInfo vulkanDeviceInfo)
     {
-        UINT32 count = 0;
+        uint32 count = 0;
         vkEnumeratePhysicalDevices(instance, &count, nullptr);
 
         eastl::vector<VkPhysicalDevice> devices(count);

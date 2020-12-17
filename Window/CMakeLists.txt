@@ -1,22 +1,22 @@
-cmake_minimum_required(VERSION 3.6) 
+cmake_minimum_required(VERSION 3.6)
 project(Hawl-Window CXX)
-add_definitions(-DUNICODE -D_UNICODE)
+
 
 
 file(GLOB SOURCE_Window "src/*.cpp" "src/*.h" "interface/*.h")
 
 add_library(Hawl-Window ${SOURCE_Window})
 
-target_link_libraries(Hawl-Window 
-PUBLIC
-    Hawl-Core
-PRIVATE
-    BuildSettings
-	winmm
-)
+target_link_libraries(Hawl-Window
+        PUBLIC
+        Hawl-Core
+        PRIVATE
+        BuildSettings
+        )
+
 
 
 target_include_directories(Hawl-Window
-PUBLIC 
-    interface
-)
+        PUBLIC
+        interface
+        )

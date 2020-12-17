@@ -33,10 +33,10 @@ INT64
 getTimerFrequency();
 
 // 获得当前时间，毫秒
-UINT32
+uint32
 getMSec();
 
-UINT32
+uint32
 getTimeSinceStart();
 
 /// 低精度时间
@@ -48,13 +48,13 @@ public:
   /// Get the time in Low accuracy time
   /// @param reset true to reset time
   /// @return return the elapsed time
-  UINT32 GetElapsedTime(bool reset);
+  uint32 GetElapsedTime(bool reset);
 
   //重置时间
   void Reset();
 
 private:
-  UINT32 m_startTime;
+  uint32 m_startTime;
 };
 
 /// 高精度时间
@@ -76,9 +76,9 @@ public:
 private:
   INT64 m_startTime;
 
-  static const UINT32 LENGTH_OF_HISTORY = 60;
+  static const uint32 LENGTH_OF_HISTORY = 60;
   INT64               m_history[LENGTH_OF_HISTORY];
-  UINT32              m_historyIndex;
+  uint32              m_historyIndex;
 };
 }
 

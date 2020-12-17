@@ -107,7 +107,7 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
     };
 
     auto CreateInstanceExtension = [&](vector<const char *> &extensions) {
-        UINT32 extensionCount = 0;
+        uint32 extensionCount = 0;
         CHECK_VULKAN_RESULT(
             vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr))
         vector<VkExtensionProperties> supportExtensions(extensionCount);
@@ -145,7 +145,7 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
     };
 
     auto CreateInstanceLayer = [&](vector<const char *> &layers) {
-        UINT32 layerCount = 0;
+        uint32 layerCount = 0;
         CHECK_VULKAN_RESULT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
         vector<VkLayerProperties> supportLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, supportLayers.data());
@@ -182,9 +182,9 @@ VkResult VulkanInstance::Create(const eastl::string &        appName,
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.pApplicationInfo = &applicationInfo;
-    createInfo.enabledLayerCount = static_cast<UINT32>(layers.size());
+    createInfo.enabledLayerCount = static_cast<uint32>(layers.size());
     createInfo.ppEnabledLayerNames = layers.empty() ? nullptr : layers.data();
-    createInfo.enabledExtensionCount = static_cast<UINT32>(extensions.size());
+    createInfo.enabledExtensionCount = static_cast<uint32>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.empty() ? nullptr : extensions.data();
 
     VkResult result = vkCreateInstance(&createInfo, pUserDefinedAllocator, &mVkInstance);

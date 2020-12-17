@@ -20,7 +20,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#include "WinApp.h"
+
 #include "Timer.h"
 #include <locale>
 

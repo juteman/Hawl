@@ -29,6 +29,7 @@
 #include <d3d12.h>
 #include <string>
 #include "Device.h"
+#include "Renderer.h"
 namespace Hawl
 {
 

@@ -7,8 +7,8 @@ using namespace Hawl;
 int main()
 {
     volkInitialize();
-    UINT32 extensionCount{0};
-    UINT32 layerCount{0};
+    uint32 extensionCount{0};
+    uint32 layerCount{0};
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
     Logger::info("extension count is  {}", extensionCount);
@@ -22,7 +22,7 @@ int main()
         Logger::info("{} | Extension Properties", ext.extensionName);
     }
 
-    UINT32 count = 0;
+    uint32 count = 0;
     for (const auto &layer : layers)
     {
         Logger::info("{} vkinstance layer", layer.layerName);

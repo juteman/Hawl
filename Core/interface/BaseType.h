@@ -26,23 +26,18 @@
 
 namespace Hawl {
 /// int 类型跨平台封装
-typedef int     INT;
-typedef int8_t  INT8;
-typedef int16_t INT16;
-typedef int32_t INT32;
-typedef int64_t INT64;
-typedef long    LONG;
+typedef int8_t  int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
 
 ///	unsigned int 类型跨平台封装
-typedef unsigned int UINT;
-typedef uint8_t      UINT8;
-typedef uint16_t     UINT16;
-typedef uint32_t     UINT32;
-typedef uint64_t     UINT64;
+typedef unsigned int uint;
+typedef uint8_t      uint8;
+typedef uint16_t     uint16;
+typedef uint32_t     uint32;
+typedef uint64_t     uint64;
 
-/// 浮点类型封装
-typedef float  FLOAT32;
-typedef double FLOAT64;
 
 /// bool类型封装
 typedef bool BOOL;
@@ -59,7 +54,7 @@ typedef void*       PVOID;
 typedef const void* CPVOID;
 
 // 引用计数类型包装
-typedef UINT64 RefCount;
+typedef uint64 RefCount;
 }
 
 #endif // !HAWL_BASE_TYPE

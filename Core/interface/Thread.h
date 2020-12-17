@@ -59,7 +59,7 @@ class ThreadPool
     using Queue = Algorithm::LockFreeQueue<Task* >;
 
   protected:
-    const UINT MaxThreadCount = std::thread::hardware_concurrency() / 2;
+    const uint MaxThreadCount = std::thread::hardware_concurrency() / 2;
     Queue TaskQueue;
     std::vector<std::thread> m_threads;
 
@@ -85,7 +85,7 @@ class ThreadPool
      * \param threadPriority priority in the pool thread
      * \return true for success create thread pool
      */
-    virtual bool Create(UINT32 numOfThreads, Priority threadPriority);
+    virtual bool Create(uint32 numOfThreads, Priority threadPriority);
 
     /**
      * \brief Clean all the thread in pool and destroy the pool

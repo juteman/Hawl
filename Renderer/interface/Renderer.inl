@@ -22,7 +22,7 @@
  */
 
 #pragma once
-#include "IRenderer.h"
+#include "Renderer.h"
 
 /**
  * \brief Create Renderer Handle

@@ -19,6 +19,8 @@
  */
 #pragma once
 #include <string>
+#include "EASTL/internal/config.h"
+
 #ifdef _MSC_VER
 #define HAWLCALL __cdecl
 #else
@@ -37,12 +39,12 @@
 #if PLATFORM_WIN32
 #define HAWL_EXPORT __declspec(dllexport)
 #define HAWL_IMPORT __declspec(dllimport)
-#define FORCEINLINE __forceinline
 #else
 #define HAWL_EXPORT __attribute__((visibility("default")))
 #define HAWL_IMPORT
-#define FORCEINLINE __attribute__((always_inline))
 #endif
+
+#define FORCEINLINE EASTL_FORCE_INLINE
 
 #ifdef __cplusplus
 #define HAWL_C_API extern "C"

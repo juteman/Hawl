@@ -19,12 +19,52 @@
  */
 #pragma once
 
-namespace Hawl
-{
+#include "BaseType.h"
+#include "Common.h"
+#include "EASTL/string.h"
+#include "WindowHandlePlatform.h"
 
-class Window
-{
+namespace Hawl {
 
-};
+    class Window {
+    public:
+        enum WindowMode {
+            Minimized,
+            Normal,
+            FullScreen
+        };
+
+
+        struct Desc {
+            uint32 width;
+            uint32 height;
+            eastl::string title;
+            WindowMode windowMode;
+            bool isResizeAble;
+        };
+
+        Window() = default;
+
+
+        FORCEINLINE const WindowHandle& getWindowHandle() const
+        {
+            return mWindowHandle;
+        }
+
+        FORCEINLINE uint32 getWindowWidth()
+        {
+            return mDesc.width;
+        }
+
+        FORCEINLINE uint32 getWindowHeight()
+        {
+            return mDesc.height;
+        }
+
+    private:
+        Desc mDesc;
+        WindowHandle mWindowHandle;
+
+    };
 } // namespace Hawl
 #endif
