@@ -33,6 +33,7 @@ add_subdirectory(tbb)
 ############################################################
 # config the spdlog lib for logging system
 ############################################################
+set(SPDLOG_BUILD_SHARED ON CACHE INTERNAL "Build shared library")
 add_subdirectory(spdlog)
 
 ############################################################
@@ -49,3 +50,8 @@ add_subdirectory(volk)
 # config the Vulkan header
 ############################################################
 add_subdirectory(Vulkan-Headers)
+
+############################################################
+# config for sdl2
+############################################################
+add_subdirectory(SDL2)

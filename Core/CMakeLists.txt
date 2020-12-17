@@ -39,7 +39,7 @@ endif ()
 set(SOURCE
     src/Thread.cc
     )
-add_library(Hawl-Core ${SOURCE} ${INCLUDE} ${INTERFACE})
+add_library(Hawl-Core SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
 
 
 target_include_directories(Hawl-Core
@@ -68,7 +68,6 @@ if (PLATFORM_LINUX)
             spdlog
             EASTL
             )
-
 endif ()
            
 

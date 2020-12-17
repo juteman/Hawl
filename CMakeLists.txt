@@ -11,9 +11,7 @@ include(platform.cmake)
 ############################################################
 add_subdirectory(ThirdParty)
 add_subdirectory(Core)
-if(WIN32)
 add_subdirectory(Window)
-endif()
 add_subdirectory(Renderer)
 
 add_subdirectory(Test)
