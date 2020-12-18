@@ -27,8 +27,7 @@ add_subdirectory(EASTL)
 ############################################################
 # config the tbb lib
 ############################################################
-set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
-add_subdirectory(tbb)
+add_subdirectory(oneTBB)
 
 ############################################################
 # config the spdlog lib for logging system

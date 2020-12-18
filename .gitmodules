@@ -1,6 +1,3 @@
-[submodule "ThirdParty/tbb"]
-	path = ThirdParty/tbb
-	url = https://github.com/wjakob/tbb
 [submodule "ThirdParty/spdlog"]
 	path = ThirdParty/spdlog
 	url = https://github.com/gabime/spdlog
@@ -13,3 +10,6 @@
 [submodule "ThirdParty/Vulkan-Headers"]
 	path = ThirdParty/Vulkan-Headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "ThirdParty/oneTBB"]
+	path = ThirdParty/oneTBB
+	url = https://github.com/oneapi-src/oneTBB.git
