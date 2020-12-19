@@ -3,9 +3,9 @@ project(Hawl-Window CXX)
 
 
 
-file(GLOB SOURCE_Window "src/*.cpp" "src/*.h" "interface/*.h")
+file(GLOB SOURCE_Window "src/*.cpp" "src/*.h" "interface/*.h" "include/*.hpp")
 
-add_library(Hawl-Window ${SOURCE_Window})
+add_library(Hawl-Window SHARED ${SOURCE_Window})
 
 target_link_libraries(Hawl-Window
         PUBLIC
@@ -19,4 +19,6 @@ target_link_libraries(Hawl-Window
 target_include_directories(Hawl-Window
         PUBLIC
         interface
+        PRIVATE
+        include
         )

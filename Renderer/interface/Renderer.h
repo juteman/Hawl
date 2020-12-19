@@ -25,7 +25,6 @@
 
 #if D3D12_SUPPORTED
 #include <vector>
-#include "DX12/DX12Handle.h"
 #endif
 
 

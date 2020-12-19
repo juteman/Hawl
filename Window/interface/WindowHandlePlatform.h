@@ -18,6 +18,9 @@
  *
  */
 #pragma once
+#ifdef PLATFORM_WIN32
+#include <windows.h>
+#endif
 
 namespace Hawl
 {

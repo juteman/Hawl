@@ -20,9 +20,9 @@
 
 #pragma once
 #include "Common.h"
+#include "BaseType.h"
+#include "EASTL/string.h"
 
-
-namespace HAWL
+namespace Hawl
 {
-    
 }

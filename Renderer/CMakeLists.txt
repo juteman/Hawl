@@ -11,6 +11,7 @@ if (D3D12_SUPPORTED)
             Hawl-Core
             BuildSettings
             PRIVATE
+            Hawl-Window
             "d3d12.lib"
             "dxgi.lib"
             "d3dcompiler.lib"

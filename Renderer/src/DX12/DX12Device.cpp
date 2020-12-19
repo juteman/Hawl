@@ -23,13 +23,15 @@
 #include "BaseType.h"
 #include "DX12Handle.h"
 #include "DX12Helper.h"
+#include "Device.h"
 #include "EASTL/array.h"
 #include "Logger.h"
+#include "Renderer.h"
+#include "Window.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <string>
-#include "Device.h"
-#include "Renderer.h"
+
 namespace Hawl
 {
 
@@ -57,7 +59,6 @@ void LogAdapter(DXGI_ADAPTER_DESC1 desc1)
     Logger::info("{}", desc1.DedicatedVideoMemory);
 }
 
-
 DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedFeatureLevel)
 {
     const static eastl::array<D3D_FEATURE_LEVEL, 4> D3DFeatureLevels{{D3D_FEATURE_LEVEL_12_1,
@@ -69,8 +70,8 @@ DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedF
     DeviceHandle      deviceHandle;
     D3D_FEATURE_LEVEL selectedFeatureLevel;
 
-    auto CreateMaxFeatureLevel = [&](const eastl::array<D3D_FEATURE_LEVEL, 4>& featureLevelArray,
-                                     UINT32                             featureLevelCount) -> bool {
+    auto CreateMaxFeatureLevel = [&](const eastl::array<D3D_FEATURE_LEVEL, 4> &featureLevelArray,
+                                     UINT32 featureLevelCount) -> bool {
         for (uint32_t i = 0; i < featureLevelCount; i++)
         {
             if (SUCCEEDED(D3D12CreateDevice(adapterHandle.Get(),
@@ -119,13 +120,15 @@ DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedF
     }
     else
     {
-        D3D12CreateDevice(adapterHandle.Get(), requestedFeatureLevel, IID_PPV_ARGS(deviceHandle.GetAddressOf()));
+        D3D12CreateDevice(
+            adapterHandle.Get(), requestedFeatureLevel, IID_PPV_ARGS(deviceHandle.GetAddressOf()));
         selectedFeatureLevel = requestedFeatureLevel;
     }
 
-    if(deviceHandle.Get() != nullptr)
+    if (deviceHandle.Get() != nullptr)
     {
-        Logger::info("Successfully created device with feature level: {}", D3DFeatureLevelToString(selectedFeatureLevel));
+        Logger::info("Successfully created device with feature level: {}",
+                     D3DFeatureLevelToString(selectedFeatureLevel));
         return deviceHandle;
     }
 
@@ -133,14 +136,21 @@ DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedF
     return nullptr;
 }
 
-
-ISwapChain3Handle CreateSwapChain(IDXGIFactory6 *pFactory6, const Window* pWindow, ID3D12CommandQueue* pCommandQueue)
+ISwapChain3Handle CreateSwapChain(IDXGIFactory6 *     pFactory6,
+                                  const Window *      pWindow,
+                                  ID3D12CommandQueue *pCommandQueue,
+                                  TextureFormat       textureFormat,
+                                  uint32              bufferCount)
 {
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc1{};
-
+    swapChainDesc1.BufferCount = bufferCount;
+    swapChainDesc1.Width = pWindow->getWindowWidth();
+    swapChainDesc1.Height = pWindow->getWindowHeight();
+    swapChainDesc1.Format = 
+    swapChainDesc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc1.SampleDesc.Count = 1;
 
 }
-
-
 
 } // namespace Hawl

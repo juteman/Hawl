@@ -26,60 +26,7 @@
 #  define HAWL_TIMER_H
 #  include "BaseType.h"
 namespace Hawl {
-INT64
-getUSec();
 
-INT64
-getTimerFrequency();
-
-// 获得当前时间，毫秒
-uint32
-getMSec();
-
-uint32
-getTimeSinceStart();
-
-/// 低精度时间
-class LTimer
-{
-public:
-  LTimer();
-
-  /// Get the time in Low accuracy time
-  /// @param reset true to reset time
-  /// @return return the elapsed time
-  uint32 GetElapsedTime(bool reset);
-
-  //重置时间
-  void Reset();
-
-private:
-  uint32 m_startTime;
-};
-
-/// 高精度时间
-class HTimer
-{
-public:
-  HTimer();
-
-  INT64 GetElapsedTime(bool reset);
-  INT64 GetElapsedTimeAverage();
-
-  /// Get the time in second format
-  /// @param reset true to reset time
-  /// @return return time from last reset
-  FLOAT32 GetSeconds(bool reset);
-  FLOAT32 GetSecondsAverage();
-  void    Reset();
-
-private:
-  INT64 m_startTime;
-
-  static const uint32 LENGTH_OF_HISTORY = 60;
-  INT64               m_history[LENGTH_OF_HISTORY];
-  uint32              m_historyIndex;
-};
 }
 
 #endif // !TIMER_H
