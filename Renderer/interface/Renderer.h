@@ -19,116 +19,230 @@
  */
 #pragma once
 
-#include "Common.h"
-#include "RenderInfo.h"
 #include "BaseType.h"
+#include "Common.h"
+#include "EASTL/vector.h"
+#include "RenderInfo.h"
+#include "TextureFormat.h"
+#include "tbb/spin_mutex.h"
+#include <dxgi1_6.h>
 
+namespace Hawl
+{
+#ifdef __cplusplus
+#ifndef MAKE_ENUM_FLAG
+#define MAKE_ENUM_FLAG(TYPE, ENUM_TYPE)                                                            \
+    static inline ENUM_TYPE operator|(ENUM_TYPE a, ENUM_TYPE b)                                    \
+    {                                                                                              \
+        return (ENUM_TYPE)((TYPE)(a) | (TYPE)(b));                                                 \
+    }                                                                                              \
+    static inline ENUM_TYPE operator&(ENUM_TYPE a, ENUM_TYPE b)                                    \
+    {                                                                                              \
+        return (ENUM_TYPE)((TYPE)(a) & (TYPE)(b));                                                 \
+    }                                                                                              \
+    static inline ENUM_TYPE operator|=(ENUM_TYPE &a, ENUM_TYPE b)                                  \
+    {                                                                                              \
+        return a = (a | b);                                                                        \
+    }                                                                                              \
+    static inline ENUM_TYPE operator&=(ENUM_TYPE &a, ENUM_TYPE b)                                  \
+    {                                                                                              \
+        return a = (a & b);                                                                        \
+    }
+
+#endif
+#endif
+
+#ifndef RENDERER_CUSTOM_MAX
+enum
+{
+    MAX_INSTANCE_EXTENSIONS = 64,
+    MAX_DEVICE_EXTENSIONS = 64,
+    /// Max number of GPUs in SLI or Cross-Fire
+    MAX_LINKED_GPUS = 4,
+    MAX_RENDER_TARGET_ATTACHMENTS = 8,
+    MAX_VERTEX_BINDINGS = 15,
+    MAX_VERTEX_ATTRIBS = 15,
+    MAX_SEMANTIC_NAME_LENGTH = 128,
+    MAX_DEBUG_NAME_LENGTH = 128,
+    MAX_MIP_LEVELS = 0xFFFFFFFF,
+    MAX_SWAPCHAIN_IMAGES = 3,
+    MAX_ROOT_CONSTANTS_PER_ROOTSIGNATURE = 4,
+    MAX_GPU_VENDOR_STRING_LENGTH = 64, // max size for GPUVendorPreset strings
+};
+#endif
+
+struct DescriptorHeap;
+struct NullDescriptors;
+
+typedef enum GPUPresetLevel
+{
+    GPU_PRESET_NONE = 0,
+    GPU_PRESET_OFFICE, // This means unsupported
+    GPU_PRESET_LOW,
+    GPU_PRESET_MEDIUM,
+    GPU_PRESET_HIGH,
+    GPU_PRESET_ULTRA,
+    GPU_PRESET_COUNT
+} GPUPresetLevel;
+
+typedef struct Fence
+{
+    ID3D12Fence *pDxFence;
+    HANDLE       pDxWaitIdleFenceEvent;
+    uint64       mFenceValue;
+    uint64       mPadA;
+} Fence;
+
+typedef enum QueueType
+{
+    QUEUE_TYPE_GRAPHICS = 0,
+    QUEUE_TYPE_TRANSFER,
+    QUEUE_TYPE_COMPUTE,
+    MAX_QUEUE_TYPE
+} QueueType;
+
+typedef enum QueueFlag
+{
+    QUEUE_FLAG_NONE = 0x0,
+    QUEUE_FLAG_DISABLE_GPU_TIMEOUT = 0x1,
+    QUEUE_FLAG_INIT_MICROPROFILE = 0x2,
+    MAX_QUEUE_FLAG = 0xFFFFFFFF
+} QueueFlag;
+MAKE_ENUM_FLAG(uint32, QueueFlag)
+
+typedef enum QueuePriority
+{
+    QUEUE_PRIORITY_NORMAL,
+    QUEUE_PRIORITY_HIGH,
+    QUEUE_PRIORITY_GLOBAL_REALTIME,
+    MAX_QUEUE_PRIORITY
+} QueuePriority;
+
+typedef struct Queue
+{
+    ID3D12CommandQueue *pDxQueue;
+    uint32              mType : 3;
+    uint32              mNodeIndex : 4;
+    Fence *             pFence;
+} Queue;
+
+typedef struct QueueDesc
+{
+    QueueType     mType;
+    QueueFlag     mFlag;
+    QueuePriority mPriority;
+    uint32_t      mNodeIndex;
+} QueueDesc;
+
+typedef struct GPUVendorPreset
+{
+    char mVendorId[MAX_GPU_VENDOR_STRING_LENGTH];
+    char mModelId[MAX_GPU_VENDOR_STRING_LENGTH];
+    char mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH]; // OPtional as not all gpu's have that. Default
+                                                    // is : 0x00
+    GPUPresetLevel mPresetLevel;
+    char mGpuName[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty
+                                                 // string
+    char mGpuDriverVersion[MAX_GPU_VENDOR_STRING_LENGTH];
+    char mGpuDriverDate[MAX_GPU_VENDOR_STRING_LENGTH];
+} GPUVendorPreset;
+
+typedef enum WaveOpsSupportFlags
+{
+    WAVE_OPS_SUPPORT_FLAG_NONE = 0x0,
+    WAVE_OPS_SUPPORT_FLAG_BASIC_BIT = 0x00000001,
+    WAVE_OPS_SUPPORT_FLAG_VOTE_BIT = 0x00000002,
+    WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT = 0x00000004,
+    WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT = 0x00000008,
+    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT = 0x00000010,
+    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT = 0x00000020,
+    WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT = 0x00000040,
+    WAVE_OPS_SUPPORT_FLAG_QUAD_BIT = 0x00000080,
+    WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV = 0x00000100,
+    WAVE_OPS_SUPPORT_FLAG_ALL = 0x7FFFFFFF
+} WaveOpsSupportFlags;
+MAKE_ENUM_FLAG(uint32, WaveOpsSupportFlags);
+
+/**
+ * GPU Settings struct
+ */
+typedef struct GPUSettings
+{
+    uint32              mUniformBufferAlignment;
+    uint32              mUploadBufferTextureAlignment;
+    uint32              mUploadBufferTextureRowAlignment;
+    uint32              mMaxVertexInputBindings;
+    uint32              mMaxRootSignatureDWORDS;
+    uint32              mWaveLaneCount;
+    WaveOpsSupportFlags mWaveOpsSupportFlags;
+    GPUVendorPreset     mGpuVendorPreset;
+    uint32              mMultiDrawIndirect : 1;
+    uint32              mROVsSupported : 1;
+    uint32              mTessellationSupported : 1;
+    uint32              mGeometryShaderSupported : 1;
+} GPUSettings;
+
+typedef struct ShaderMacro
+{
+    const char *definition;
+    const char *value;
+} ShaderMacro;
+
+typedef struct GPUCapBits
+{
+    bool canShaderReadFrom[TextureFormat::Count];
+    bool canShaderWriteTo[TextureFormat::Count];
+    bool canRenderTargetWriteTo[TextureFormat::Count];
+} GPUCapBits;
+
+
+typedef enum ShaderTarget
+{
+    shader_target_5_1,
+    shader_target_6_0,
+    shader_target_6_1,
+    shader_target_6_2,
+    shader_target_6_3, //required for Raytracing
+} ShaderTarget;
+
+typedef enum GpuMode
+{
+    GPU_MODE_SINGLE = 0,
+    GPU_MODE_LINKED,
+} GpuMode;
+
+typedef struct RendererDesc
+{
+    ShaderTarget                 mShaderTarget;
+    GpuMode                      mGpuMode;
+    /// This results in new validation not possible during API calls on the CPU, by creating patched shaders that have validation added directly to the shader.
+    /// However, it can slow things down a lot, especially for applications with numerous PSOs. Time to see the first render frame may take several minutes
+    bool                         mEnableGPUBasedValidation;
+} RendererDesc;
+
+typedef struct alignas(64) Renderer
+{
 #if D3D12_SUPPORTED
-#include <vector>
+    DescriptorHeap **pCPUDescriptorHeaps;
+    DescriptorHeap **pCbvSrvUavHeaps;
+    DescriptorHeap **pSamplerHeaps;
+
+    IDXGIFactory6 *pDXGIFactory;
+    IDXGIAdapter4 *pDxActiveGPU;
+    ID3D12Device * pDxDevice;
+    // class  D3D12MA::Allocator*      pResourceAllocator;
 #endif
-
-
-#ifdef RENDERER_SHARED
-#define HAWLRENDERERAPI HAWL_C_API HAWL_EXPORT FORCEINLINE
-#else
-#define HAWLRENDERERAPI
-#endif
-
-namespace Hawl {
-    enum class TextureFormat : uint32 {
-        // Compressed formats
-        BC1,          //!< DXT1 R5G6B5A1
-        BC2,          //!< DXT3 R5G6B5A4
-        BC3,          //!< DXT5 R5G6B5A8
-        BC4,          //!< LATC1/ATI1 R8
-        BC5,          //!< LATC2/ATI2 RG8
-        BC6H,         //!< BC6H RGB16F
-        BC7,          //!< BC7 RGB 4-7 bits per color channel, 0-8 bits alpha
-        ETC1,         //!< ETC1 RGB8
-        ETC2,         //!< ETC2 RGB8
-        ETC2A,        //!< ETC2 RGBA8
-        ETC2A1,       //!< ETC2 RGB8A1
-        PTC12,        //!< PVRTC1 RGB 2BPP
-        PTC14,        //!< PVRTC1 RGB 4BPP
-        PTC12A,       //!< PVRTC1 RGBA 2BPP
-        PTC14A,       //!< PVRTC1 RGBA 4BPP
-        PTC22,        //!< PVRTC2 RGBA 2BPP
-        PTC24,        //!< PVRTC2 RGBA 4BPP
-        ATC,          //!< ATC RGB 4BPP
-        ATCE,         //!< ATCE RGBA 8 BPP explicit alpha
-        ATCI,         //!< ATCI RGBA 8 BPP interpolated alpha
-        ASTC4x4,      //!< ASTC 4x4 8.0 BPP
-        ASTC5x5,      //!< ASTC 5x5 5.12 BPP
-        ASTC6x6,      //!< ASTC 6x6 3.56 BPP
-        ASTC8x5,      //!< ASTC 8x5 3.20 BPP
-        ASTC8x6,      //!< ASTC 8x6 2.67 BPP
-        ASTC10x5,     //!< ASTC 10x5 2.56 BPP
-
-        Unknown,      // Compressed formats above.
-
-        R1,
-        A8,
-        R8,
-        R8I,
-        R8U,
-        R8S,
-        R16,
-        R16I,
-        R16U,
-        R16F,
-        R16S,
-        R32I,
-        R32U,
-        R32F,
-        RG8,
-        RG8I,
-        RG8U,
-        RG8S,
-        RG16,
-        RG16I,
-        RG16U,
-        RG16F,
-        RG16S,
-        RG32I,
-        RG32U,
-        RG32F,
-        RGB8,
-        RGB8I,
-        RGB8U,
-        RGB8S,
-        RGB9E5F,
-        BGRA8,
-        RGBA8,
-        RGBA8I,
-        RGBA8U,
-        RGBA8S,
-        RGBA16,
-        RGBA16I,
-        RGBA16U,
-        RGBA16F,
-        RGBA16S,
-        RGBA32I,
-        RGBA32U,
-        RGBA32F,
-        R5G6B5,
-        RGBA4,
-        RGB5A1,
-        RGB10A2,
-        RG11B10F,
-
-        UnknownDepth,
-
-        // Depth-stencil blow
-        D16,
-        D24,
-        D24S8,
-        D32,
-        D16F,
-        D24F,
-        D32F,
-        D0S8,
-
-        Count
-    };
+    NullDescriptors *pNullDescriptors;
+    char *           pName;
+    GPUSettings *    pActiveGpuSettings;
+    ShaderMacro *    pBuiltinShaderDefines;
+    GPUCapBits *     pCapBits;
+    uint32           mLinkedNodeCount : 4;
+    uint32           mGpuMode : 3;
+    uint32           mShaderTarget : 4;
+    uint32           mApi : 5;
+    uint32           mEnableGpuBasedValidation : 1;
+    uint32           mBuiltinShaderDefinesCount;
+} Renderer;
 
 } // namespace Hawl

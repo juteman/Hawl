@@ -27,12 +27,13 @@ add_subdirectory(EASTL)
 ############################################################
 # config the tbb lib
 ############################################################
+set(TBB_TEST OFF CACHE INTERNAL "Not enable Tbb testing")
 add_subdirectory(oneTBB)
 
 ############################################################
 # config the spdlog lib for logging system
 ############################################################
-set(SPDLOG_BUILD_SHARED ON CACHE INTERNAL "Build shared library")
+set(SPDLOG_BUILD_SHARED OFF CACHE INTERNAL "Build shared library")
 add_subdirectory(spdlog)
 
 ############################################################
@@ -40,17 +41,12 @@ add_subdirectory(spdlog)
 ############################################################
 if (WIN32)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
-elseif(PLATFORM_LINUX)
+elseif (PLATFORM_LINUX)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XLIB_KHR)
-endif()
+endif ()
 add_subdirectory(volk)
 
 ############################################################
 # config the Vulkan header
 ############################################################
 add_subdirectory(Vulkan-Headers)
-
-############################################################
-# config for sdl2
-############################################################
-add_subdirectory(SDL2)

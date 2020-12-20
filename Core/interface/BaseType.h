@@ -39,12 +39,7 @@ typedef uint32_t     uint32;
 typedef uint64_t     uint64;
 
 
-/// bool类型封装
-typedef bool BOOL;
-// 这里使用 static 定义 FALSE 而不是
-// 使用宏， 宏会与其他头文件中定义冲突
-static BOOL FALSE = false;
-static BOOL TRUE  = true;
+
 // char 类型封装
 typedef char CHAR;
 

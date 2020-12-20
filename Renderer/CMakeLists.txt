@@ -5,13 +5,14 @@ project(Hawl-Render CXX)
 if (D3D12_SUPPORTED)
     file(GLOB SOURCE_DX12 "src/DX12/*.cpp" "src/DX12/*.h" "interface/*.h")
 
-    add_library(RendererDX12 SHARED ${SOURCE_DX12})
+    add_library(RendererDX12 SHARED ${SOURCE_DX12} src/DX12/D3D12.cpp)
     target_link_libraries(RendererDX12 
             PUBLIC
             Hawl-Core
             BuildSettings
             PRIVATE
             Hawl-Window
+            tbb
             "d3d12.lib"
             "dxgi.lib"
             "d3dcompiler.lib"

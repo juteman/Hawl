@@ -50,13 +50,6 @@ namespace Hawl
         SHADER_MODEL_6_5
     };
 
-    struct RendererDesc
-    {
-        RendererApi rendererApi;
-        ShaderModel shaderModel;
-#if D3D12_SUPPORTED
-        D3D_FEATURE_LEVEL maxFeatureLevel;
-#endif
-    };
+
 
 };

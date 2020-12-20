@@ -32,4 +32,5 @@ using DeviceHandle = Microsoft::WRL::ComPtr<ID3D12Device>;
 using Device4Handle = Microsoft::WRL::ComPtr<ID3D12Device4>;
 using CommandQueueHandle = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
 using ISwapChain3Handle = Microsoft::WRL::ComPtr<IDXGISwapChain3>;
+using ISwapChain1Handle = Microsoft::WRL::ComPtr<IDXGISwapChain1>;
 } // namespace Hawl

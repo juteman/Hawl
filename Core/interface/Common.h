@@ -22,9 +22,9 @@
 #include "EASTL/internal/config.h"
 
 #ifdef _MSC_VER
-#define HAWLCALL __cdecl
+#define Hawl_CALLCONV __cdecl
 #else
-#define HAWLCALL
+#define Hawl_CALLCONV
 #endif
 
 #define HAWL_DISABLE_COPY(TypeName)                                                                \
@@ -44,7 +44,9 @@
 #define HAWL_IMPORT
 #endif
 
+#ifndef FORCEINLINE
 #define FORCEINLINE EASTL_FORCE_INLINE
+#endif
 
 #ifdef __cplusplus
 #define HAWL_C_API extern "C"

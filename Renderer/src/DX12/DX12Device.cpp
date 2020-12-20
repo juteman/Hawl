@@ -23,6 +23,7 @@
 #include "BaseType.h"
 #include "DX12Handle.h"
 #include "DX12Helper.h"
+#include "DX12Resource.h"
 #include "Device.h"
 #include "EASTL/array.h"
 #include "Logger.h"
@@ -146,11 +147,23 @@ ISwapChain3Handle CreateSwapChain(IDXGIFactory6 *     pFactory6,
     swapChainDesc1.BufferCount = bufferCount;
     swapChainDesc1.Width = pWindow->getWindowWidth();
     swapChainDesc1.Height = pWindow->getWindowHeight();
-    swapChainDesc1.Format = 
+    swapChainDesc1.Format = getDXGIFormat(textureFormat);
     swapChainDesc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc1.SampleDesc.Count = 1;
 
+    ISwapChain1Handle swapChain1Handle;
+    CHECK_DX12_RESULT(pFactory6->CreateSwapChainForHwnd(pCommandQueue,
+                                                        pWindow->getNativeHandle(),
+                                                        &swapChainDesc1,
+                                                        nullptr,
+                                                        nullptr,
+                                                        &swapChain1Handle))
+
+    ISwapChain3Handle swapChain3Handle;
+    CHECK_DX12_RESULT(swapChain1Handle->QueryInterface(IID_PPV_ARGS(&swapChain3Handle)))
+
+    return swapChain3Handle;
 }
 
 } // namespace Hawl
