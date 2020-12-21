@@ -44,3 +44,4 @@ out/
 .idea/
 Folder.DotSettings
 CMakeSettings.json
+.xmake/

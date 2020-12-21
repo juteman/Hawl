@@ -1,0 +1,8 @@
+target("Hawl-Core")
+    set_kind("shared")
+    add_packages("spdlog")
+    add_packages("eastl")
+    add_packages("tbb")
+    add_includedirs("./interface", {public = true})
+    add_files("src/*.cpp")
+target_end()

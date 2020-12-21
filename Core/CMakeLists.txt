@@ -36,7 +36,7 @@ if (PLATFORM_LINUX)
 endif ()
 
 set(SOURCE
-    src/Thread.cc
+    src/Thread.cpp
     )
 add_library(Hawl-Core SHARED ${SOURCE} ${INCLUDE} ${INTERFACE})
 
