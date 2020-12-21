@@ -13,6 +13,3 @@
 [submodule "ThirdParty/oneTBB"]
 	path = ThirdParty/oneTBB
 	url = https://github.com/oneapi-src/oneTBB.git
-[submodule "ThirdParty/tiny_imageformat"]
-	path = ThirdParty/tiny_imageformat
-	url = https://github.com/DeanoC/tiny_imageformat.git
