@@ -32,3 +32,5 @@ if is_plat("windows") then
 end
 
 includes("Core")
+includes("Window")
+includes("Renderer")

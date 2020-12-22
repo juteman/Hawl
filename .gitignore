@@ -45,3 +45,4 @@ out/
 Folder.DotSettings
 CMakeSettings.json
 .xmake/
+obj/
