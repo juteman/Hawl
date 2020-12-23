@@ -19,18 +19,20 @@ namespace Hawl
         [Configure]
         public virtual void Configure(Configuration configuration, Target target)
         {
+            configuration.Name = @"[target.Optimization] [target.OutputType]";
             // Configuration Project name and path setting
-            configuration.ProjectFileName = "[project.Name]_[target.DevEnv]_[target.Platform]";
-            configuration.ProjectPath = @"[project.SharpmakeCsPath]\projects";
+            configuration.ProjectPath = @"[project.SharpmakeCsPath]/projects/[project.Name]";
             // set Languages Standard as latest
             configuration.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+            
             configuration.Options.Add(Options.Vc.Compiler.MultiProcessorCompilation.Enable);
             // set warnning log
             configuration.Options.Add(Options.Vc.General.WarningLevel.Level4);
+            configuration.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
             configuration.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
             configuration.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
             configuration.TargetLibraryPath = @"[project.SharpmakeCsPath]/lib";
-
+            
             if (target.Optimization == Optimization.Debug)
             {
                 configuration.Options.Add(Options.Vc.General.WholeProgramOptimization.Disable);

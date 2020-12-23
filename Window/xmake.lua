@@ -1,8 +1,0 @@
-target("Hawl-window")
-    set_kind("shared")
-    add_packages("eastl")
-    add_packages("spdlog")
-    add_includedirs("interface", {public = true})
-    add_includedirs("include")
-    add_files("src/*.cpp")
-target_end()

@@ -11,12 +11,14 @@ namespace Hawl
         public  CoreLib()
         {
             Name = "CoreLib";
-            SourceRootPath = @"[project.SharpmakeCsPath]/Core/src";
+            SourceRootPath = @"[project.SharpmakeCsPath]/Core";
         }
 
         public override void Configure(Configuration configuration, Target target)
         {
-            configuration.IncludePaths.Add(@"[project.SourceRootPath]/../interface");
+            base.Configure(configuration, target);
+            configuration.ProjectFileName = @"[project.Name]_[target.DevEnv]_[target.Platform]";
+            configuration.IncludePaths.Add(@"[project.SourceRootPath]/interface");
         }
     }
 }
