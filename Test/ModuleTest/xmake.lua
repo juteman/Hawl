@@ -1,5 +1,0 @@
-target("hello")
-    set_kind("binary")
-    add_files("*.cpp", "*.mpp")
-    set_toolset("cc", "clang")
-    set_toolset("ld", "clang++")

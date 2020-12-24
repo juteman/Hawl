@@ -11,13 +11,13 @@ namespace Hawl
         public RendererLib()
         {
             Name = "RendererLib";
-            SourceRootPath = @"[project.SharpmakeCsPath]/../Renderer/";
+            SourceRootPath = @"[project.SharpmakeCsPath]\..\Renderer\";
         }
 
         public override void Configure(Configuration configuration, Target target)
         {
             base.Configure(configuration, target);
-            configuration.IncludePaths.Add(@"[project.SourceRootPath]/interface");
+            configuration.IncludePaths.Add(@"[project.SourceRootPath]\interface");
             configuration.AddPublicDependency<CoreLib>(target);
         }
     }

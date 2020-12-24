@@ -24,7 +24,7 @@ namespace Hawl
         public void ConfigureAll(Configuration conf, Target target)
         {
             conf.Name = @"[target.Optimization]_[target.OutputType]";
-            conf.SolutionPath = @"[solution.SharpmakeCsPath]/projects";
+            conf.SolutionPath = @"[solution.SharpmakeCsPath]\projects";
             conf.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
             conf.AddProject<CoreLib>(target);
             conf.AddProject<RendererLib>(target);
