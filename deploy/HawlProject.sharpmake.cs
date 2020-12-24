@@ -16,7 +16,7 @@ namespace Hawl
             ));
         }
 
-        [Configure]
+        [Configure()]
         public virtual void Configure(Configuration configuration, Target target)
         {
             // Configuration Project name and path setting
@@ -77,14 +77,9 @@ namespace Hawl
         {
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release
-            ));
         }
 
-        [Configure]
+        [Configure()]
         public virtual void ThirdConfiguration(Configuration configuration, Target target)
         {
             // set Languages Standard as latest
@@ -92,7 +87,7 @@ namespace Hawl
 
             configuration.Options.Add(Options.Vc.Compiler.MultiProcessorCompilation.Enable);
             // set warnning log
-            configuration.Options.Add(Options.Vc.General.WarningLevel.Level4);
+            configuration.Options.Add(Options.Vc.General.WarningLevel.Level0);
             configuration.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
             configuration.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
             configuration.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);

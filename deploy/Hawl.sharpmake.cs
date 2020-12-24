@@ -1,6 +1,7 @@
 ﻿using System;
 using Sharpmake;
 
+[module: Sharpmake.Include("ThirdParty.sharpmake.cs")]
 [module: Sharpmake.Include("Core.sharpmake.cs")]
 [module: Sharpmake.Include("Renderer.sharpmake.cs")]
 
@@ -26,6 +27,7 @@ namespace Hawl
             conf.Name = @"[target.Optimization]_[target.OutputType]";
             conf.SolutionPath = @"[solution.SharpmakeCsPath]\projects";
             conf.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
+            //conf.AddProject<EASTL>(target);
             conf.AddProject<CoreLib>(target);
             conf.AddProject<RendererLib>(target);
         }
