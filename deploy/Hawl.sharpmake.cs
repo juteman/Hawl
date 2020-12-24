@@ -16,8 +16,7 @@ namespace Hawl
             AddTargets(new Target(
                Platform.win64,
                DevEnv.vs2019,
-               Optimization.Debug | Optimization.Release,
-               OutputType.Dll | OutputType.Lib
+               Optimization.Debug | Optimization.Release
            ));
         }
 

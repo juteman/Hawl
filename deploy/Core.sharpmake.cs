@@ -1,17 +1,17 @@
 using Sharpmake;
 
-[module: Sharpmake.Include("Lib.sharpmake.cs")]
+[module: Sharpmake.Include("HawlProject.sharpmake.cs")]
 
 namespace Hawl
 {
 
     [Generate]
-    class CoreLib : LibProject
+    class CoreLib : HawlLib
     {
         public  CoreLib()
         {
             Name = "CoreLib";
-            SourceRootPath = @"[project.SharpmakeCsPath]/Core";
+            SourceRootPath = @"[project.SharpmakeCsPath]/../Core";
         }
 
         public override void Configure(Configuration configuration, Target target)
