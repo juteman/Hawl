@@ -18,6 +18,14 @@ namespace Hawl
         {
             base.Configure(configuration, target);
             configuration.IncludePaths.Add(@"[project.SourceRootPath]\interface");
+            configuration.IncludePrivatePaths.Add(@"[project.SourceRootPath]\..\ThirdParty\nvapi");
+            configuration.IncludePrivatePaths.Add(@"[project.SourceRootPath]\..\ThirdParty\AGS_SDK\ags_lib\inc");
+
+            configuration.LibraryPaths.Add(@"[project.SourceRootPath]\..\ThirdParty\nvapi\amd64");
+            configuration.LibraryPaths.Add(@"[project.SourceRootPath]\..\ThirdParty\AGS_SDK\ags_lib\lib");
+
+            configuration.LibraryFiles.Add("nvapi64");
+            configuration.LibraryFiles.Add("amd_ags_x64");
             configuration.AddPublicDependency<CoreLib>(target);
         }
     }

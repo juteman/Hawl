@@ -50,6 +50,7 @@ namespace Hawl
         public Spdlog()
         {
             Name = "Spdlog";
+            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator";
             AddTargets(new Target(
                 Platform.win64,
                 DevEnv.vs2019,
@@ -63,6 +64,36 @@ namespace Hawl
         {
             
             configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\spdlog\include");
+            if (target.OutputType == OutputType.Dll)
+            {
+                configuration.Output = Configuration.OutputType.Dll;
+            }
+
+            if (target.OutputType == OutputType.Lib)
+            {
+                configuration.Output = Configuration.OutputType.Lib;
+            }
+        }
+    }
+
+    [Generate]
+    class D3D12MemoryAllocator : ThirdProject
+    {
+        public D3D12MemoryAllocator()
+        {
+            Name = "D3D12MemoryAllocator";
+            AddTargets(new Target(
+                Platform.win64,
+                DevEnv.vs2019,
+                Optimization.Debug | Optimization.Release,
+                OutputType.Dll | OutputType.Lib
+            ));
+        }
+
+        [Configure()]
+        public void Configure(Configuration configuration, Target target)
+        {
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator");
             if (target.OutputType == OutputType.Dll)
             {
                 configuration.Output = Configuration.OutputType.Dll;
