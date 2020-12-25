@@ -33,11 +33,7 @@ namespace Hawl
                 // if output as shared library
                 configuration.Output = Configuration.OutputType.Dll;
 
-                // expects HAWL_DLL symbol to be defined when use as DLL
-                configuration.ExportDefines.Add("HAWL_DLL");
 
-                // add define micro.
-                configuration.Defines.Add("HAWL_DLL");
             }
 
             if (target.OutputType == OutputType.Lib)
@@ -69,12 +65,7 @@ namespace Hawl
             configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\spdlog\include");
             if (target.OutputType == OutputType.Dll)
             {
-                // if output as shared library
                 configuration.Output = Configuration.OutputType.Dll;
-
-
-                // add define micro.
-                //configuration.Defines.Add("SPDLOG_SHARED_LIB");
             }
 
             if (target.OutputType == OutputType.Lib)
