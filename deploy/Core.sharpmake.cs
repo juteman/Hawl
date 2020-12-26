@@ -22,8 +22,9 @@ namespace Hawl
             configuration.Defines.Add("SPDLOG_WCHAR_TO_UTF8_SUPPORT");
             configuration.Defines.Add("SPDLOG_WCHAR_FILENAMES");
             configuration.IncludePaths.Add(@"[project.SourceRootPath]\interface");
-            configuration.AddPublicDependency<EASTL>(target);
+            configuration.AddPublicDependency<EASTL>(target, DependencySetting.OnlyBuildOrder | DependencySetting.IncludePaths );
             configuration.AddPublicDependency<Spdlog>(target);
+            configuration.AddPublicDependency<Tbb>(target);
         }
     }
 }

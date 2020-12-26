@@ -12,7 +12,7 @@ namespace Hawl
                 Platform.win64,
                 DevEnv.vs2019,
                 Optimization.Debug | Optimization.Release,
-                OutputType.Dll | OutputType.Lib
+                OutputType.Dll
             ));
         }
 
@@ -91,7 +91,6 @@ namespace Hawl
             configuration.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
             configuration.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
             configuration.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
-            configuration.Options.Add(Options.Vc.General.CharacterSet.Unicode);
 
             if (target.Optimization == Optimization.Debug)
             {

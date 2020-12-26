@@ -17,7 +17,8 @@ namespace Hawl
             AddTargets(new Target(
                Platform.win64,
                DevEnv.vs2019,
-               Optimization.Debug | Optimization.Release
+               Optimization.Debug | Optimization.Release,
+               OutputType.Dll
            ));
         }
 
@@ -27,7 +28,6 @@ namespace Hawl
             conf.Name = @"[target.Optimization]_[target.OutputType]";
             conf.SolutionPath = @"[solution.SharpmakeCsPath]\projects";
             conf.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
-            //conf.AddProject<EASTL>(target);
             conf.AddProject<CoreLib>(target);
             conf.AddProject<RendererLib>(target);
         }

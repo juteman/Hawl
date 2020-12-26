@@ -25,6 +25,8 @@
 #include "RenderInfo.h"
 #include "TextureFormat.h"
 #include "tbb/spin_mutex.h"
+
+#include <d3d12.h>
 #include <dxgi1_6.h>
 
 namespace Hawl
@@ -141,6 +143,7 @@ typedef struct GPUVendorPreset
     char mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH]; // OPtional as not all gpu's have that. Default
                                                     // is : 0x00
     GPUPresetLevel mPresetLevel;
+
     char mGpuName[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty
                                                  // string
     char mGpuDriverVersion[MAX_GPU_VENDOR_STRING_LENGTH];

@@ -15,7 +15,7 @@ namespace Hawl
                 Platform.win64,
                 DevEnv.vs2019,
                 Optimization.Debug | Optimization.Release,
-                OutputType.Dll | OutputType.Lib
+                OutputType.Dll
             ));
         }
 
@@ -28,18 +28,7 @@ namespace Hawl
             configuration.Defines.Add("EASTL_OPENSOURCE", "1");
             configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\EASTL\test\packages\EABase\include\Common");
             configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\EASTL\include");
-            if (target.OutputType == OutputType.Dll)
-            {
-                // if output as shared library
-                configuration.Output = Configuration.OutputType.Dll;
-
-
-            }
-
-            if (target.OutputType == OutputType.Lib)
-            {
-                configuration.Output = Configuration.OutputType.Lib;
-            }
+            configuration.Output = Configuration.OutputType.Lib;
         }
     }
 
@@ -55,24 +44,17 @@ namespace Hawl
                 Platform.win64,
                 DevEnv.vs2019,
                 Optimization.Debug | Optimization.Release,
-                OutputType.Dll | OutputType.Lib
+                OutputType.Dll
             ));
         }
 
         [Configure()]
         public void Configure(Configuration configuration, Target target)
         {
-            
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\spdlog\include");
-            if (target.OutputType == OutputType.Dll)
-            {
-                configuration.Output = Configuration.OutputType.Dll;
-            }
 
-            if (target.OutputType == OutputType.Lib)
-            {
-                configuration.Output = Configuration.OutputType.Lib;
-            }
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\spdlog\include");
+            configuration.Output = Configuration.OutputType.Lib;
+
         }
     }
 
@@ -82,27 +64,46 @@ namespace Hawl
         public D3D12MemoryAllocator()
         {
             Name = "D3D12MemoryAllocator";
+            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator";
             AddTargets(new Target(
                 Platform.win64,
                 DevEnv.vs2019,
                 Optimization.Debug | Optimization.Release,
-                OutputType.Dll | OutputType.Lib
+                OutputType.Dll
             ));
         }
 
         [Configure()]
         public void Configure(Configuration configuration, Target target)
         {
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator");
-            if (target.OutputType == OutputType.Dll)
-            {
-                configuration.Output = Configuration.OutputType.Dll;
-            }
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator"); 
+          
+            configuration.Output = Configuration.OutputType.Lib;
+            
+        }
+    }
 
-            if (target.OutputType == OutputType.Lib)
-            {
-                configuration.Output = Configuration.OutputType.Lib;
-            }
+    [Generate]
+    class Tbb : ThirdProject
+    {
+        public Tbb()
+        {
+            Name = "OneTbb";
+            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\oneTbb\src\tbb";
+            AddTargets(new Target(
+                Platform.win64,
+                DevEnv.vs2019,
+                Optimization.Debug | Optimization.Release,
+                OutputType.Dll
+            ));
+        }
+
+        [Configure()]
+        public void Configure(Configuration configuration, Target target)
+        {
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\oneTbb\include");
+            configuration.Output = Configuration.OutputType.Lib;
+            configuration.Defines.Add("__TBB_BUILD");
         }
     }
 }
