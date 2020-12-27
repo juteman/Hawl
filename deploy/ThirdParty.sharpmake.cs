@@ -4,106 +4,145 @@ using Sharpmake;
 
 namespace Hawl
 {
-    [Generate]
-    class EASTL : ThirdProject
+    // Add a dependency to this project to be able to use vcpkg packages in a project.
+    //
+    // This project then setup the necessary include and library paths to be able to reference any installed vcpkg package in
+    // our local vcpackage installation.
+    //
+    // Note: The required vcpkg packages are installed by bootstrap-sample.bat
+    //
+    [Export]
+    public class VCPKG : ThirdProject
     {
-        public EASTL()
+        public override void ConfigureRelease(Configuration conf, Target target)
         {
-            Name = "EASTL";
-            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\EASTL\source";
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Dll
-            ));
+            base.ConfigureRelease(conf, target);
+
+            // Add root include path for vcpkg packages.
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\vcpkg\installed\x64-windows\include");
+
+            // Add root lib path for vcpkg packages.
+            conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\..\vcpkg\installed\x64-windows\lib");
         }
 
-        [Configure()]
-        public void Configure(Configuration configuration, Target target)
+        public override void ConfigureDebug(Configuration conf, Target target)
         {
-            configuration.Defines.Add("_CHAR16T");
-            configuration.Defines.Add("_CRT_SECURE_NO_WARNINGS");
-            configuration.Defines.Add("_SCL_SECURE_NO_WARNINGS");
-            configuration.Defines.Add("EASTL_OPENSOURCE", "1");
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\EASTL\test\packages\EABase\include\Common");
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\EASTL\include");
-            configuration.Output = Configuration.OutputType.Lib;
+            base.ConfigureDebug(conf, target);
+
+            // Add root include path for vcpkg packages.
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\vcpkg\installed\x64-windows\include");
+
+            // Add root lib path for vcpkg packages.
+            conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\..\vcpkg\installed\x64-windows\debug\lib");
+        }
+    }
+
+    [Export]
+    class EASTL: VCPKG
+    {
+        public override void ConfigureAll(Configuration conf, Target target)
+        {
+            base.ConfigureAll(conf, target);
+        }
+
+        public override void ConfigureDebug(Configuration conf, Target target)
+        {
+            base.ConfigureDebug(conf, target);
+            conf.LibraryFiles.Add("EASTL.lib");
+        }
+
+        public override void ConfigureRelease(Configuration conf, Target target)
+        {
+            base.ConfigureRelease(conf, target);
+            conf.LibraryFiles.Add("EASTL.lib");
         }
     }
 
 
-    [Generate]
-    class Spdlog : ThirdProject
+
+    [Export]
+    class MiMalloc: VCPKG
     {
-        public Spdlog()
+        public override void ConfigureAll(Configuration conf, Target target)
         {
-            Name = "Spdlog";
-            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator";
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Dll
-            ));
+            base.ConfigureAll(conf, target);
         }
 
-        [Configure()]
-        public void Configure(Configuration configuration, Target target)
+        public override void ConfigureDebug(Configuration conf, Target target)
         {
+            base.ConfigureDebug(conf, target);
+            conf.LibraryFiles.Add("mimalloc-debug.lib");
+        }
 
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\spdlog\include");
-            configuration.Output = Configuration.OutputType.Lib;
+        public override void ConfigureRelease(Configuration conf, Target target)
+        {
+            base.ConfigureRelease(conf, target);
+            conf.LibraryFiles.Add("mimalloc.lib");
+        }
+    }
 
+    [Export]
+    class Spdlog : VCPKG
+    {
+        public override void ConfigureAll(Configuration conf, Target target)
+        {
+            base.ConfigureAll(conf, target);
+        }
+
+        public override void ConfigureDebug(Configuration conf, Target target)
+        {
+            base.ConfigureDebug(conf, target);
+            conf.LibraryFiles.Add(@"fmtd.lib");
+            conf.LibraryFiles.Add(@"spdlogd.lib");
+        }
+
+        public override void ConfigureRelease(Configuration conf, Target target)
+        {
+            base.ConfigureRelease(conf, target);
+            conf.LibraryFiles.Add(@"fmt.lib");
+            conf.LibraryFiles.Add(@"spdlog.lib");
         }
     }
 
     [Generate]
-    class D3D12MemoryAllocator : ThirdProject
+    class D3D12MemoryAllocator : HawlProject
     {
         public D3D12MemoryAllocator()
         {
             Name = "D3D12MemoryAllocator";
             SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator";
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Dll
-            ));
         }
 
-        [Configure()]
-        public void Configure(Configuration configuration, Target target)
+        public override void ConfigureAll(Configuration configuration, Target target)
         {
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator"); 
-          
+            base.ConfigureAll(configuration, target);
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\D3D12MemoryAllocator");
             configuration.Output = Configuration.OutputType.Lib;
-            
         }
     }
 
-    [Generate]
-    class Tbb : ThirdProject
+    [Export]
+    class Tbb : VCPKG
     {
-        public Tbb()
+        public override void ConfigureAll(Configuration conf, Target target)
         {
-            Name = "OneTbb";
-            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\oneTbb\src\tbb";
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Dll
-            ));
+            base.ConfigureAll(conf, target);
         }
 
-        [Configure()]
-        public void Configure(Configuration configuration, Target target)
+        public override void ConfigureDebug(Configuration conf, Target target)
         {
-            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\oneTbb\include");
-            configuration.Output = Configuration.OutputType.Lib;
-            configuration.Defines.Add("__TBB_BUILD");
+            base.ConfigureDebug(conf, target);
+            conf.LibraryFiles.Add(@"tbb_debug.lib");
+            conf.LibraryFiles.Add(@"tbbmalloc_debug.lib");
+            conf.LibraryFiles.Add(@"tbbmalloc_proxy_debug");
+        }
+
+        public override void ConfigureRelease(Configuration conf, Target target)
+        {
+            base.ConfigureRelease(conf, target);
+            conf.LibraryFiles.Add(@"tbb.lib");
+            conf.LibraryFiles.Add(@"tbbmalloc.lib");
+            conf.LibraryFiles.Add(@"tbbmalloc_proxy");
         }
     }
 }

@@ -2,120 +2,91 @@ using Sharpmake;
 
 namespace Hawl
 {
-    abstract class HawlLib : Project
+    public class HawlProject : Project
     {
-        public HawlLib()
+        public HawlProject()
         {
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
             AddTargets(new Target(
                 Platform.win64,
                 DevEnv.vs2019,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Dll
+                Optimization.Debug | Optimization.Release
             ));
         }
 
-        [Configure()]
-        public virtual void Configure(Configuration configuration, Target target)
+        [Configure(), ConfigurePriority(1)]
+        public virtual void ConfigureAll(Configuration conf, Target target)
         {
             // Configuration Project name and path setting
-            configuration.Name = @"[target.Optimization] [target.OutputType]";
-            configuration.TargetFileName = Name;
-            configuration.ProjectPath = @"[project.SharpmakeCsPath]\projects\[project.Name]";
+            conf.Name = @"[target.Optimization]";
+            conf.TargetFileName = Name;
+            conf.ProjectPath = @"[project.SharpmakeCsPath]\projects\[project.Name]";
             // set Languages Standard as latest
-            configuration.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+            conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
-            configuration.Options.Add(Options.Vc.Compiler.MultiProcessorCompilation.Enable);
+            conf.Options.Add(Options.Vc.Compiler.MultiProcessorCompilation.Enable);
             // set warnning log
-            configuration.Options.Add(Options.Vc.General.WarningLevel.Level4);
-            configuration.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
-            configuration.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
-            configuration.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
-            configuration.Options.Add(Options.Vc.General.CharacterSet.Unicode);
+            conf.Options.Add(Options.Vc.General.WarningLevel.Level4);
+            conf.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
+            conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+            conf.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
+            conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.ConformanceMode.Enable);
+        }
 
-            if (target.Optimization == Optimization.Debug)
-            {
-                configuration.Defines.Add("_DEBUG");
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.MinimalRebuild.Enable);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeChecks.Both);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.Optimization.Disable);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Enable);
-            }
+        [Configure(Optimization.Debug), ConfigurePriority(2)]
+        public virtual void ConfigureDebug(Configuration conf, Target target)
+        {
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.Inline.Disable);
+            conf.Defines.Add("_DEBUG");
+            conf.Defines.Add("DEBUG");
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.Optimization.Disable);
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Enable);
+        }
 
-            if (target.Optimization == Optimization.Release)
-            {
-                configuration.Options.Add(Options.Vc.Compiler.Optimization.FullOptimization);
-                configuration.Options.Add(Sharpmake.Options.Vc.General.UseDebugLibraries.Disabled);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Disable);
-            }
-
-            if (target.OutputType == OutputType.Dll)
-            {
-                // if output as shared library
-                configuration.Output = Configuration.OutputType.Dll;
-
-                // expects HAWL_DLL symbol to be defined when use as DLL
-                configuration.ExportDefines.Add("HAWL_DLL");
-
-                // add define micro.
-                configuration.Defines.Add("HAWL_DLL");
-            }
-
-            if (target.OutputType == OutputType.Lib)
-            {
-                configuration.Output = Configuration.OutputType.Lib;
-            }
+        [Configure(Optimization.Release), ConfigurePriority(3)]
+        public virtual void ConfigureRelease(Configuration conf, Target target)
+        {
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.Optimization.MaximizeSpeed);
+            conf.Options.Add(Sharpmake.Options.Vc.General.WholeProgramOptimization.LinkTime);
+            conf.Options.Add(Sharpmake.Options.Vc.Linker.LinkTimeCodeGeneration.UseLinkTimeCodeGeneration);
+            conf.Options.Add(Sharpmake.Options.Vc.Linker.EnableCOMDATFolding.RemoveRedundantCOMDATs);
+            conf.Options.Add(Sharpmake.Options.Vc.Linker.Reference.EliminateUnreferencedData);
+            conf.Options.Add(Sharpmake.Options.Vc.General.UseDebugLibraries.Disabled);
+            conf.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Disable);
         }
     }
 
-    abstract class ThirdProject : Project
+    abstract public class ThirdProject : Project
     {
         public ThirdProject()
         {
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
+            AddTargets(new Target(
+                    Platform.win64,
+                    DevEnv.vs2019,
+                    Optimization.Debug | Optimization.Release));
         }
 
-        [Configure()]
-        public virtual void ThirdConfiguration(Configuration configuration, Target target)
+        [Configure(), ConfigurePriority(1)]
+        public virtual void ConfigureAll(Configuration configuration, Target target)
         {
-            // set Languages Standard as latest
-            configuration.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+        }
 
-            configuration.Options.Add(Options.Vc.Compiler.MultiProcessorCompilation.Enable);
-            // set warnning log
-            configuration.Options.Add(Options.Vc.General.WarningLevel.Level0);
-            configuration.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
-            configuration.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
-            configuration.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
+        [Configure(Optimization.Debug), ConfigurePriority(2)]
+        public virtual void ConfigureDebug(Configuration configuration, Target target)
+        {
+        }
 
-            if (target.Optimization == Optimization.Debug)
-            {
-                configuration.Defines.Add("_DEBUG");
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.MinimalRebuild.Enable);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeChecks.Both);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.Optimization.Disable);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Enable);
-            }
-
-            if (target.Optimization == Optimization.Release)
-            {
-                configuration.Defines.Add("NDEBUG");
-                configuration.Options.Add(Options.Vc.Compiler.Optimization.FullOptimization);
-                configuration.Options.Add(Sharpmake.Options.Vc.General.UseDebugLibraries.Disabled);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
-                configuration.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Disable);
-            }
-
-            // Configuration Project name and path setting
-            configuration.Name = @"[target.Optimization] [target.OutputType]";
-            configuration.TargetFileName = Name;
-            configuration.ProjectPath = @"[project.SharpmakeCsPath]\projects\[project.Name]";
+        [Configure(Optimization.Release), ConfigurePriority(3)]
+        public virtual void ConfigureRelease(Configuration configuration, Target target)
+        {
         }
     }
-
 }
+
+
+
+

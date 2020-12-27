@@ -17,9 +17,13 @@ namespace Hawl
             AddTargets(new Target(
                Platform.win64,
                DevEnv.vs2019,
-               Optimization.Debug | Optimization.Release,
-               OutputType.Dll
+               Optimization.Debug | Optimization.Release
            ));
+
+            ExtraItems.Add("Markdown", new Strings()
+            {
+                @"[solution.SharpmakeCsPath]/../README.md",
+            });
         }
 
         [Configure()]
