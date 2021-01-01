@@ -30,9 +30,7 @@ namespace Hawl
             conf.Options.Add(Options.Vc.General.WarningLevel.Level4);
             conf.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
             conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
-            conf.Options.Add(Options.Vc.Compiler.FloatingPointModel.Precise);
             conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
-            conf.Options.Add(Sharpmake.Options.Vc.Compiler.ConformanceMode.Enable);
         }
 
         [Configure(Optimization.Debug), ConfigurePriority(2)]

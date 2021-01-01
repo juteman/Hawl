@@ -19,13 +19,11 @@
  */
 
 #pragma once
-#include "EASTL/string.h"
-#include <comdef.h>
 #include <string>
-#include <windows.h>
 #include <exception>
 #include <utility>
 #include <d3d12.h>
+#include <EASTL/string.h>
 
 /**
  * \brief This function convert string to wstring
@@ -48,7 +46,8 @@ public:
                   eastl::wstring functionName,
                   eastl::wstring filename,
                   int            lineNumber)
-        : errCode{hr}, functionName{std::move(functionName)}, fileName{std::move(filename)}, lineNumber{lineNumber}
+        : errCode{hr}, functionName{std::move(functionName)}, fileName{std::move(filename)},
+          lineNumber{lineNumber}
     {
     }
 
@@ -76,6 +75,8 @@ public:
     }
 #endif
 
+
+
 // clang-format off
 #define TO_STRING_CASE(a) case a: return #a;
 
@@ -97,4 +98,6 @@ inline eastl::string D3DFeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 #undef TO_STRING_CASE
+
+#define SAFE_RELEASE(ptr)   do { if(ptr) { (ptr)->Release(); (ptr) = NULL; } } while(false)
 // clang-format on

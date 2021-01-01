@@ -1,169 +1,178 @@
-/*
- * Copyright (c) 2020 juteman
- *
- * This file is part of ReForge
- * (see https://github.com/juteman/Hawl).
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+#include "DX12Device.h"
+
 #include "BaseType.h"
-#include "DX12Handle.h"
+#include "D3D12Desc.h"
 #include "DX12Helper.h"
-#include "DX12Resource.h"
-#include "Device.h"
-#include "EASTL/array.h"
 #include "Logger.h"
-#include "Renderer.h"
-#include "Window.h"
-#include <Windows.h>
-#include <d3d12.h>
-#include <string>
+#include <cassert>
 
 namespace Hawl
 {
-
-typedef enum D3D12_DESCRIPTOR_HEAP_TYPE
+FORCEINLINE void EnableDebugLayer(ID3D12Debug *pDXDebug, const uint32 bEnableGpuBasedValidation)
 {
-    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0,
-    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-    D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-    D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-    D3D12_DESCRIPTOR_HEAP_TYPE_NUM_COUNT
-} D3D12_DESCRIPTOR_HEAP_TYPE;
-
-/**
- * \brief Log the adapter information
- * \param desc3  description struct
- */
-void LogAdapter(DXGI_ADAPTER_DESC1 desc1)
-{
-    // Convert wstring to string
-    std::wstring      convert = desc1.Description;
-    const std::string desc(convert.begin(), convert.end());
-    Logger::info("{}", desc);
-    Logger::info("{}", desc1.DeviceId);
-    Logger::info("{}", desc1.VendorId);
-    Logger::info("{}", desc1.DedicatedVideoMemory);
+    pDXDebug->EnableDebugLayer();
+    ID3D12Debug1 *pDebug1 = nullptr;
+    if (SUCCEEDED(pDXDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
+    {
+        pDebug1->SetEnableGPUBasedValidation(bEnableGpuBasedValidation);
+        pDebug1->Release();
+    }
 }
 
-DeviceHandle CreateDevice(IDXGIFactory6 *pFactory6, D3D_FEATURE_LEVEL requestedFeatureLevel)
+void FillGpuDesc(ID3D12Device *&pDxDevice, const D3D_FEATURE_LEVEL &featureLevel, GpuDesc &gpuDesc)
 {
-    const static eastl::array<D3D_FEATURE_LEVEL, 4> D3DFeatureLevels{{D3D_FEATURE_LEVEL_12_1,
-                                                                      D3D_FEATURE_LEVEL_12_0,
-                                                                      D3D_FEATURE_LEVEL_11_1,
-                                                                      D3D_FEATURE_LEVEL_11_0}};
+    // Query the level of support of Shader Model.
+    D3D12_FEATURE_DATA_D3D12_OPTIONS  featureData = {};
+    D3D12_FEATURE_DATA_D3D12_OPTIONS1 featureData1 = {};
+    // Query the level of support of Wave Intrinsics.
+    pDxDevice->CheckFeatureSupport(
+        static_cast<D3D12_FEATURE>(D3D12_FEATURE_D3D12_OPTIONS),
+        &featureData,
+        sizeof(featureData));
+    pDxDevice->CheckFeatureSupport(
+        static_cast<D3D12_FEATURE>(D3D12_FEATURE_D3D12_OPTIONS1),
+        &featureData1,
+        sizeof(featureData1));
 
-    AdapterHandle     adapterHandle;
-    DeviceHandle      deviceHandle;
-    D3D_FEATURE_LEVEL selectedFeatureLevel;
+    DXGI_ADAPTER_DESC3 desc = {};
+    gpuDesc.pGpu->GetDesc3(&desc);
+    gpuDesc.mMaxSupportedFeatureLevel = featureLevel;
+    gpuDesc.mDedicatedVideoMemory = desc.DedicatedVideoMemory;
+    gpuDesc.mFeatureDataOptions = featureData;
+    gpuDesc.mFeatureDataOptions1 = featureData1;
 
-    auto CreateMaxFeatureLevel = [&](const eastl::array<D3D_FEATURE_LEVEL, 4> &featureLevelArray,
-                                     UINT32 featureLevelCount) -> bool {
-        for (uint32_t i = 0; i < featureLevelCount; i++)
-        {
-            if (SUCCEEDED(D3D12CreateDevice(adapterHandle.Get(),
-                                            featureLevelArray[i],
-                                            IID_PPV_ARGS(deviceHandle.GetAddressOf()))))
-            {
-                selectedFeatureLevel = featureLevelArray[i];
-                return true;
-            }
-        }
+    gpuDesc.mDeviceId = desc.DeviceId;
+    gpuDesc.mVendorId = desc.VendorId;
+    gpuDesc.mRevisionId = desc.Revision;
 
-        return false;
+    size_t numConverted = 0;
+    wcstombs_s(&numConverted, gpuDesc.mName, desc.Description, MAX_GPU_VENDOR_STRING_LENGTH);
+}
+
+DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
+{
+#if GRAPHICS_DEBUG
+    if (SUCCEEDED(
+        D3D12GetDebugInterface(__uuidof(pDXDebug), reinterpret_cast<void **>(&(pDXDebug)))))
+    {
+        EnableDebugLayer(pDXDebug, bEnableGpuBasedValidation);
+    }
+#endif
+
+    // TODO DRED_ENABLE used for debug, needed add and deconstructed function both
+#if DRED_ENABLE
+#endif
+
+    D3D_FEATURE_LEVEL featureLevels[4] =
+    {
+        D3D_FEATURE_LEVEL_12_1,
+        D3D_FEATURE_LEVEL_12_0,
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
     };
 
-    bool bSelectedAdapter = false;
+    uint flags = 0;
+#if GRAPHICS_DEBUG
+    flags = DXGI_CREATE_FACTORY_DEBUG;
+#endif
+    CHECK_DX12_RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&pDXGIFactory6)))
 
-    for (UINT32 i = 0; pFactory6->EnumAdapterByGpuPreference(
-                           i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapterHandle)) !=
-                       DXGI_ERROR_NOT_FOUND;
-         i++)
+    bool           foundSuitAbleGpu = false;
+    IDXGIAdapter4 *adapter4 = nullptr;
+    bool           foundSoftwareAdapter = false;
+    GpuDesc        gpuDesc;
+    // Find number of usable GPUs
+    // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress exports
+    for (UINT i = 0; DXGI_ERROR_NOT_FOUND != pDXGIFactory6->EnumAdapterByGpuPreference(i,
+                         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+                         IID_PPV_ARGS(&adapter4)); ++i)
     {
-        DXGI_ADAPTER_DESC1 desc{};
+        DXGI_ADAPTER_DESC3 desc{};
+        adapter4->GetDesc3(&desc);
 
-        CHECK_DX12_RESULT(adapterHandle->GetDesc1(&desc))
-
-        // No soft render
-        if (!(desc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))
+        // Ignore Microsoft Driver
+        if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
         {
-            bSelectedAdapter = true;
-            LogAdapter(desc);
-            break;
+            for (uint32_t level = 0; level < sizeof(featureLevels) / sizeof(featureLevels[0]); ++
+                 level)
+            {
+                // Make sure the adapter can support a D3D12 device
+                if (SUCCEEDED(
+                    D3D12CreateDevice(adapter4, featureLevels[level], __uuidof(ID3D12Device),
+                        nullptr)))
+                {
+                    // find adapter support D3D feature and adapter4 
+                    HRESULT hres = adapter4->QueryInterface(IID_PPV_ARGS(&gpuDesc.pGpu));
+                    if (SUCCEEDED(hres))
+                    {
+                        D3D12CreateDevice(adapter4, featureLevels[level], IID_PPV_ARGS(&pDxDevice));
+                        FillGpuDesc(pDxDevice, featureLevels[level], gpuDesc);
+                        foundSuitAbleGpu = true;
+                        break;
+                    }
+                }
+            }
         }
+        else
+        {
+            foundSoftwareAdapter = true;
+        }
+
+        adapter4->Release();
     }
 
-    if (!bSelectedAdapter)
+    // If the only adapter we found is a software adapter, log error message for QA
+    if (!foundSuitAbleGpu && foundSoftwareAdapter)
     {
-        // If no GPU was found, just select the first and select default adapter device
-        Logger::warn(
-            "Could not find a GPU matching conditions specified in environment variables.");
-        CHECK_DX12_RESULT(pFactory6->EnumAdapters1(0, adapterHandle.GetAddressOf()));
+        Logger::error("The only available GPU has DXGI_ADAPTER_FLAG_SOFTWARE. Early exiting");
+        assert(false);
     }
 
-    if (requestedFeatureLevel == 0)
+    Logger::info("Name of selected gpu: {}", gpuDesc.mName);
+    Logger::info("Vendor id of selected gpu: {}", gpuDesc.mVendorId);
+    Logger::info("Revision id of selected gpu: {}", gpuDesc.mRevisionId);
+    Logger::info("Dedicated video memory of selected gpu: {}", gpuDesc.mDedicatedVideoMemory);
+#if DEBUG
+    HRESULT hr = pDxDevice->QueryInterface(IID_PPV_ARGS(&pDxDebugValidation));
+    if (SUCCEEDED(hr))
     {
-        CreateMaxFeatureLevel(D3DFeatureLevels, D3DFeatureLevels.size());
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+        // D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND breaks even when it is disabled
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+        pDxDebugValidation->SetBreakOnID(D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND, false);
     }
-    else
-    {
-        D3D12CreateDevice(
-            adapterHandle.Get(), requestedFeatureLevel, IID_PPV_ARGS(deviceHandle.GetAddressOf()));
-        selectedFeatureLevel = requestedFeatureLevel;
-    }
-
-    if (deviceHandle.Get() != nullptr)
-    {
-        Logger::info("Successfully created device with feature level: {}",
-                     D3DFeatureLevelToString(selectedFeatureLevel));
-        return deviceHandle;
-    }
-
-    Logger::error("Failed created D3D device");
-    return nullptr;
+#endif
 }
 
-ISwapChain3Handle CreateSwapChain(IDXGIFactory6 *     pFactory6,
-                                  const Window *      pWindow,
-                                  ID3D12CommandQueue *pCommandQueue,
-                                  TextureFormat       textureFormat,
-                                  uint32              bufferCount)
+DeviceImpl::~DeviceImpl()
 {
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc1{};
-    swapChainDesc1.BufferCount = bufferCount;
-    swapChainDesc1.Width = pWindow->getWindowWidth();
-    swapChainDesc1.Height = pWindow->getWindowHeight();
-    swapChainDesc1.Format = getDXGIFormat(textureFormat);
-    swapChainDesc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc1.SampleDesc.Count = 1;
+    SAFE_RELEASE(pDXGIFactory6);
+    if (pDxDebugValidation)
+    {
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, false);
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, false);
+        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+        SAFE_RELEASE(pDxDebugValidation);
+    }
+#if DEBUG
+    ID3D12DebugDevice *pDebugDevice = nullptr;
+    pDxDevice->QueryInterface(&pDebugDevice);
 
-    ISwapChain1Handle swapChain1Handle;
-    CHECK_DX12_RESULT(pFactory6->CreateSwapChainForHwnd(pCommandQueue,
-                                                        pWindow->getNativeHandle(),
-                                                        &swapChainDesc1,
-                                                        nullptr,
-                                                        nullptr,
-                                                        &swapChain1Handle))
+    SAFE_RELEASE(pDXDebug);
+    SAFE_RELEASE(pDxDevice);
 
-    ISwapChain3Handle swapChain3Handle;
-    CHECK_DX12_RESULT(swapChain1Handle->QueryInterface(IID_PPV_ARGS(&swapChain3Handle)))
+    if (pDebugDevice)
+    {
+        // Debug device is released first so report live objects don't show its ref as a warning.
+        pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
+        pDebugDevice->Release();
+    }
+#else
+    SAFE_RELEASE(pDxDevice);
+#endif
 
-    return swapChain3Handle;
+#if DRED_ENABLE
+#endif
 }
-
 } // namespace Hawl

@@ -60,6 +60,7 @@ void Renderer::AddCommandQueue(bool isDebug)
         CommandQueueHandle queue;
         CHECK_DX12_RESULT(m_device4->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)))
         m_cmdQueue.push_back(queue);
+        Logger::info("test");
     }
 }
 

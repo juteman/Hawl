@@ -45,7 +45,7 @@
 #endif
 
 #ifndef FORCEINLINE
-#define FORCEINLINE EASTL_FORCE_INLINE
+#define FORCEINLINE __forceinline
 #endif
 
 #ifdef __cplusplus
