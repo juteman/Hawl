@@ -86,4 +86,24 @@ const std::string &GetExecutableName();
  */
 const std::string &GetExecutablePath();
 
+/**
+ * \brief aligned a number to up to near multiple
+ *
+ * For example RoundUp(5, 7) => 7 , RoundUp(10, 3) => 12 , RoundUp(127, 32) => 128
+ */
+static inline uint32 RoundUp(uint32 value, uint32 multiple)
+{
+    return ((value + multiple - 1) / multiple) * multiple;
+}
+
+
+/**
+ * \brief aligned a number to up to near multiple for uint64
+ *
+ * For example RoundUp(5, 7) => 7 , RoundUp(10, 3) => 12 , RoundUp(127, 32) => 128
+ */
+static inline uint64 RoundUp64(uint64 value, uint64 multiple)
+{
+    return ((value + multiple - 1) / multiple) * multiple;
+}
 } // namespace Hawl

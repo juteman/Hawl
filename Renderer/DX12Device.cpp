@@ -83,7 +83,7 @@ DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
     GpuDesc        gpuDesc;
     // Find number of usable GPUs
     // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress exports
-    for (UINT i = 0; DXGI_ERROR_NOT_FOUND != pDXGIFactory6->EnumAdapterByGpuPreference(i,
+    for (uint i = 0; DXGI_ERROR_NOT_FOUND != pDXGIFactory6->EnumAdapterByGpuPreference(i,
                          DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
                          IID_PPV_ARGS(&adapter4)); ++i)
     {
@@ -93,7 +93,7 @@ DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
         // Ignore Microsoft Driver
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
         {
-            for (uint32_t level = 0; level < sizeof(featureLevels) / sizeof(featureLevels[0]); ++
+            for (uint32 level = 0; level < sizeof(featureLevels) / sizeof(featureLevels[0]); ++
                  level)
             {
                 // Make sure the adapter can support a D3D12 device
@@ -143,6 +143,8 @@ DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
         pDxDebugValidation->SetBreakOnID(D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND, false);
     }
 #endif
+
+    //TODO store the caps builder
 }
 
 DeviceImpl::~DeviceImpl()

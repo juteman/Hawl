@@ -12,6 +12,11 @@ public:
     DeviceImpl(uint32 bEnableGpuBasedValidation);
     ~DeviceImpl();
 
+    ID3D12Device*& GetDevice()
+    {
+        return pDxDevice;
+    }
+
 private:
     ID3D12Debug *    pDXDebug;
     IDXGIFactory6 *  pDXGIFactory6;
