@@ -32,4 +32,19 @@
 namespace Hawl
 {
 namespace Logger = spdlog;
+
+void _FailedAssert(const char* file, int line, const char* statement);
+
+#if defined(_DEBUG)
+#define IFASSERT(x) x
+#define ASSERT(b) \
+	if (!(b)) _FailedAssert(__FILE__, __LINE__, #b)
+#else
+#if _MSC_VER >= 1400
+#define IFASSERT(x) x
+#else
+#define IFASSERT(x)
+#endif
+#define ASSERT(b) (void)(b)
+#endif
 } // namespace Hawl

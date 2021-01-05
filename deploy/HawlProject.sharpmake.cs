@@ -39,6 +39,7 @@ namespace Hawl
             conf.Options.Add(Sharpmake.Options.Vc.Compiler.Inline.Disable);
             conf.Defines.Add("_DEBUG");
             conf.Defines.Add("DEBUG");
+            conf.Defines.Add("HAWL_STACKTRACE_DUMP");
             conf.Options.Add(Sharpmake.Options.Vc.Compiler.Optimization.Disable);
             conf.Options.Add(Sharpmake.Options.Vc.Compiler.BufferSecurityCheck.Enable);
         }
