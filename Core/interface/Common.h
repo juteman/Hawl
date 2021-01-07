@@ -45,12 +45,29 @@
 #endif
 
 #ifndef FORCEINLINE
+#if defined(__GNUC__)
+#define FORCEINLINE __attribute__((always_inline)) inline
+#elif defined(_MSC_VER)
 #define FORCEINLINE __forceinline
+#else
+#define FORCEINLINE inline
+#endif
 #endif
 
 #ifdef __cplusplus
 #define HAWL_C_API extern "C"
 #endif
+
+#ifdef _DEBUG
+#ifdef _MSC_VER
+#define DEBUG_BREAK() __debugbreak()
+#else
+#define DEBUG_BREAK() __builtin_trap()
+#endif
+#else
+#define DEBUG_BREAK()
+#endif
+
 
 #define SafeDelete(a)                                                                              \
     {                                                                                              \
@@ -63,29 +80,14 @@
         a = nullptr;                                                                               \
     }
 
+#ifndef TO_STRING
+#define TO_STRING(x)  #x
+#endif
 
-#define CODE_TO_STRING(x)  #x
+#include "BaseType.h"
 
 namespace Hawl
 {
-/**
- * \brief Get the current execute program name
- * \return the name of program
- */
-const std::string &GetExecutableFilename();
-
-/**
- * \brief Get the absolute name of program
- * \return
- */
-const std::string &GetExecutableName();
-
-/**
- * \brief Get the parent path of execute program
- * \return the program current path
- */
-const std::string &GetExecutablePath();
-
 /**
  * \brief aligned a number to up to near multiple
  *
