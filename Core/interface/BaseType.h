@@ -1,5 +1,5 @@
 ﻿/**
- *  Copyright 2020 juteman
+ *  Copyright 2020-2021 Zhang QiuLiang (juteman). All rights reserved.
  *
  *  This file is a part of Hawl
  *  see(https://github.com/juteman/Hawl)
@@ -38,15 +38,6 @@ typedef uint16_t     uint16;
 typedef uint32_t     uint32;
 typedef uint64_t     uint64;
 
-
-
-// char 类型封装
-typedef char CHAR;
-
-/// size_t 空指针封装
-typedef size_t      SIZETYPE;
-typedef void*       PVOID;
-typedef const void* CPVOID;
 
 // 引用计数类型包装
 typedef uint64 RefCount;

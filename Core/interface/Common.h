@@ -1,5 +1,5 @@
 /**
- *  Copyright 2020 juteman
+ *  Copyright 2020-2021 Zhang QiuLiang (juteman). All rights reserved.
  *
  *  This file is a part of Hawl
  *  see(https://github.com/juteman/Hawl)
