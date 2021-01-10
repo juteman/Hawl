@@ -3,7 +3,7 @@
 #include "nvapi.h"
 #include "Logger.h"
 
-#if defined(_WIN64) && !defined(DURANGO)
+#if defined(_WIN64)
 #define AMDAGS
 #define NVAPI
 static AGSContext *pAgsContext = nullptr;
@@ -31,8 +31,6 @@ typedef enum NvAPI_Status
 #endif
 
 
-namespace Hawl
-{
 static AGSReturnCode agsInit()
 {
 #if defined(AMDAGS)
@@ -80,5 +78,4 @@ static void nvapiPrintDriverInfo()
 		Logger::info("NVIDIA Build Branch {}", buildBranch);
 	}
 #endif
-}
 }

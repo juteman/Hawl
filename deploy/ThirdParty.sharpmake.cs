@@ -121,6 +121,28 @@ namespace Hawl
         }
     }
 
+    [Generate]
+    class EAAssert : HawlProject
+    {
+        public EAAssert()
+        {
+            Name = "EAAssert";
+            SourceRootPath = @"[project.SharpmakeCsPath]\..\ThirdParty\EAAssert\source";
+        }
+
+        public override void ConfigureAll(Configuration configuration, Target target)
+        {
+            base.ConfigureAll(configuration, target);
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\ThirdParty\EAAssert\include");
+            configuration.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\vcpkg\installed\x64-windows\include\Common");
+            configuration.Defines.Add("_CHAR16T");
+            configuration.Output = Configuration.OutputType.Lib;
+            
+        }
+
+
+    }
+
     [Export]
     class Tbb : VCPKG
     {

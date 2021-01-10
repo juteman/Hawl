@@ -19,10 +19,11 @@
  */
 
 #pragma once
-#include <string>
-#include <exception>
-#include <utility>
+#include "BaseType.h"
+
+#include "Logger.h"
 #include <d3d12.h>
+#include <EAAssert/eaassert.h>
 #include <EASTL/string.h>
 
 /**
@@ -37,44 +38,24 @@ inline eastl::wstring AnsiToWString(const eastl::string &str)
     return eastl::wstring(buffer);
 }
 
-class DX12Exception : std::exception
+/**
+ * @brief Check if result is failure, if it is, will exit with error message
+ * @param result | result code to check
+ * @param code  | the code generator result to be checked 
+ * @param filename | the filename contains the code
+ * @param line | the line of the code  
+ * @param device | the adapter device to be checked
+*/
+FORCEINLINE void CheckDX12Result(HRESULT result, const char* code, const char* filename, uint32 line)
 {
-public:
-    DX12Exception() = default;
+    __debugbreak();
+    Logger::error(" FAILED with {}  in {} line: {} with HRESULT: {}", code, filename, line, result);
+    EA_ASSERT(false);
+}
 
-    DX12Exception(HRESULT        hr,
-                  eastl::wstring functionName,
-                  eastl::wstring filename,
-                  int            lineNumber)
-        : errCode{hr}, functionName{std::move(functionName)}, fileName{std::move(filename)},
-          lineNumber{lineNumber}
-    {
-    }
-
-    eastl::wstring ToString() const
-    {
-        return functionName + L" failed in " + fileName + L"; line " +
-               eastl::to_wstring(lineNumber);
-    }
-
-    HRESULT        errCode = S_OK;
-    eastl::wstring functionName;
-    eastl::wstring fileName;
-    INT32          lineNumber = -1;
-};
-
-#ifndef CHECK_DX12_RESULT
-#define CHECK_DX12_RESULT(x)                                                                       \
-    {                                                                                              \
-        HRESULT hr = (x);                                                                          \
-        if (FAILED(hr))                                                                            \
-        {                                                                                          \
-            eastl::wstring wfn = AnsiToWString(__FILE__);                                            \
-            throw DX12Exception(hr, L#x, wfn, __LINE__);                                           \
-        }                                                                                          \
-    }
+#ifndef CHECK_DX12RESULT
+#define CHECK_DX12RESULT(x)  {HRESULT hres = x; if (FAILED(hres)) { CheckDX12Result(hres, #x, __FILE__, __LINE__); }}
 #endif
-
 
 
 // clang-format off
@@ -98,6 +79,4 @@ inline eastl::string D3DFeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 #undef TO_STRING_CASE
-
-#define SAFE_RELEASE(ptr)   do { if(ptr) { (ptr)->Release(); (ptr) = NULL; } } while(false)
 // clang-format on

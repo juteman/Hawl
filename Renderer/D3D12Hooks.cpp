@@ -1,8 +1,11 @@
 /*
- * Copyright (c) 2021 juteman
+ * Copyright 2020-2021 Zhang QiuLiang (juteman). All rights reserved.
+ * Copyright (c) 2018-2021 The Forge Interactive Inc.
  *
- * This file is part of Hawl
- * (see https://github.com/juteman/Hawl).
+ *  This file is a part of Hawl
+ *  see(https://github.com/juteman/Hawl)
+ *  and base of the Direct3D12Hooks.cpp
+ *	in The-Forge (see https://github.com/ConfettiFX/The-Forge)
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,23 +23,22 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */
+*/
 
-#pragma once
-#ifndef HAWL_IAPPBASE_H
-#  define HAWL_IAPPBASE_H
-#  include "BaseType.h"
-namespace Hawl {
-class IApp
+
+#include "BaseType.h"
+#include "IRenderer.h"
+
+void hook_enable_debug_layer(Renderer* pRenderer)
 {
-public:
-  virtual INT  Init()                    = 0;
-  virtual void Exit()                    = 0;
-  virtual bool Load()                    = 0;
-  virtual void Unload()                  = 0;
-  virtual void Update(FLOAT32 deltaTime) = 0;
-  virtual void Draw()                    = 0;
-  virtual ~IApp(){};
-};
-}
+	UNREF_PARAM(pRenderer);
+#if defined(ENABLE_GRAPHICS_DEBUG)
+	pRenderer->pDXDebug->EnableDebugLayer();
+	ID3D12Debug1* pDebug1 = NULL;
+	if (SUCCEEDED(pRenderer->pDXDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
+	{
+		pDebug1->SetEnableGPUBasedValidation(pRenderer->mEnableGpuBasedValidation);
+		pDebug1->Release();
+	}
 #endif
+}

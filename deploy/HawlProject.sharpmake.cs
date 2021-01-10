@@ -21,7 +21,6 @@ namespace Hawl
             // Configuration Project name and path setting
             conf.Name = @"[target.Optimization]";
             conf.TargetFileName = Name;
-            conf.ProjectPath = @"[project.SharpmakeCsPath]\projects\[project.Name]";
             // set Languages Standard as latest
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 

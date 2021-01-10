@@ -4,7 +4,6 @@
 #include "DX12Helper.h"
 
 
-
 #include <mimalloc.h>
 
 
@@ -26,7 +25,7 @@ DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIPTOR_HEAP_TYPE
 };
 
 
-void AddDescriptorHeap(ID3D12Device *                    pDevice,
+void AddDescriptorHeap(ID3D12Device *&                   pDevice,
                        const D3D12_DESCRIPTOR_HEAP_DESC &desc,
                        DescriptorHeap                    descHeap)
 {
@@ -44,19 +43,21 @@ void AddDescriptorHeap(ID3D12Device *                    pDevice,
     descAfterRoundUp = desc;
     descHeap.mDesc = descAfterRoundUp;
 
-    CHECK_DX12_RESULT(pDevice->CreateDescriptorHeap(&descAfterRoundUp, IID_PPV_ARGS(&descHeap.pCurrentHeap)));
+    CHECK_DX12_RESULT(
+        pDevice->CreateDescriptorHeap(&descAfterRoundUp, IID_PPV_ARGS(&descHeap.pCurrentHeap)));
 
     descHeap.mStartHandle.mCpu = descHeap.pCurrentHeap->GetCPUDescriptorHandleForHeapStart();
     descHeap.mStartHandle.mGpu = descHeap.pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
     descHeap.mDescriptorSize = pDevice->GetDescriptorHandleIncrementSize(descHeap.mDesc.Type);
-    if (descAfterRoundUp.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE){
+    if (descAfterRoundUp.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+    {
         descHeap.pHandles = static_cast<D3D12_CPU_DESCRIPTOR_HANDLE *>(mi_calloc(
             descAfterRoundUp.NumDescriptors,
             sizeof(D3D12_CPU_DESCRIPTOR_HANDLE)));
     }
 }
 
-DescriptorHeapsImpl::DescriptorHeapsImpl(DeviceImpl &deviceImpl)
+DX12DescriptorHeap::DX12DescriptorHeap(DX12Device &deviceImpl)
 {
     for (uint32 i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
     {
@@ -65,7 +66,21 @@ DescriptorHeapsImpl::DescriptorHeapsImpl(DeviceImpl &deviceImpl)
         desc.NodeMask = 0; // CPU Descriptor Heap - Node mask is irrelevant
         desc.NumDescriptors = gCpuDescriptorHeapProperties[i].mMaxDescriptors;
         desc.Type = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
-        AddDescriptorHeap(deviceImpl.GetDevice(), desc, mCPUDescriptorHeaps[i]);
+        AddDescriptorHeap(deviceImpl.pDxDevice, desc, mCPUDescriptorHeaps[i]);
     }
+
+    D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    // TODO if we are use gpu linked, should different Node mask
+    desc.NodeMask = 0;
+
+    // 
+    desc.NumDescriptors = 1 << 16;
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    AddDescriptorHeap(deviceImpl.pDxDevice, desc, mCbvSrvUavHeaps);
+
+    desc.NumDescriptors = 1 << 11;
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    AddDescriptorHeap(deviceImpl.pDxDevice, desc, mSamplerHeap);
 }
 }

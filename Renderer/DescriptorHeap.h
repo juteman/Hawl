@@ -37,19 +37,23 @@ struct DescriptorHeap
     tbb::atomic<uint32> mUsedDescriptors;
 };
 
-class DescriptorHeapsImpl
+class DX12DescriptorHeap
 {
-
+    using DescriptorHeapEnumArray =  eastl::array<DescriptorHeap, D3D12_DESCRIPTOR_HEAP_TYPE>;
 
 public:
     /**
      * \brief Init the all the descriptor heap
      * \param deviceImpl use ID3D12Device to create descriptor heap
      */
-    DescriptorHeapsImpl(DeviceImpl& deviceImpl);
+    DX12DescriptorHeap(DX12Device& deviceImpl);
 
 private:
-    eastl::array<DescriptorHeap, D3D12_DESCRIPTOR_HEAP_TYPE> mCPUDescriptorHeaps;
+
+    // CPU descriptor heaps
+    DescriptorHeapEnumArray mCPUDescriptorHeaps;
+
+
     DescriptorHeap mCbvSrvUavHeaps;
     DescriptorHeap mSamplerHeap;
 };

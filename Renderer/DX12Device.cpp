@@ -49,7 +49,7 @@ void FillGpuDesc(ID3D12Device *&pDxDevice, const D3D_FEATURE_LEVEL &featureLevel
     wcstombs_s(&numConverted, gpuDesc.mName, desc.Description, MAX_GPU_VENDOR_STRING_LENGTH);
 }
 
-DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
+DX12Device::DX12Device(uint32 bEnableGpuBasedValidation)
 {
 #if GRAPHICS_DEBUG
     if (SUCCEEDED(
@@ -147,7 +147,7 @@ DeviceImpl::DeviceImpl(uint32 bEnableGpuBasedValidation)
     //TODO store the caps builder
 }
 
-DeviceImpl::~DeviceImpl()
+DX12Device::~DX12Device()
 {
     SAFE_RELEASE(pDXGIFactory6);
     if (pDxDebugValidation)

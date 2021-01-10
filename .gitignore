@@ -45,3 +45,5 @@ CMakeSettings.json
 .xmake/
 obj/
 projects/
+*.vcxproj.*
+*.vcxproj

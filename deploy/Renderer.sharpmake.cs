@@ -10,14 +10,14 @@ namespace Hawl
     {
         public RendererLib()
         {
-            Name = "RendererLib";
+            Name = "Renderer";
             SourceRootPath = @"[project.SharpmakeCsPath]\..\Renderer\";
         }
 
         public override void ConfigureAll(Configuration configuration, Target target)
         {
             base.ConfigureAll(configuration, target);
-            
+            configuration.ProjectPath = @"[project.SharpmakeCsPath]\..\[project.Name]";
             configuration.Defines.Add("D3D12_SUPPORTED");
             
             configuration.IncludePaths.Add(@"[project.SourceRootPath]\interface");
@@ -27,7 +27,7 @@ namespace Hawl
             configuration.LibraryPaths.Add(@"[project.SourceRootPath]\..\ThirdParty\AGS_SDK\ags_lib\lib");
             configuration.LibraryFiles.Add("nvapi64.lib");
             configuration.LibraryFiles.Add("amd_ags_x64.lib");
-            configuration.Output = Configuration.OutputType.Dll;
+            configuration.Output = Configuration.OutputType.Lib;
             configuration.AddPublicDependency<CoreLib>(target);
             configuration.AddPublicDependency<D3D12MemoryAllocator>(target);
         }
@@ -36,6 +36,7 @@ namespace Hawl
         {
             base.ConfigureDebug(conf, target);
             conf.Defines.Add("GRAPHICS_DEBUG");
+            conf.Defines.Add("EA_DEBUG");
         }
     }
 }

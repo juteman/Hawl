@@ -6,21 +6,17 @@
 
 namespace Hawl
 {
-class DeviceImpl
+class DX12Device
 {
 public:
-    DeviceImpl(uint32 bEnableGpuBasedValidation);
-    ~DeviceImpl();
+    DX12Device(uint32 bEnableGpuBasedValidation);
+    ~DX12Device();
 
-    ID3D12Device*& GetDevice()
-    {
-        return pDxDevice;
-    }
-
-private:
+    ID3D12Device *   pDxDevice;
     ID3D12Debug *    pDXDebug;
     IDXGIFactory6 *  pDXGIFactory6;
-    ID3D12Device *   pDxDevice;
     ID3D12InfoQueue *pDxDebugValidation;
+
+
 };
 }

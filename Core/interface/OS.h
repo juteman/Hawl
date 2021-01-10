@@ -18,3 +18,22 @@
  *
  */
 
+#pragma once
+
+
+typedef struct WindowHandle
+{
+#if defined(VK_USE_PLATFORM_XLIB_KHR)
+	Display*                 display;
+	Window                   window;
+	Atom                     xlib_wm_delete_window;
+    Colormap                 colormap;
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
+	xcb_connection_t*        connection;
+	xcb_window_t             window;
+	xcb_screen_t*            screen;
+	xcb_intern_atom_reply_t* atom_wm_delete_window;
+#else
+	void*                    window;    //hWnd
+#endif
+} WindowHandle;

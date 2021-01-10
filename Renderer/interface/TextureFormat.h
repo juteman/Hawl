@@ -21,8 +21,6 @@
 #pragma once
 #include "BaseType.h"
 
-namespace Hawl
-{
 typedef enum TextureFormat : uint32
 {
     UNDEFINED = 0,
@@ -266,5 +264,3 @@ typedef enum TextureFormat : uint32
     G16_B16R16_2PLANE_422_UNORM = 238,
     Count
 } TextureFormat;
-
-} // namespace Hawl
