@@ -149,6 +149,7 @@ static bool AddDevice(Renderer *pRenderer)
 	hook_fill_gpu_desc(pRenderer, feature_levels[0], &gpuDesc[0]);
 
 #else
+    // PC Device create start
     UINT flags = 0;
 #if defined(GRAPHICS_DEBUG)
     flags = DXGI_CREATE_FACTORY_DEBUG;
@@ -161,7 +162,7 @@ static bool AddDevice(Renderer *pRenderer)
     bool           foundSoftwareAdapter = false;
 
     // Find number of usable GPUs
-    // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress exports
+    // Use DXGI6 interface which lets us specify gpu preference so we don't need to use NVOptimus or AMDPowerExpress exports
     for (UINT i = 0; DXGI_ERROR_NOT_FOUND != pRenderer->pDXGIFactory->EnumAdapterByGpuPreference(i,
                          DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
                          IID_ARGS(&adapter)); ++i)
@@ -169,7 +170,7 @@ static bool AddDevice(Renderer *pRenderer)
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapter->GetDesc3(&desc);
 
-        // Ignore Microsoft Driver
+        // Ignore Microsoft Soft Renderer Driver
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
         {
             for (uint32_t level = 0; level < sizeof(feature_levels) / sizeof(feature_levels[0]); ++
@@ -209,16 +210,16 @@ static bool AddDevice(Renderer *pRenderer)
     }
 
     EA_ASSERT(gpuCount);
-    GpuDesc *gpuDesc = (GpuDesc *)alloca(gpuCount * sizeof(GpuDesc));
+    auto *gpuDesc = static_cast<GpuDesc *>(alloca(gpuCount * sizeof(GpuDesc)));
     memset(gpuDesc, 0, gpuCount * sizeof(GpuDesc));
     gpuCount = 0;
 
-    // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress exports
+    // Use DXGI6 interface which lets us specify gpu preference so we don't need to use NVOptimus or AMDPowerExpress exports
     for (UINT i = 0; DXGI_ERROR_NOT_FOUND != pRenderer->pDXGIFactory->EnumAdapterByGpuPreference(i,
                          DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
                          IID_ARGS(&adapter)); ++i)
     {
-        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc);
+        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapter->GetDesc3(&desc);
 
         // Ignore Microsoft Driver
@@ -257,7 +258,7 @@ static bool AddDevice(Renderer *pRenderer)
         adapter->Release();
     }
 
-    ASSERT(gpuCount > 0);
+    EA_ASSERT(gpuCount > 0);
 
     typedef bool (*DeviceBetterFn)(GpuDesc *gpuDesc, uint32_t testIndex, uint32_t refIndex);
     DeviceBetterFn isDeviceBetter = [](GpuDesc *gpuDesc,
