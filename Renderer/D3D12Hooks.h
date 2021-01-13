@@ -3,13 +3,13 @@
 
 typedef struct GpuDesc
 {
-	Renderer*                         pRenderer = NULL;
+	Renderer*                         pRenderer = nullptr;
 #if defined(XBOX)
 	IDXGIAdapter*                     pGpu = NULL;
 #else
-	IDXGIAdapter4*                    pGpu = NULL;
+	IDXGIAdapter4*                    pGpu = nullptr;
 #endif
-	D3D_FEATURE_LEVEL                 mMaxSupportedFeatureLevel = (D3D_FEATURE_LEVEL)0;
+	D3D_FEATURE_LEVEL                 mMaxSupportedFeatureLevel = static_cast<D3D_FEATURE_LEVEL>(0);
 	D3D12_FEATURE_DATA_D3D12_OPTIONS  mFeatureDataOptions;
 	D3D12_FEATURE_DATA_D3D12_OPTIONS1 mFeatureDataOptions1;
 	SIZE_T                            mDedicatedVideoMemory = 0;
@@ -18,7 +18,7 @@ typedef struct GpuDesc
 	char                              mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH];
 	char                              mName[MAX_GPU_VENDOR_STRING_LENGTH];
 	GPUPresetLevel                    mPreset;
-} GpuDesc;
+}                                     GpuDesc;
 
 extern HMODULE hook_get_d3d12_module_handle();
 

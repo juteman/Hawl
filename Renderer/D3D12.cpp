@@ -78,6 +78,43 @@ PFN_D3D12_SERIALIZE_VERSIONED_ROOT_SIGNATURE fnD3D12SerializeVersionedRootSignat
 PFN_D3D12_CREATE_VERSIONED_ROOT_SIGNATURE_DESERIALIZER
 fnD3D12CreateVersionedRootSignatureDeserializer = nullptr;
 
+typedef enum GpuVendor
+{
+    GPU_VENDOR_NVIDIA,
+    GPU_VENDOR_AMD,
+    GPU_VENDOR_INTEL,
+    GPU_VENDOR_UNKNOWN,
+    GPU_VENDOR_COUNT,
+} GpuVendor;
+
+static uint32_t gRootSignatureDWORDS[GpuVendor::GPU_VENDOR_COUNT] =
+{
+    64U,
+    13U,
+    64U,
+    64U,
+};
+
+#define VENDOR_ID_NVIDIA 0x10DE
+#define VENDOR_ID_AMD 0x1002
+#define VENDOR_ID_AMD_1 0x1022
+#define VENDOR_ID_INTEL 0x163C
+#define VENDOR_ID_INTEL_1 0x8086
+#define VENDOR_ID_INTEL_2 0x8087
+
+static GpuVendor util_to_internal_gpu_vendor(UINT vendorId)
+{
+    if (vendorId == VENDOR_ID_NVIDIA)
+        return GPU_VENDOR_NVIDIA;
+    else if (vendorId == VENDOR_ID_AMD || vendorId == VENDOR_ID_AMD_1)
+        return GPU_VENDOR_AMD;
+    else if (vendorId == VENDOR_ID_INTEL || vendorId == VENDOR_ID_INTEL_1 || vendorId ==
+             VENDOR_ID_INTEL_2)
+        return GPU_VENDOR_INTEL;
+    else
+        return GPU_VENDOR_UNKNOWN;
+}
+
 static bool AddDevice(Renderer *pRenderer)
 {
     // The D3D debug layer (as well as Microsoft PIX and other graphics debugger
@@ -231,7 +268,7 @@ static bool AddDevice(Renderer *pRenderer)
                 // Make sure the adapter can support a D3D12 device
                 if (SUCCEEDED(
                         D3D12CreateDevice(adapter, feature_levels[level], __uuidof(ID3D12Device),
-                            NULL))
+                            nullptr))
                 )
                 {
                     HRESULT hres = adapter->QueryInterface(IID_ARGS(&gpuDesc[gpuCount].pGpu));
@@ -242,10 +279,12 @@ static bool AddDevice(Renderer *pRenderer)
                                           IID_PPV_ARGS(&pRenderer->pDxDevice));
                         hook_fill_gpu_desc(pRenderer, feature_levels[level], &gpuDesc[gpuCount]);
                         //get preset for current gpu description
-                        gpuDesc[gpuCount].mPreset = getGPUPresetLevel(
+                        gpuDesc[gpuCount].mPreset = GPU_PRESET_ULTRA;
+                        // TODO Write a function to get the GPU PRESET level
+                        /* getGPUPresetLevel(
                             gpuDesc[gpuCount].mVendorId,
                             gpuDesc[gpuCount].mDeviceId,
-                            gpuDesc[gpuCount].mRevisionId);
+                            gpuDesc[gpuCount].mRevisionId); */
 
                         ++gpuCount;
                         SAFE_RELEASE(pRenderer->pDxDevice);
@@ -280,13 +319,14 @@ static bool AddDevice(Renderer *pRenderer)
         }
 
         // Next check for higher preset
-        if ((int)gpu1.mPreset != (int)gpu2.mPreset)
+        if (static_cast<int>(gpu1.mPreset) != static_cast<int>(gpu2.mPreset))
         {
             return gpu1.mPreset > gpu2.mPreset;
         }
 
         // Check feature level first, sort the greatest feature level gpu to the front
-        if ((int)gpu1.mMaxSupportedFeatureLevel != (int)gpu2.mMaxSupportedFeatureLevel)
+        if (static_cast<int>(gpu1.mMaxSupportedFeatureLevel) != static_cast<int>(gpu2.
+                mMaxSupportedFeatureLevel))
         {
             return gpu1.mMaxSupportedFeatureLevel > gpu2.mMaxSupportedFeatureLevel;
         }
@@ -296,8 +336,8 @@ static bool AddDevice(Renderer *pRenderer)
 
 #endif
 
-    uint32_t     gpuIndex = UINT32_MAX;
-    GPUSettings *gpuSettings = (GPUSettings *)alloca(gpuCount * sizeof(GPUSettings));
+    uint32 gpuIndex = UINT32_MAX;
+    auto * gpuSettings = static_cast<GPUSettings *>(alloca(gpuCount * sizeof(GPUSettings)));
 
     for (uint32_t i = 0; i < gpuCount; ++i)
     {
@@ -309,21 +349,21 @@ static bool AddDevice(Renderer *pRenderer)
         gpuSettings[i].mMaxVertexInputBindings = 32U;
 
         //assign device ID
-        strncpy(gpuSettings[i].mGpuVendorPreset.mModelId,
-                gpuDesc[i].mDeviceId,
-                MAX_GPU_VENDOR_STRING_LENGTH);
+        strncpy_s(gpuSettings[i].mGpuVendorPreset.mModelId,
+                  gpuDesc[i].mDeviceId,
+                  MAX_GPU_VENDOR_STRING_LENGTH);
         //assign vendor ID
-        strncpy(gpuSettings[i].mGpuVendorPreset.mVendorId,
-                gpuDesc[i].mVendorId,
-                MAX_GPU_VENDOR_STRING_LENGTH);
+        strncpy_s(gpuSettings[i].mGpuVendorPreset.mVendorId,
+                  gpuDesc[i].mVendorId,
+                  MAX_GPU_VENDOR_STRING_LENGTH);
         //assign Revision ID
-        strncpy(gpuSettings[i].mGpuVendorPreset.mRevisionId,
-                gpuDesc[i].mRevisionId,
-                MAX_GPU_VENDOR_STRING_LENGTH);
+        strncpy_s(gpuSettings[i].mGpuVendorPreset.mRevisionId,
+                  gpuDesc[i].mRevisionId,
+                  MAX_GPU_VENDOR_STRING_LENGTH);
         //get name from api
-        strncpy(gpuSettings[i].mGpuVendorPreset.mGpuName,
-                gpuDesc[i].mName,
-                MAX_GPU_VENDOR_STRING_LENGTH);
+        strncpy_s(gpuSettings[i].mGpuVendorPreset.mGpuName,
+                  gpuDesc[i].mName,
+                  MAX_GPU_VENDOR_STRING_LENGTH);
         //get preset
         gpuSettings[i].mGpuVendorPreset.mPresetLevel = gpuDesc[i].mPreset;
         //get wave lane count
@@ -337,14 +377,14 @@ static bool AddDevice(Renderer *pRenderer)
         gpuDesc[i].pGpu->GetDesc(&adapterDesc);
         gpuSettings[i].mMaxRootSignatureDWORDS = gRootSignatureDWORDS[util_to_internal_gpu_vendor(
             adapterDesc.VendorId)];
-        LOGF(LogLevel::eINFO,
-             "GPU[%i] detected. Vendor ID: %x, Model ID: %x, Revision ID: %x, Preset: %s, GPU Name: %S",
-             i,
-             adapterDesc.VendorId,
-             adapterDesc.DeviceId,
-             adapterDesc.Revision,
-             presetLevelToString(gpuSettings[i].mGpuVendorPreset.mPresetLevel),
-             adapterDesc.Description);
+        Logger::info(
+            "GPU[{}] detected. Vendor ID: {}, Model ID: {}, Revision ID: {}, Preset: {}, GPU Name: {}",
+            i,
+            adapterDesc.VendorId,
+            adapterDesc.DeviceId,
+            adapterDesc.Revision,
+            PresetLevelToString(gpuSettings[i].mGpuVendorPreset.mPresetLevel),
+            adapterDesc.Description);
 
         // Check that gpu supports at least graphics
         if (gpuIndex == UINT32_MAX || isDeviceBetter(gpuDesc, i, gpuIndex))
@@ -353,14 +393,10 @@ static bool AddDevice(Renderer *pRenderer)
         }
     }
 
-#if defined(ACTIVE_TESTING_GPU) && !defined(DURANGO) && defined(AUTOMATED_TESTING)
-	selectActiveGpu(gpuSettings, &gpuIndex, gpuCount);
-#endif
-
     // Get the latest and greatest feature level gpu
-    CHECK_HRESULT(gpuDesc[gpuIndex].pGpu->QueryInterface(IID_ARGS(&pRenderer->pDxActiveGPU)));
-    ASSERT(pRenderer->pDxActiveGPU != NULL);
-    pRenderer->pActiveGpuSettings = (GPUSettings *)tf_malloc(sizeof(GPUSettings));
+    CHECK_DX12RESULT(gpuDesc[gpuIndex].pGpu->QueryInterface(IID_ARGS(&pRenderer->pDxActiveGPU)))
+    EA_ASSERT(pRenderer->pDxActiveGPU != nullptr);
+    pRenderer->pActiveGpuSettings = static_cast<GPUSettings *>(mi_malloc(sizeof(GPUSettings)));
     *pRenderer->pActiveGpuSettings = gpuSettings[gpuIndex];
 
     for (uint32_t i = 0; i < gpuCount; ++i)
@@ -369,63 +405,59 @@ static bool AddDevice(Renderer *pRenderer)
     }
 
     // Print selected GPU information
-    LOGF(LogLevel::eINFO, "GPU[%d] is selected as default GPU", gpuIndex);
-    LOGF(LogLevel::eINFO,
-         "Name of selected gpu: %s",
-         pRenderer->pActiveGpuSettings->mGpuVendorPreset.mGpuName);
-    LOGF(LogLevel::eINFO,
-         "Vendor id of selected gpu: %s",
-         pRenderer->pActiveGpuSettings->mGpuVendorPreset.mVendorId);
-    LOGF(LogLevel::eINFO,
-         "Model id of selected gpu: %s",
-         pRenderer->pActiveGpuSettings->mGpuVendorPreset.mModelId);
-    LOGF(LogLevel::eINFO,
-         "Revision id of selected gpu: %s",
-         pRenderer->pActiveGpuSettings->mGpuVendorPreset.mRevisionId);
-    LOGF(LogLevel::eINFO,
-         "Preset of selected gpu: %s",
-         presetLevelToString(pRenderer->pActiveGpuSettings->mGpuVendorPreset.mPresetLevel));
+    Logger::info("GPU[{}] is selected as default GPU", gpuIndex);
+    Logger::info("Name of selected gpu: {}",
+                 pRenderer->pActiveGpuSettings->mGpuVendorPreset.mGpuName);
+    Logger::info("Vendor id of selected gpu: {}",
+                 pRenderer->pActiveGpuSettings->mGpuVendorPreset.mVendorId);
+    Logger::info("Model id of selected gpu: {}",
+                 pRenderer->pActiveGpuSettings->mGpuVendorPreset.mModelId);
+    Logger::info("Revision id of selected gpu: {}",
+                 pRenderer->pActiveGpuSettings->mGpuVendorPreset.mRevisionId);
+    Logger::info("Preset of selected gpu: {}",
+                 PresetLevelToString(pRenderer->pActiveGpuSettings->mGpuVendorPreset.mPresetLevel));
 
     // Load functions
     {
         HMODULE module = hook_get_d3d12_module_handle();
 
         fnD3D12CreateRootSignatureDeserializer =
-            (PFN_D3D12_CREATE_ROOT_SIGNATURE_DESERIALIZER)GetProcAddress(
+            reinterpret_cast<PFN_D3D12_CREATE_ROOT_SIGNATURE_DESERIALIZER>(GetProcAddress(
                 module,
-                "D3D12SerializeVersionedRootSignature");
+                "D3D12SerializeVersionedRootSignature"));
 
         fnD3D12SerializeVersionedRootSignature =
-            (PFN_D3D12_SERIALIZE_VERSIONED_ROOT_SIGNATURE)GetProcAddress(
+            reinterpret_cast<PFN_D3D12_SERIALIZE_VERSIONED_ROOT_SIGNATURE>(GetProcAddress(
                 module,
-                "D3D12SerializeVersionedRootSignature");
+                "D3D12SerializeVersionedRootSignature"));
 
         fnD3D12CreateVersionedRootSignatureDeserializer =
-            (PFN_D3D12_CREATE_VERSIONED_ROOT_SIGNATURE_DESERIALIZER)GetProcAddress(
+            reinterpret_cast<PFN_D3D12_CREATE_VERSIONED_ROOT_SIGNATURE_DESERIALIZER>(GetProcAddress(
                 module,
-                "D3D12CreateVersionedRootSignatureDeserializer");
+                "D3D12CreateVersionedRootSignatureDeserializer"));
     }
 
 #if !defined(XBOX)
-    CHECK_HRESULT(D3D12CreateDevice(pRenderer->pDxActiveGPU,
-                                    gpuDesc[gpuIndex].mMaxSupportedFeatureLevel,
-                                    IID_ARGS(&pRenderer->pDxDevice)));
+    CHECK_DX12RESULT(D3D12CreateDevice(pRenderer->pDxActiveGPU,
+        gpuDesc[gpuIndex].mMaxSupportedFeatureLevel,
+        IID_ARGS(&pRenderer->pDxDevice)))
 #endif
 
 #if defined(USE_NSIGHT_AFTERMATH)
 	SetAftermathDevice(pRenderer->pDxDevice);
 #endif
 
-#if defined(_WINDOWS) && defined(FORGE_DEBUG)
-	HRESULT hr = pRenderer->pDxDevice->QueryInterface(IID_ARGS(&pRenderer->pDxDebugValidation));
-	if (SUCCEEDED(hr))
-	{
-		pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-		pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-		// D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND breaks even when it is disabled
-		pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
-		hr = pRenderer->pDxDebugValidation->SetBreakOnID(D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND, false);
-	}
+#if EA_PLATFORM_DESKTOP && defined(_DEBUG)
+    HRESULT hr = pRenderer->pDxDevice->QueryInterface(IID_ARGS(&pRenderer->pDxDebugValidation));
+    if (SUCCEEDED(hr))
+    {
+        pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+        pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+        // D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND breaks even when it is disabled
+        pRenderer->pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+        hr = pRenderer->pDxDebugValidation->SetBreakOnID(D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND,
+                                                         false);
+    }
 #endif
 
     return true;

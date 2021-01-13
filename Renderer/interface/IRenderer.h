@@ -637,6 +637,27 @@ typedef enum GPUPresetLevel
     GPU_PRESET_COUNT
 } GPUPresetLevel;
 
+inline const char *PresetLevelToString(const GPUPresetLevel preset)
+{
+    switch (preset)
+    {
+    case GPU_PRESET_NONE:
+        return "";
+    case GPU_PRESET_OFFICE:
+        return "office";
+    case GPU_PRESET_LOW:
+        return "low";
+    case GPU_PRESET_MEDIUM:
+        return "medium";
+    case GPU_PRESET_HIGH:
+        return "high";
+    case GPU_PRESET_ULTRA:
+        return "ultra";
+    default:
+        return nullptr;
+    }
+}
+
 typedef struct BufferBarrier
 {
     Buffer *      pBuffer;
