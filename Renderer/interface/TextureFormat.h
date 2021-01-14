@@ -264,3 +264,171 @@ typedef enum TextureFormat : uint32
     G16_B16R16_2PLANE_422_UNORM = 238,
     Count
 } TextureFormat;
+
+
+inline DXGI_FORMAT TextureFormatToDxgiFormat(const TextureFormat& format)
+{
+    switch (format)
+    {
+    case R1_UNORM:
+        return DXGI_FORMAT_R1_UNORM;
+#ifdef (XBOX)
+    case R4G4_UNORM:
+        return DXGI_FORMAT_R4G4_UNORM;
+#endif
+    case R5G6B5_UNORM:
+        return DXGI_FORMAT_B5G6R5_UNORM;
+    case B5G6R5_UNORM:
+        return DXGI_FORMAT_B5G6R5_UNORM;
+    case B5G5R5A1_UNORM:
+        return DXGI_FORMAT_B5G5R5A1_UNORM;
+    case R8_UNORM:
+        return DXGI_FORMAT_R8_UNORM;
+    case R8_SNORM:
+        return DXGI_FORMAT_R8_SNORM;
+    case R8_UINT:
+        return DXGI_FORMAT_R8_UINT;
+    case R8_SINT:
+        return DXGI_FORMAT_R8_SINT;
+    case R8G8_UNORM:
+        return DXGI_FORMAT_R8G8_UNORM;
+    case R8G8_SNORM:
+        return DXGI_FORMAT_R8G8_SNORM;
+    case R8G8_UINT:
+        return DXGI_FORMAT_R8G8_UINT;
+    case R8G8_SINT:
+        return DXGI_FORMAT_R8G8_SINT;
+    case B4G4R4A4_UNORM:
+        return DXGI_FORMAT_B4G4R4A4_UNORM;
+
+    case R8G8B8A8_UNORM:
+        return DXGI_FORMAT_R8G8B8A8_UNORM;
+    case R8G8B8A8_SNORM:
+        return DXGI_FORMAT_R8G8B8A8_SNORM;
+    case R8G8B8A8_UINT:
+        return DXGI_FORMAT_R8G8B8A8_UINT;
+    case R8G8B8A8_SINT:
+        return DXGI_FORMAT_R8G8B8A8_SINT;
+    case R8G8B8A8_SRGB:
+        return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+    case B8G8R8A8_UNORM:
+        return DXGI_FORMAT_B8G8R8A8_UNORM;
+    case B8G8R8X8_UNORM:
+        return DXGI_FORMAT_B8G8R8X8_UNORM;
+    case B8G8R8A8_SRGB:
+        return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+
+    case R10G10B10A2_UNORM:
+        return DXGI_FORMAT_R10G10B10A2_UNORM;
+    case R10G10B10A2_UINT:
+        return DXGI_FORMAT_R10G10B10A2_UINT;
+
+    case R16_UNORM:
+        return DXGI_FORMAT_R16_UNORM;
+    case R16_SNORM:
+        return DXGI_FORMAT_R16_SNORM;
+    case R16_UINT:
+        return DXGI_FORMAT_R16_UINT;
+    case R16_SINT:
+        return DXGI_FORMAT_R16_SINT;
+    case R16_SFLOAT:
+        return DXGI_FORMAT_R16_FLOAT;
+    case R16G16_UNORM:
+        return DXGI_FORMAT_R16G16_UNORM;
+    case R16G16_SNORM:
+        return DXGI_FORMAT_R16G16_SNORM;
+    case R16G16_UINT:
+        return DXGI_FORMAT_R16G16_UINT;
+    case R16G16_SINT:
+        return DXGI_FORMAT_R16G16_SINT;
+    case R16G16_SFLOAT:
+        return DXGI_FORMAT_R16G16_FLOAT;
+    case R16G16B16A16_UNORM:
+        return DXGI_FORMAT_R16G16B16A16_UNORM;
+    case R16G16B16A16_SNORM:
+        return DXGI_FORMAT_R16G16B16A16_SNORM;
+    case R16G16B16A16_UINT:
+        return DXGI_FORMAT_R16G16B16A16_UINT;
+    case R16G16B16A16_SINT:
+        return DXGI_FORMAT_R16G16B16A16_SINT;
+    case R16G16B16A16_SFLOAT:
+        return DXGI_FORMAT_R16G16B16A16_FLOAT;
+    case R32_UINT:
+        return DXGI_FORMAT_R32_UINT;
+    case R32_SINT:
+        return DXGI_FORMAT_R32_SINT;
+    case R32_SFLOAT:
+        return DXGI_FORMAT_R32_FLOAT;
+    case R32G32_UINT:
+        return DXGI_FORMAT_R32G32_UINT;
+    case R32G32_SINT:
+        return DXGI_FORMAT_R32G32_SINT;
+    case R32G32_SFLOAT:
+        return DXGI_FORMAT_R32G32_FLOAT;
+    case R32G32B32_UINT:
+        return DXGI_FORMAT_R32G32B32_UINT;
+    case R32G32B32_SINT:
+        return DXGI_FORMAT_R32G32B32_SINT;
+    case R32G32B32_SFLOAT:
+        return DXGI_FORMAT_R32G32B32_FLOAT;
+    case R32G32B32A32_UINT:
+        return DXGI_FORMAT_R32G32B32A32_UINT;
+    case R32G32B32A32_SINT:
+        return DXGI_FORMAT_R32G32B32A32_SINT;
+    case R32G32B32A32_SFLOAT:
+        return DXGI_FORMAT_R32G32B32A32_FLOAT;
+    case B10G11R11_UFLOAT:
+        return DXGI_FORMAT_R11G11B10_FLOAT;
+    case E5B9G9R9_UFLOAT:
+        return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
+    case D16_UNORM:
+        return DXGI_FORMAT_D16_UNORM;
+    case X8_D24_UNORM:
+        return DXGI_FORMAT_D24_UNORM_S8_UINT;
+    case D32_SFLOAT:
+        return DXGI_FORMAT_D32_FLOAT;
+    case D24_UNORM_S8_UINT:
+        return DXGI_FORMAT_D24_UNORM_S8_UINT;
+    case D32_SFLOAT_S8_UINT:
+        return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+    case DXBC1_RGB_UNORM:
+        return DXGI_FORMAT_BC1_UNORM;
+    case DXBC1_RGB_SRGB:
+        return DXGI_FORMAT_BC1_UNORM_SRGB;
+    case DXBC1_RGBA_UNORM:
+        return DXGI_FORMAT_BC1_UNORM;
+    case DXBC1_RGBA_SRGB:
+        return DXGI_FORMAT_BC1_UNORM_SRGB;
+    case DXBC2_UNORM:
+        return DXGI_FORMAT_BC2_UNORM;
+    case DXBC2_SRGB:
+        return DXGI_FORMAT_BC2_UNORM_SRGB;
+    case DXBC3_UNORM:
+        return DXGI_FORMAT_BC3_UNORM;
+    case DXBC3_SRGB:
+        return DXGI_FORMAT_BC3_UNORM_SRGB;
+    case DXBC4_UNORM:
+        return DXGI_FORMAT_BC4_UNORM;
+    case DXBC4_SNORM:
+        return DXGI_FORMAT_BC4_SNORM;
+    case DXBC5_UNORM:
+        return DXGI_FORMAT_BC5_UNORM;
+    case DXBC5_SNORM:
+        return DXGI_FORMAT_BC5_SNORM;
+    case DXBC6H_UFLOAT:
+        return DXGI_FORMAT_BC6H_UF16;
+    case DXBC6H_SFLOAT:
+        return DXGI_FORMAT_BC6H_SF16;
+    case DXBC7_UNORM:
+        return DXGI_FORMAT_BC7_UNORM;
+    case DXBC7_SRGB:
+        return DXGI_FORMAT_BC7_UNORM_SRGB;
+#ifdef XBOX
+    case D16_UNORM_S8_UINT:
+        return DXGI_FORMAT_D16_UNORM_S8_UINT;
+#endif
+    default:
+        return DXGI_FORMAT_UNKNOWN;
+    }
+}
