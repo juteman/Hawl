@@ -31,6 +31,11 @@
 #include "D3D12Hooks.h"
 #include <cstdio>
 
+HMODULE hook_get_d3d12_module_handle()
+{
+	return GetModuleHandle(TEXT("d3d12.dll"));
+}
+
 void hook_enable_debug_layer(Renderer* pRenderer)
 {
 	UNREF_PARAM(pRenderer);

@@ -27,5 +27,3 @@
 #include <string>
 
 namespace Logger = spdlog;
-
-

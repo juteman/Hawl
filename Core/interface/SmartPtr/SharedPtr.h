@@ -30,7 +30,6 @@
 
 namespace Hawl::SmartPtr
 {
-
 template <typename T>
 class SharedPtr;
 
@@ -75,22 +74,24 @@ struct SharedPtrTraits<void const volatile>
 template <typename T>
 class SharedPtr
 {
-  public:
+public:
     typedef SharedPtr<T>                               ThisType;
     typedef T                                          ObjectType;
     typedef typename SharedPtrTraits<T>::referenceType ReferenceType;
 
-  protected:
+protected:
     RefCntUtilityBase *m_pRefCnt;
     T *                m_pObject;
 
-  public:
+public:
     /// Init a blank SharePtr
-    SharedPtr() noexcept : m_pRefCnt{nullptr}, m_pObject{nullptr}
+    SharedPtr() noexcept
+        : m_pRefCnt{nullptr}, m_pObject{nullptr}
     {
     }
 
-    SharedPtr(std::nullptr_t) noexcept : m_pRefCnt{nullptr}, m_pObject{nullptr}
+    SharedPtr(std::nullptr_t) noexcept
+        : m_pRefCnt{nullptr}, m_pObject{nullptr}
     {
     }
 
@@ -99,7 +100,8 @@ class SharedPtr
     template <
         typename U,
         typename = typename std::enable_if<std::is_convertible<U *, ObjectType *>::value>::type>
-    explicit SharedPtr(U *pValue) : m_pRefCnt{NewDefaultRefCnt(pValue)}, m_pObject{pValue}
+    explicit SharedPtr(U *pValue)
+        : m_pRefCnt{NewDefaultRefCnt(pValue)}, m_pObject{pValue}
     {
     }
 
@@ -117,7 +119,7 @@ class SharedPtr
     template <typename DeleterType>
     SharedPtr(std::nullptr_t, DeleterType deleter)
         : m_pRefCnt{NewCustomRefCnt(nullptr, std::forward<DeleterType>(deleter))}, m_pObject{
-                                                                                       nullptr}
+              nullptr}
     {
     }
 
@@ -166,9 +168,9 @@ class SharedPtr
         typename = typename std::enable_if<std::is_convertible<U *, ObjectType *>::value>::type>
     explicit SharedPtr(const WeakPtr<U> &weakPtr) noexcept
         : m_pObject{weakPtr.m_pObject}, m_pRefCnt{
-                                            weakPtr.m_pRefCnt
-                                                ? weakPtr.m_pRefCnt->ConditionallyAddShareRefCnt()
-                                                : weakPtr.m_pRefCnt}
+              weakPtr.m_pRefCnt
+                  ? weakPtr.m_pRefCnt->ConditionallyAddShareRefCnt()
+                  : weakPtr.m_pRefCnt}
     {
         if (!m_pRefCnt)
         {
@@ -309,7 +311,7 @@ class SharedPtr
         return (m_pRefCnt && (m_pRefCnt->GetSharedRefCnt() == 1));
     }
 
-  protected:
+protected:
     template <typename U>
     friend class SharedPtr;
     template <typename U>
@@ -320,12 +322,13 @@ class SharedPtr
 template <typename T>
 class WeakPtr
 {
-  public:
+public:
     typedef WeakPtr<T> ThisType;
     typedef T          ObjectType;
 
-  public:
-    WeakPtr() noexcept : m_pObject{nullptr}, m_pRefCnt{nullptr}
+public:
+    WeakPtr() noexcept
+        : m_pObject{nullptr}, m_pRefCnt{nullptr}
     {
     }
 
@@ -468,7 +471,7 @@ class WeakPtr
         m_pRefCnt = pCntUtilityBase;
     }
 
-  protected:
+protected:
     /// Weak owned pointer
     ObjectType *m_pObject;
     /// Reference count for ownd pointer

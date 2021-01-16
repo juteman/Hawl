@@ -22,8 +22,9 @@
 #ifndef HAWL_TIMER_H
 #  define HAWL_TIMER_H
 #  include "BaseType.h"
-namespace Hawl {
 
+namespace Hawl
+{
 }
 
 #endif // !TIMER_H

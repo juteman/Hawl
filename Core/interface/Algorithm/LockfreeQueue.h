@@ -24,7 +24,6 @@
 
 namespace Hawl::Algorithm
 {
-
 enum class QueueModel
 {
     SPSC,
@@ -35,20 +34,23 @@ enum class QueueModel
 template <typename T>
 class LockFreeQueue
 {
-  private:
+private:
     /// LockFreeQueue node implement
     struct QueueNode
     {
         /// construct node with null
-        QueueNode() : next{nullptr}
+        QueueNode()
+            : next{nullptr}
         {
         }
 
-        explicit QueueNode(const T &InData) : next{nullptr}, data{InData}
+        explicit QueueNode(const T &InData)
+            : next{nullptr}, data{InData}
         {
         }
 
-        explicit QueueNode(const T &&InData) : next{nullptr}, data{std::move(InData)}
+        explicit QueueNode(const T &&InData)
+            : next{nullptr}, data{std::move(InData)}
         {
         }
 
@@ -59,7 +61,7 @@ class LockFreeQueue
         T data;
     };
 
-  public:
+public:
     /// Initialize with dummy node
     LockFreeQueue()
     {
@@ -111,7 +113,7 @@ class LockFreeQueue
                     }
                 }
 
-                // if tailNext is not nullptr, fetch the LockFreeQueue tails to next
+                    // if tailNext is not nullptr, fetch the LockFreeQueue tails to next
                 else
                 {
                     m_tail.compare_exchange_strong(tail, tailNext);
@@ -193,7 +195,7 @@ class LockFreeQueue
         return (m_head.load() == m_tail.load());
     }
 
-  private:
+private:
     /// atomic head and  tail
     std::atomic<QueueNode *> m_head;
     std::atomic<QueueNode *> m_tail;

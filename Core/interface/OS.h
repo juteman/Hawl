@@ -34,6 +34,6 @@ typedef struct WindowHandle
 	xcb_screen_t*            screen;
 	xcb_intern_atom_reply_t* atom_wm_delete_window;
 #else
-	void*                    window;    //hWnd
+    void *window; //hWnd
 #endif
 } WindowHandle;

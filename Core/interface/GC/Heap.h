@@ -24,31 +24,38 @@
 #  include "Triats.h"
 #  include <cstddef>
 #  include <type_traits>
-namespace Hawl {
 
+namespace Hawl
+{
 /// HawlGC
-template<typename T>
+template <typename T>
 class HawlGC
 {
 private:
-  /// 禁止拷贝
-  HawlGC(const HawlGC&) = delete;
-  HawlGC& operator=(const HawlGC&) = delete;
+    /// 禁止拷贝
+    HawlGC(const HawlGC &) = delete;
+    HawlGC &operator=(const HawlGC &) = delete;
 
-  /// 禁止在堆上分配数组对象
-  void* operator new[](size_t size);
-  void  operator delete[](void* ptr);
+    /// 禁止在堆上分配数组对象
+    void *operator new[](size_t size);
+    void  operator delete[](void *ptr);
 
 public:
-  /// 重载new函数，使其能够被垃圾回收
-  void*        operator new(size_t size) { Allocate(size); }
-  static void* Allocate(size_t size);
+    /// 重载new函数，使其能够被垃圾回收
+    void *operator new(size_t size)
+    {
+        Allocate(size);
+    }
 
-  /// 在垃圾回收下delete应不可用，无需手动释放
-  void operator delete(void* ptr);
+    static void *Allocate(size_t size);
+
+    /// 在垃圾回收下delete应不可用，无需手动释放
+    void operator delete(void *ptr);
 
 protected:
-  HawlGC() {}
+    HawlGC()
+    {
+    }
 };
 
 /* 还有另一种偏特化的方式
@@ -111,83 +118,84 @@ struct is_template_base_of<B, D,
 ******************************************************************************/
 // clang-format on
 
-template<
-  typename T,
-  bool = IsSubclassOfTemplate<typename std::remove_cv<T>::type, HawlGC>::value>
+template <
+    typename T,
+    bool = IsSubclassOfTemplate<typename std::remove_cv<T>::type, HawlGC>::value>
 class NeedsAdjustAndMark;
 
-template<typename T>
+template <typename T>
 class NeedsAdjustAndMark<T, true>
 {
-  static_assert(sizeof(T), "T应该被定义为一个类型");
+    static_assert(sizeof(T), "T应该被定义为一个类型");
 
 public:
-  static const bool value = false;
+    static const bool value = false;
 };
 
-template<typename T>
+template <typename T>
 const bool NeedsAdjustAndMark<T, true>::value;
 
-template<typename T>
+template <typename T>
 class NeedsAdjustAndMark<T, false>
 {
-  static_assert(sizeof(T), "T应该被定义为一个类型");
+    static_assert(sizeof(T), "T应该被定义为一个类型");
 
 public:
-  static const bool value =
-    IsHawlGCMixin<typename std::remove_cv<T>::Type>::value;
+    static const bool value =
+        IsHawlGCMixin<typename std::remove_cv<T>::Type>::value;
 };
-template<typename T>
+
+template <typename T>
 const bool NeedsAdjustAndMark<T, false>::value;
 
 /// 根据bool的两种判断决定偏特化的类型
-template<typename T, bool = NeedsAdjustAndMark<T>::value>
+template <typename T, bool = NeedsAdjustAndMark<T>::value>
 class ObjectAliveTrait;
 
-template<typename T>
+template <typename T>
 class ObjectAliveTrait<T, false>
 {
 public:
-  static bool isObjectAlive(T* object)
-  {
-    static_assert(sizeof(T), "T应该被定义为一个类型");
-    return GCObjectHeader::fromPayload(object)->isMarked();
-  }
+    static bool isObjectAlive(T *object)
+    {
+        static_assert(sizeof(T), "T应该被定义为一个类型");
+        return GCObjectHeader::fromPayload(object)->isMarked();
+    }
 };
 
-template<typename T>
+template <typename T>
 class ObjectAliveTrait<T, true>
 {
 public:
-  static bool isObjectAlive(T* object)
-  {
-    static_assert(sizeof(T), "T应该被定义为一个类型");
-    return object->isObjectAlive();
-  }
+    static bool isObjectAlive(T *object)
+    {
+        static_assert(sizeof(T), "T应该被定义为一个类型");
+        return object->isObjectAlive();
+    }
 };
 
 class GCHeap
 {
 public:
-  /// 启动GC
-  static void Start();
-  /// 关闭GC
-  static void Stop();
+    /// 启动GC
+    static void Start();
+    /// 关闭GC
+    static void Stop();
 
-  /// 判断对象是否存活
-  template<typename T>
-  static inline bool IsObjectAlive(T* Object)
-  {
-    static_assert(sizeof(T), "T应该被定义为一个类型");
+    /// 判断对象是否存活
+    template <typename T>
+    static inline bool IsObjectAlive(T *Object)
+    {
+        static_assert(sizeof(T), "T应该被定义为一个类型");
 
-    /// nullptr 不会被标记释放
-    /// 所以应该认为一个nullptr永远是生存状态
-    if (!Object)
-      return true;
+        /// nullptr 不会被标记释放
+        /// 所以应该认为一个nullptr永远是生存状态
+        if (!Object)
+            return true;
 
-    /// 根据一系列偏特化判断类型是否存活
-    return ObjectAliveTrait<T>::isObjectAlive(Object);
-  }
+        /// 根据一系列偏特化判断类型是否存活
+        return ObjectAliveTrait<T>::isObjectAlive(Object);
+    }
 };
 }
 #endif

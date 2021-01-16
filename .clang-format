@@ -1,12 +1,12 @@
 ﻿---
-Language:        Cpp
-BasedOnStyle: Microsoft
-AlignConsecutiveDeclarations: true
-AlignOperands: true
-BinPackParameters: false
-BinPackArguments: false
-AlwaysBreakTemplateDeclarations: Yes
-Cpp11BracedListStyle: true
-ColumnLimit: 100
+BasedOnStyle: LLVM
+
+AccessModifierOffset: -4
+BreakBeforeBraces: Allman
+ColumnLimit: 0
+IndentCaseLabels: false
+IndentWidth: 4
+SortIncludes: false
+TabWidth: 4
 ...
 

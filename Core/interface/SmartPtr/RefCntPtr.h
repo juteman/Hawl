@@ -31,14 +31,14 @@
 
 namespace Hawl::SmartPtr
 {
-
 /// RefCnt Interface example
 class IRefCountObject
 {
-  public:
+public:
     virtual ~IRefCountObject()
     {
     }
+
     virtual UINT32 AddRef() const = 0;
     virtual UINT32 Release() const = 0;
     virtual UINT32 GetRefCount() const = 0;
@@ -46,8 +46,9 @@ class IRefCountObject
 
 class AtomicRefCountObject : public IRefCountObject
 {
-  public:
-    AtomicRefCountObject() : m_refCounter(0)
+public:
+    AtomicRefCountObject()
+        : m_refCounter(0)
     {
     }
 
@@ -60,6 +61,7 @@ class AtomicRefCountObject : public IRefCountObject
     {
         return (UINT32)++m_refCounter;
     }
+
     UINT32 Release() const
     {
         --m_refCounter;
@@ -74,7 +76,7 @@ class AtomicRefCountObject : public IRefCountObject
         return m_refCounter;
     }
 
-  private:
+private:
     mutable std::atomic<UINT32> m_refCounter;
 };
 
@@ -86,29 +88,33 @@ class AtomicRefCountObject : public IRefCountObject
 template <typename T>
 class RefCountPtr
 {
-  public:
+public:
     inline RefCountPtr() noexcept = default;
 
-    explicit RefCountPtr(T *pObject, bool IsAddRef = true) noexcept : m_pObject{pObject}
+    explicit RefCountPtr(T *pObject, bool IsAddRef = true) noexcept
+        : m_pObject{pObject}
     {
         if (m_pObject && IsAddRef)
             m_pObject->AddRef();
     }
 
-    RefCountPtr(const RefCountPtr &Ptr) noexcept : m_pObject{Ptr.m_pObject}
+    RefCountPtr(const RefCountPtr &Ptr) noexcept
+        : m_pObject{Ptr.m_pObject}
     {
         if (m_pObject)
             m_pObject->AddRef();
     }
 
     template <typename U>
-    explicit RefCountPtr(const RefCountPtr<U> &Ptr) : m_pObject{static_cast<T *>(Ptr.Get())}
+    explicit RefCountPtr(const RefCountPtr<U> &Ptr)
+        : m_pObject{static_cast<T *>(Ptr.Get())}
     {
         if (m_pObject)
             m_pObject->AddRef();
     }
 
-    RefCountPtr(RefCountPtr &&Ptr) noexcept : m_pObject{std::move(Ptr.m_pObject)}
+    RefCountPtr(RefCountPtr &&Ptr) noexcept
+        : m_pObject{std::move(Ptr.m_pObject)}
     {
         Ptr.m_pObject = nullptr;
     }
@@ -133,7 +139,6 @@ class RefCountPtr
             oldObj->Release();
         }
         return *this;
-
     }
 
     RefCountPtr &operator=(const RefCountPtr &Ptr) noexcept
@@ -164,6 +169,7 @@ class RefCountPtr
     {
         return *m_pObject;
     }
+
     inline const T &operator*() const noexcept
     {
         return *m_pObject;
@@ -173,6 +179,7 @@ class RefCountPtr
     {
         return m_pObject;
     }
+
     inline const T *operator->() const noexcept
     {
         return m_pObject;
@@ -183,6 +190,7 @@ class RefCountPtr
     {
         return m_pObject;
     }
+
     operator T *() const noexcept
     {
         return m_pObject;
@@ -250,7 +258,7 @@ class RefCountPtr
         std::swap(m_pObject, Ptr.m_pObject);
     }
 
-  private:
+private:
     T *m_pObject = nullptr;
 };
 } // namespace Hawl::SmartPtr

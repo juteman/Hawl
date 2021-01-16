@@ -26,17 +26,22 @@
 #ifndef HAWL_IAPPBASE_H
 #  define HAWL_IAPPBASE_H
 #  include "BaseType.h"
-namespace Hawl {
+
+namespace Hawl
+{
 class IApp
 {
 public:
-  virtual INT  Init()                    = 0;
-  virtual void Exit()                    = 0;
-  virtual bool Load()                    = 0;
-  virtual void Unload()                  = 0;
-  virtual void Update(FLOAT32 deltaTime) = 0;
-  virtual void Draw()                    = 0;
-  virtual ~IApp(){};
+    virtual INT  Init() = 0;
+    virtual void Exit() = 0;
+    virtual bool Load() = 0;
+    virtual void Unload() = 0;
+    virtual void Update(FLOAT32 deltaTime) = 0;
+    virtual void Draw() = 0;
+
+    virtual ~IApp()
+    {
+    };
 };
 }
 #endif

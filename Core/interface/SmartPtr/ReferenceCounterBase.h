@@ -33,13 +33,12 @@
 
 namespace Hawl::SmartPtr
 {
-
 /// base reference counter class
 /// include about share reference counter and the
 /// weak reference counter
 class RefCntUtilityBase
 {
-  public:
+public:
     inline explicit RefCntUtilityBase(UINT32 shareCnt = 1, UINT32 weakCnt = 1) noexcept
     {
         m_shareRefCnt.store(shareCnt);
@@ -77,11 +76,11 @@ class RefCntUtilityBase
             // why use compare exchange?
             // because on the multiple thread the value will change
             if (m_shareRefCnt.compare_exchange_weak(shareRefCntRecord, shareRefCntRecord + 1))
-                [[likely]]
-                {
-                    ++m_weakRefCnt;
-                    return this;
-                }
+            [[likely]]
+            {
+                ++m_weakRefCnt;
+                return this;
+            }
         }
         return nullptr;
     }
@@ -90,11 +89,11 @@ class RefCntUtilityBase
     inline void ReleaseSharedRef()
     {
         assert((m_shareRefCnt.load(std::memory_order_relaxed) > 0) &&
-               (m_weakRefCnt.load(std::memory_order_relaxed) > 0));
+            (m_weakRefCnt.load(std::memory_order_relaxed) > 0));
         if (--m_shareRefCnt == 0)
             DestroyObject();
 
-        if (--m_weakRefCnt==0)
+        if (--m_weakRefCnt == 0)
         {
             DestroyRefCnt();
         }
@@ -120,7 +119,7 @@ class RefCntUtilityBase
     /// Destroy the this instance
     virtual void DestroyRefCnt() noexcept = 0;
 
-  protected:
+protected:
     /// The number of shared references to the object.
     /// When count equal 0, the object will be destroy
     std::atomic<INT32> m_shareRefCnt;
@@ -137,7 +136,7 @@ class RefCntUtilityBase
 template <typename T, typename DeleterType>
 class RefCntDeleter : public RefCntUtilityBase
 {
-  public:
+public:
     /// rename the type
     typedef T ValueType;
 
@@ -172,7 +171,7 @@ class RefCntDeleter : public RefCntUtilityBase
 template <typename T>
 class RefCntInst : public RefCntUtilityBase
 {
-  public:
+public:
     typedef T                                                          ValueType;
     typedef typename std::aligned_storage<sizeof(T), alignof(T)>::type StorgeType;
 
@@ -184,9 +183,10 @@ class RefCntInst : public RefCntUtilityBase
     }
 
     template <typename... Args>
-    RefCntInst(Args &&... args) : RefCntUtilityBase{}
+    RefCntInst(Args &&...args)
+        : RefCntUtilityBase{}
     {
-        new (&m_memory) ValueType(std::forward<Args>(args)...);
+        new(&m_memory) ValueType(std::forward<Args>(args)...);
     }
 
     void DestroyObject() noexcept override
@@ -220,7 +220,7 @@ template <typename ValueType>
 inline RefCntUtilityBase *NewDefaultRefCnt(ValueType *object)
 {
     return new RefCntDeleter<ValueType, DefaultDeleter<ValueType>>(object,
-                                                                   DefaultDeleter<ValueType>());
+        DefaultDeleter<ValueType>());
 }
 
 // Create with custom deleter
@@ -228,6 +228,7 @@ template <typename ValueType, typename DeleterType>
 inline RefCntUtilityBase *NewCustomRefCnt(ValueType *object, DeleterType &&deleter)
 {
     return new RefCntDeleter<ValueType, typename std::remove_reference_t<DeleterType>::Type>(
-        object, std::forward<DeleterType>(deleter));
+        object,
+        std::forward<DeleterType>(deleter));
 }
 } // namespace Hawl::SmartPtr

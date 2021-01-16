@@ -21,16 +21,18 @@
 #pragma once
 #ifndef HAWL_OBJECTHEADER_H
 #  define HAWL_OBJECTHEADER_H
-namespace {
+
+namespace
+{
 class GCObjectHeader
 {
 public:
-  static GCObjectHeader* fromPayload(const void*);
-  bool                   isMarked() const;
-  void                   mark();
-  void                   unmark();
-  void                   markDead();
-  bool                   isDead() const;
+    static GCObjectHeader *fromPayload(const void *);
+    bool                   isMarked() const;
+    void                   mark();
+    void                   unmark();
+    void                   markDead();
+    bool                   isDead() const;
 };
 }
 #endif

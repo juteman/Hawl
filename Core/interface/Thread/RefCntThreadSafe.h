@@ -28,7 +28,7 @@ namespace Hawl
 /// Class use reference counting to ensure thread safe
 class RefCntThreadSafe
 {
-  public:
+public:
     RefCntThreadSafe()
     {
         m_counter.store(0);
@@ -75,7 +75,7 @@ class RefCntThreadSafe
         return m_counter.load(std::memory_order_relaxed);
     }
 
-  private:
+private:
     /// counter for thread safe
     volatile std::atomic<INT32> m_counter{};
 

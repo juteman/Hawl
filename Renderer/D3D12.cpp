@@ -37,8 +37,9 @@
 
 #include <amd_ags.h>
 #include <tbb/atomic.h>
-#include <tbb/mutex.h>
 
+#include "D3D12MemAlloc.h"
+#include "math/Common.h"
 
 #if defined(XBOX)
 // 
@@ -47,11 +48,11 @@
 #endif
 
 #define SAFE_FREE(p_var)                \
-	if ((p_var))                        \
-	{                                   \
-		mi_free((void*)(p_var));        \
-		p_var = nullptr;                \
-	}
+    if ((p_var))                        \
+    {                                   \
+        mi_free((void*)(p_var));        \
+        p_var = nullptr;                \
+    }
 
 #if defined(__cplusplus)
 #define DECLARE_ZERO(type, var) type var = {};
@@ -61,11 +62,11 @@
 
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p_var)     \
-	if (p_var)                  \
-	{                           \
-		(p_var)->Release();     \
-		p_var = nullptr;        \
-	}
+    if (p_var)                  \
+    {                           \
+        (p_var)->Release();     \
+        p_var = nullptr;        \
+    }
 #endif
 
 
@@ -86,9 +87,20 @@ fnD3D12CreateVersionedRootSignatureDeserializer = nullptr;
 /************************************************************************/
 typedef struct DescriptorHeapProperties
 {
-    uint32_t                    mMaxDescriptors;
+    uint32_t mMaxDescriptors;
     D3D12_DESCRIPTOR_HEAP_FLAGS mFlags;
-}                               DescriptorHeapProperties;
+} DescriptorHeapProperties;
+
+typedef struct NullDescriptors
+{
+	// Default NULL Descriptors for binding at empty descriptor slots to make sure all descriptors are bound at submit
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullTextureSRV[TEXTURE_DIM_COUNT];
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullTextureUAV[TEXTURE_DIM_COUNT];
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullBufferSRV;
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullBufferUAV;
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullBufferCBV;
+	D3D12_CPU_DESCRIPTOR_HANDLE mNullSampler;
+} NullDescriptors;
 
 DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] =
 {
@@ -97,6 +109,14 @@ DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIPTOR_HEAP_TYPE
     {512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE},        // RTV
     {512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE},        // DSV
 };
+
+
+
+
+static void remove_default_resources(Renderer* pRenderer)
+{
+	SAFE_FREE(pRenderer->pNullDescriptors);
+}
 
 typedef enum GpuVendor
 {
@@ -146,13 +166,13 @@ typedef struct DescriptorHeap
     {
         D3D12_CPU_DESCRIPTOR_HANDLE mCpu;
         D3D12_GPU_DESCRIPTOR_HANDLE mGpu;
-    }                               DescriptorHandle;
+    } DescriptorHandle;
 
     /// DX Heap
     ID3D12DescriptorHeap *pCurrentHeap;
     /// Lock for multi-threaded descriptor allocations
-    tbb::mutex *                 pMutex;
-    ID3D12Device *               pDevice;
+    std::mutex pMutex;
+    ID3D12Device *pDevice;
     D3D12_CPU_DESCRIPTOR_HANDLE *pHandles;
     /// Start position in the heap
     DescriptorHandle mStartHandle;
@@ -164,26 +184,24 @@ typedef struct DescriptorHeap
     uint32_t mDescriptorSize;
     /// Used
     tbb::atomic<uint32> mUsedDescriptors;
-}                       DescriptorHeap;
+} DescriptorHeap;
 
 /************************************************************************/
 // Static Descriptor Heap Implementation
 /************************************************************************/
-static void add_descriptor_heap(ID3D12Device *                    pDevice,
+static void add_descriptor_heap(ID3D12Device *pDevice,
                                 const D3D12_DESCRIPTOR_HEAP_DESC *pDesc,
-                                DescriptorHeap **                 ppDescHeap)
+                                DescriptorHeap **ppDescHeap)
 {
     uint32_t numDescriptors = pDesc->NumDescriptors;
     hook_modify_descriptor_heap_size(pDesc->Type, &numDescriptors);
 
-    DescriptorHeap *pHeap = static_cast<DescriptorHeap *>(mi_calloc(1, sizeof(*pHeap)));
+    auto *pHeap = static_cast<DescriptorHeap *>(mi_calloc(1, sizeof(*pHeap)));
 
-    pHeap->pMutex = static_cast<tbb::mutex *>(mi_calloc(1, sizeof(tbb::mutex)));
-    pHeap->pMutex->set_state(tbb::mutex::INITIALIZED);
     pHeap->pDevice = pDevice;
 
     // Keep 32 aligned for easy remove
-    numDescriptors = round_up(numDescriptors, 32);
+    numDescriptors = RoundUp(numDescriptors, 32);
 
     D3D12_DESCRIPTOR_HEAP_DESC Desc = *pDesc;
     Desc.NumDescriptors = numDescriptors;
@@ -203,6 +221,203 @@ static void add_descriptor_heap(ID3D12Device *                    pDevice,
     *ppDescHeap = pHeap;
 }
 
+
+/************************************************************************/
+// Multi GPU Helper Functions
+/************************************************************************/
+uint32_t util_calculate_shared_node_mask(Renderer* pRenderer)
+{
+	if (pRenderer->mGpuMode == GPU_MODE_LINKED)
+		return (1 << pRenderer->mLinkedNodeCount) - 1;
+	else
+		return 0;
+}
+
+
+static DescriptorHeap::DescriptorHandle consume_descriptor_handles(DescriptorHeap* pHeap, uint32_t descriptorCount)
+{
+	if (pHeap->mUsedDescriptors + descriptorCount > pHeap->mDesc.NumDescriptors)
+	{
+        std::scoped_lock<std::mutex> guard(pHeap->pMutex);
+
+		if ((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE))
+		{
+			uint32_t currentOffset = pHeap->mUsedDescriptors;
+			D3D12_DESCRIPTOR_HEAP_DESC desc = pHeap->mDesc;
+			while(pHeap->mUsedDescriptors + descriptorCount > desc.NumDescriptors)
+				desc.NumDescriptors <<= 1;
+			ID3D12Device* pDevice = pHeap->pDevice;
+			SAFE_RELEASE(pHeap->pCurrentHeap);
+			pDevice->CreateDescriptorHeap(&desc, IID_ARGS(&pHeap->pCurrentHeap));
+			pHeap->mDesc = desc;
+			pHeap->mStartHandle.mCpu = pHeap->pCurrentHeap->GetCPUDescriptorHandleForHeapStart();
+			pHeap->mStartHandle.mGpu = pHeap->pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
+
+            auto *const rangeSizes = static_cast<uint32_t *>(alloca(pHeap->mUsedDescriptors * sizeof(uint32_t)));
+			uint32_t usedDescriptors = pHeap->mUsedDescriptors.load();
+			for (uint32_t i = 0; i < pHeap->mUsedDescriptors; ++i)
+				rangeSizes[i] = 1;
+			pDevice->CopyDescriptors(1, &pHeap->mStartHandle.mCpu, &usedDescriptors,
+				pHeap->mUsedDescriptors, pHeap->pHandles, rangeSizes,
+				pHeap->mDesc.Type);
+            auto * pNewHandles = static_cast<D3D12_CPU_DESCRIPTOR_HANDLE *>(mi_calloc(pHeap->mDesc.NumDescriptors, sizeof(D3D12_CPU_DESCRIPTOR_HANDLE)));
+			memcpy(pNewHandles, pHeap->pHandles, pHeap->mUsedDescriptors * sizeof(D3D12_CPU_DESCRIPTOR_HANDLE));
+			SAFE_FREE(pHeap->pHandles)
+			pHeap->pHandles = pNewHandles;
+		}
+		else if (pHeap->mFreeList.size() >= descriptorCount)
+		{
+			if (descriptorCount == 1)
+			{
+				DescriptorHeap::DescriptorHandle ret = pHeap->mFreeList.back();
+				pHeap->mFreeList.pop_back();
+				return ret;
+			}
+
+			// search for continuous free items in the list
+			uint32_t freeCount = 1;		
+			for (size_t i = pHeap->mFreeList.size() - 1; i > 0; --i)
+			{
+                const size_t index = i - 1;
+                const DescriptorHeap::DescriptorHandle descHandle = pHeap->mFreeList[index];
+				if (descHandle.mCpu.ptr + pHeap->mDescriptorSize == pHeap->mFreeList[i].mCpu.ptr)
+					++freeCount;
+				else
+					freeCount = 1;
+
+				if (freeCount == descriptorCount)
+				{
+					pHeap->mFreeList.erase(pHeap->mFreeList.begin() + index, pHeap->mFreeList.begin() + index + descriptorCount);
+					return descHandle;
+				}
+			}
+		}
+	}
+
+	uint32 usedDescriptors =  pHeap->mUsedDescriptors.fetch_and_add<tbb::memory_semantics::relaxed>(descriptorCount) ;
+	EA_ASSERT(usedDescriptors + descriptorCount <= pHeap->mDesc.NumDescriptors);
+	DescriptorHeap::DescriptorHandle ret =
+	{
+		{ pHeap->mStartHandle.mCpu.ptr + usedDescriptors * pHeap->mDescriptorSize },
+		{ pHeap->mStartHandle.mGpu.ptr + usedDescriptors * pHeap->mDescriptorSize },
+	};
+
+	return ret;
+}
+
+void return_cpu_descriptor_handles(DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count)
+{
+	EA_ASSERT((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) == 0);
+	MutexLock lock(*pHeap->pMutex);
+	for (uint32_t i = 0; i < count; ++i)
+		pHeap->mFreeList.push_back({
+		{ handle.ptr + pHeap->mDescriptorSize * i },
+		D3D12_GPU_VIRTUAL_ADDRESS_NULL });
+}
+
+static void copy_descriptor_handle(DescriptorHeap* pHeap, const D3D12_CPU_DESCRIPTOR_HANDLE& srcHandle, const uint64_t& dstHandle, uint32_t index)
+{
+	pHeap->pHandles[(dstHandle / pHeap->mDescriptorSize) + index] = srcHandle;
+	pHeap->pDevice->CopyDescriptorsSimple(
+		1,
+		{ pHeap->mStartHandle.mCpu.ptr + dstHandle + (index * pHeap->mDescriptorSize) },
+		srcHandle,
+		pHeap->mDesc.Type);
+}
+
+static void add_sampler(Renderer* pRenderer, const D3D12_SAMPLER_DESC* pSamplerDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+	*pHandle =
+		consume_descriptor_handles(pRenderer->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER], 1).mCpu;
+	pRenderer->pDxDevice->CreateSampler(pSamplerDesc, *pHandle);
+}
+
+D3D12_DEPTH_STENCIL_DESC gDefaultDepthDesc = {};
+D3D12_BLEND_DESC gDefaultBlendDesc = {};
+D3D12_RASTERIZER_DESC gDefaultRasterizerDesc = {};
+
+static void add_default_resources(Renderer* pRenderer)
+{
+	pRenderer->pNullDescriptors = static_cast<NullDescriptors *>(mi_calloc(1, sizeof(NullDescriptors)));
+	// Create NULL descriptors in case user does not specify some descriptors we can bind null descriptor handles at those points
+	D3D12_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = samplerDesc.AddressV = samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	add_sampler(pRenderer, &samplerDesc, &pRenderer->pNullDescriptors->mNullSampler);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R8_UINT;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R8_UINT;
+
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_1D]);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullTextureUAV[TEXTURE_DIM_1D]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_2D]);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullTextureUAV[TEXTURE_DIM_2D]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_2DMS]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_3D]);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullTextureUAV[TEXTURE_DIM_3D]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_1D_ARRAY]);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullTextureUAV[TEXTURE_DIM_1D_ARRAY]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_2D_ARRAY]);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullTextureUAV[TEXTURE_DIM_2D_ARRAY]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_2DMS_ARRAY]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_CUBE]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullTextureSRV[TEXTURE_DIM_CUBE_ARRAY]);
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+	add_srv(pRenderer, NULL, &srvDesc, &pRenderer->pNullDescriptors->mNullBufferSRV);
+	add_uav(pRenderer, NULL, NULL, &uavDesc, &pRenderer->pNullDescriptors->mNullBufferUAV);
+	add_cbv(pRenderer, NULL, &pRenderer->pNullDescriptors->mNullBufferCBV);
+
+	BlendStateDesc blendStateDesc = {};
+	blendStateDesc.mDstAlphaFactors[0] = BC_ZERO;
+	blendStateDesc.mDstFactors[0] = BC_ZERO;
+	blendStateDesc.mSrcAlphaFactors[0] = BC_ONE;
+	blendStateDesc.mSrcFactors[0] = BC_ONE;
+	blendStateDesc.mMasks[0] = ALL;
+	blendStateDesc.mRenderTargetMask = BLEND_STATE_TARGET_ALL;
+	blendStateDesc.mIndependentBlend = false;
+	gDefaultBlendDesc = util_to_blend_desc(&blendStateDesc);
+
+	DepthStateDesc depthStateDesc = {};
+	depthStateDesc.mDepthFunc = CMP_LEQUAL;
+	depthStateDesc.mDepthTest = false;
+	depthStateDesc.mDepthWrite = false;
+	depthStateDesc.mStencilBackFunc = CMP_ALWAYS;
+	depthStateDesc.mStencilFrontFunc = CMP_ALWAYS;
+	depthStateDesc.mStencilReadMask = 0xFF;
+	depthStateDesc.mStencilWriteMask = 0xFF;
+	gDefaultDepthDesc = util_to_depth_desc(&depthStateDesc);
+
+	RasterizerStateDesc rasterizerStateDesc = {};
+	rasterizerStateDesc.mCullMode = CULL_MODE_BACK;
+	gDefaultRasterizerDesc = util_to_rasterizer_desc(&rasterizerStateDesc);
+}
+
+uint32_t util_calculate_node_mask(Renderer* pRenderer, uint32_t i)
+{
+	if (pRenderer->mGpuMode == GPU_MODE_LINKED)
+		return (1 << i);
+	else
+		return 0;
+}
+
 static bool AddDevice(Renderer *pRenderer)
 {
     // The D3D debug layer (as well as Microsoft PIX and other graphics debugger
@@ -219,17 +434,17 @@ static bool AddDevice(Renderer *pRenderer)
 #endif
 
 #if defined(USE_NSIGHT_AFTERMATH)
-	// Enable Nsight Aftermath GPU crash dump creation.
-	// This needs to be done before the Vulkan device is created.
-	CreateAftermathTracker(pRenderer->pName, &pRenderer->mAftermathTracker);
+    // Enable Nsight Aftermath GPU crash dump creation.
+    // This needs to be done before the Vulkan device is created.
+    CreateAftermathTracker(pRenderer->pName, &pRenderer->mAftermathTracker);
 #endif
 
 #if defined(USE_DRED)
-	SUCCEEDED(D3D12GetDebugInterface(__uuidof(pRenderer->pDredSettings), (void**)&(pRenderer->pDredSettings)));
+    SUCCEEDED(D3D12GetDebugInterface(__uuidof(pRenderer->pDredSettings), (void**)&(pRenderer->pDredSettings)));
 
-	// Turn on AutoBreadcrumbs and Page Fault reporting
-	pRenderer->pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-	pRenderer->pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+    // Turn on AutoBreadcrumbs and Page Fault reporting
+    pRenderer->pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+    pRenderer->pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 #endif
 
     D3D_FEATURE_LEVEL feature_levels[4] =
@@ -241,37 +456,37 @@ static bool AddDevice(Renderer *pRenderer)
     };
 
 #if defined(XBOX)
-	// Create the DX12 API device object.
-	CHECK_HRESULT(hook_create_device(NULL, feature_levels[0], &pRenderer->pDxDevice));
+    // Create the DX12 API device object.
+    CHECK_HRESULT(hook_create_device(NULL, feature_levels[0], &pRenderer->pDxDevice));
 
 #if defined(GRAPHICS_DEBUG)
     //Sets the callback functions to invoke when the GPU hangs
     //pRenderer->pDxDevice->SetHangCallbacksX(HANGBEGINCALLBACK, HANGPRINTCALLBACK, NULL);
 #endif
 
-	// First, retrieve the underlying DXGI device from the D3D device.
-	IDXGIDevice1* dxgiDevice;
-	CHECK_HRESULT(pRenderer->pDxDevice->QueryInterface(IID_ARGS(&dxgiDevice)));
+    // First, retrieve the underlying DXGI device from the D3D device.
+    IDXGIDevice1* dxgiDevice;
+    CHECK_HRESULT(pRenderer->pDxDevice->QueryInterface(IID_ARGS(&dxgiDevice)));
 
-	// Identify the physical adapter (GPU or card) this device is running on.
-	IDXGIAdapter* dxgiAdapter;
-	CHECK_HRESULT(dxgiDevice->GetAdapter(&dxgiAdapter));
+    // Identify the physical adapter (GPU or card) this device is running on.
+    IDXGIAdapter* dxgiAdapter;
+    CHECK_HRESULT(dxgiDevice->GetAdapter(&dxgiAdapter));
 
-	// And obtain the factory object that created it.
-	CHECK_HRESULT(dxgiAdapter->GetParent(IID_ARGS(&pRenderer->pDXGIFactory)));
+    // And obtain the factory object that created it.
+    CHECK_HRESULT(dxgiAdapter->GetParent(IID_ARGS(&pRenderer->pDXGIFactory)));
 
-	uint32_t gpuCount = 1;
-	GpuDesc gpuDesc[1] = {};
-	dxgiAdapter->QueryInterface(IID_ARGS(&gpuDesc[0].pGpu));
+    uint32_t gpuCount = 1;
+    GpuDesc gpuDesc[1] = {};
+    dxgiAdapter->QueryInterface(IID_ARGS(&gpuDesc[0].pGpu));
 
-	dxgiAdapter->Release();
-	typedef bool(*DeviceBetterFn)(GpuDesc* gpuDesc, uint32_t testIndex, uint32_t refIndex);
-	DeviceBetterFn isDeviceBetter = [](GpuDesc* gpuDesc, uint32_t testIndex, uint32_t refIndex) -> bool
-	{
-		return false;
-	};
+    dxgiAdapter->Release();
+    typedef bool(*DeviceBetterFn)(GpuDesc* gpuDesc, uint32_t testIndex, uint32_t refIndex);
+    DeviceBetterFn isDeviceBetter = [](GpuDesc* gpuDesc, uint32_t testIndex, uint32_t refIndex) -> bool
+    {
+        return false;
+    };
 
-	hook_fill_gpu_desc(pRenderer, feature_levels[0], &gpuDesc[0]);
+    hook_fill_gpu_desc(pRenderer, feature_levels[0], &gpuDesc[0]);
 
 #else
     // PC Device create start
@@ -282,15 +497,15 @@ static bool AddDevice(Renderer *pRenderer)
 
     CHECK_DX12RESULT(CreateDXGIFactory2(flags, IID_ARGS(&pRenderer->pDXGIFactory)))
 
-    uint32_t       gpuCount = 0;
+    uint32_t gpuCount = 0;
     IDXGIAdapter4 *adapter = nullptr;
-    bool           foundSoftwareAdapter = false;
+    bool foundSoftwareAdapter = false;
 
     // Find number of usable GPUs
     // Use DXGI6 interface which lets us specify gpu preference so we don't need to use NVOptimus or AMDPowerExpress exports
     for (UINT i = 0; DXGI_ERROR_NOT_FOUND != pRenderer->pDXGIFactory->EnumAdapterByGpuPreference(i,
-                         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-                         IID_ARGS(&adapter)); ++i)
+                                                                                                 DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+                                                                                                 IID_ARGS(&adapter)); ++i)
     {
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapter->GetDesc3(&desc);
@@ -341,8 +556,8 @@ static bool AddDevice(Renderer *pRenderer)
 
     // Use DXGI6 interface which lets us specify gpu preference so we don't need to use NVOptimus or AMDPowerExpress exports
     for (uint i = 0; DXGI_ERROR_NOT_FOUND != pRenderer->pDXGIFactory->EnumAdapterByGpuPreference(i,
-                         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-                         IID_ARGS(&adapter)); ++i)
+                                                                                                 DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+                                                                                                 IID_ARGS(&adapter)); ++i)
     {
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapter->GetDesc3(&desc);
@@ -387,10 +602,9 @@ static bool AddDevice(Renderer *pRenderer)
 
     EA_ASSERT(gpuCount > 0);
 
-    typedef bool (*DeviceBetterFn)(GpuDesc *gpuDesc, uint32_t testIndex, uint32_t refIndex);
-    DeviceBetterFn isDeviceBetter = [](GpuDesc *gpuDesc,
-                                       uint32_t testIndex,
-                                       uint32_t refIndex) -> bool
+    auto isDeviceBetter = [](GpuDesc *gpuDesc,
+                             const uint32_t testIndex,
+                             const uint32_t refIndex)
     {
         const GpuDesc &gpu1 = gpuDesc[testIndex];
         const GpuDesc &gpu2 = gpuDesc[refIndex];
@@ -425,7 +639,7 @@ static bool AddDevice(Renderer *pRenderer)
 #endif
 
     uint32 gpuIndex = UINT32_MAX;
-    auto * gpuSettings = static_cast<GPUSettings *>(alloca(gpuCount * sizeof(GPUSettings)));
+    auto *gpuSettings = static_cast<GPUSettings *>(alloca(gpuCount * sizeof(GPUSettings)));
 
     for (uint32_t i = 0; i < gpuCount; ++i)
     {
@@ -489,7 +703,7 @@ static bool AddDevice(Renderer *pRenderer)
 
     for (uint32_t i = 0; i < gpuCount; ++i)
     {
-        SAFE_RELEASE(gpuDesc[i].pGpu);
+        SAFE_RELEASE(gpuDesc[i].pGpu)
     }
 
     // Print selected GPU information
@@ -532,7 +746,7 @@ static bool AddDevice(Renderer *pRenderer)
 #endif
 
 #if defined(USE_NSIGHT_AFTERMATH)
-	SetAftermathDevice(pRenderer->pDxDevice);
+    SetAftermathDevice(pRenderer->pDxDevice);
 #endif
 
 #if EA_PLATFORM_DESKTOP && defined(_DEBUG)
@@ -567,7 +781,7 @@ static void RemoveDevice(Renderer *pRenderer)
 #endif
 
 #if defined(XBOX)
-	SAFE_RELEASE(pRenderer->pDxDevice);
+    SAFE_RELEASE(pRenderer->pDxDevice);
 #elif GRAPHICS_DEBUG
     ID3D12DebugDevice *pDebugDevice = nullptr;
     pRenderer->pDxDevice->QueryInterface(&pDebugDevice);
@@ -582,15 +796,15 @@ static void RemoveDevice(Renderer *pRenderer)
         pDebugDevice->Release();
     }
 #else
-	SAFE_RELEASE(pRenderer->pDxDevice);
+    SAFE_RELEASE(pRenderer->pDxDevice);
 #endif
 
 #if defined(USE_NSIGHT_AFTERMATH)
-	DestroyAftermathTracker(&pRenderer->mAftermathTracker);
+    DestroyAftermathTracker(&pRenderer->mAftermathTracker);
 #endif
 
 #if defined(USE_DRED)
-	SAFE_RELEASE(pRenderer->pDredSettings);
+    SAFE_RELEASE(pRenderer->pDredSettings);
 #endif
 }
 
@@ -600,7 +814,7 @@ inline void utils_caps_builder(Renderer *pRenderer)
 
     for (uint32_t i = 0; i < TextureFormat::Count; ++i)
     {
-        DXGI_FORMAT fmt = static_cast<DXGI_FORMAT>(TextureFormatToDxgiFormat(
+        const DXGI_FORMAT fmt = static_cast<DXGI_FORMAT>(TextureFormatToDxgiFormat(
             static_cast<TextureFormat>(i)));
         if (fmt == DXGI_FORMAT_UNKNOWN)
             continue;
@@ -628,20 +842,19 @@ void initRenderer(const char *appName, const RendererDesc *pDesc, Renderer **ppR
     EA_ASSERT(pDesc);
     EA_ASSERT(ppRenderer);
 
-    Renderer *pRenderer = (Renderer *)mi_calloc_aligned(1, alignof(Renderer), sizeof(Renderer));
+    Renderer *pRenderer = static_cast<Renderer *>(mi_calloc_aligned(1, alignof(Renderer), sizeof(Renderer)));
     EA_ASSERT(pRenderer);
 
     pRenderer->mGpuMode = pDesc->mGpuMode;
     pRenderer->mShaderTarget = pDesc->mShaderTarget;
     pRenderer->mEnableGpuBasedValidation = pDesc->mEnableGPUBasedValidation;
 #if defined(XBOX)
-	pRenderer->mApi = RENDERER_API_XBOX_D3D12;
+    pRenderer->mApi = RENDERER_API_XBOX_D3D12;
 #else
     pRenderer->mApi = RENDERER_API_D3D12;
 #endif
 
-    pRenderer->pName = (char *)mi_calloc(strlen(appName) + 1, sizeof(char));
-    strcpy(pRenderer->pName, appName);
+    pRenderer->mName = appName;
 
     // Initialize the D3D12 bits
     {
@@ -672,8 +885,6 @@ void initRenderer(const char *appName, const RendererDesc *pDesc, Renderer **ppR
             EA_ASSERT(
                 pRenderer->pActiveGpuSettings->mGpuVendorPreset.mPresetLevel >= GPU_PRESET_LOW);
 
-            SAFE_FREE(pRenderer->pName)
-
             //remove device and any memory we allocated in just above as this is the first function called
             //when initializing the forge
             RemoveDevice(pRenderer);
@@ -692,7 +903,7 @@ void initRenderer(const char *appName, const RendererDesc *pDesc, Renderer **ppR
         if (pRenderer->mShaderTarget >= shader_target_6_0)
         {
             // Query the level of support of Shader Model.
-            D3D12_FEATURE_DATA_SHADER_MODEL   shaderModelSupport = {D3D_SHADER_MODEL_6_0};
+            D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport = {D3D_SHADER_MODEL_6_0};
             D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
             if (!SUCCEEDED(pRenderer->pDxDevice->CheckFeatureSupport(
                 static_cast<D3D12_FEATURE>(D3D12_FEATURE_SHADER_MODEL), &shaderModelSupport, sizeof(
@@ -769,7 +980,7 @@ void initRenderer(const char *appName, const RendererDesc *pDesc, Renderer **ppR
         desc.Flags = gCpuDescriptorHeapProperties[i].mFlags;
         desc.NodeMask = 0; // CPU Descriptor Heap - Node mask is irrelevant
         desc.NumDescriptors = gCpuDescriptorHeapProperties[i].mMaxDescriptors;
-        desc.Type = (D3D12_DESCRIPTOR_HEAP_TYPE)i;
+        desc.Type = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
         add_descriptor_heap(pRenderer->pDxDevice, &desc, &pRenderer->pCPUDescriptorHeaps[i]);
     }
 
@@ -796,65 +1007,40 @@ void initRenderer(const char *appName, const RendererDesc *pDesc, Renderer **ppR
     desc.pDevice = pRenderer->pDxDevice;
     desc.pAdapter = pRenderer->pDxActiveGPU;
 
-    D3D12MA::ALLOCATION_CALLBACKS             allocationCallbacks = {};
+    D3D12MA::ALLOCATION_CALLBACKS allocationCallbacks = {};
     allocationCallbacks.pAllocate = [](size_t size, size_t alignment, void *)
     {
-        return tf_memalign(alignment, size);
+        return mi_memalign(alignment, size);
     };
     allocationCallbacks.pFree = [](void *ptr, void *)
     {
-        tf_free(ptr);
+        mi_free(ptr);
     };
     desc.pAllocationCallbacks = &allocationCallbacks;
-    CHECK_HRESULT(D3D12MA::CreateAllocator(&desc, &pRenderer->pResourceAllocator));
-}
+    CHECK_DX12RESULT(D3D12MA::CreateAllocator(&desc, &pRenderer->pResourceAllocator))
+    /************************************************************************/
+    /************************************************************************/
+    add_default_resources(pRenderer);
 
-/************************************************************************/
-/************************************************************************/
-add_default_resources (pRenderer);
+    hook_post_init_renderer(pRenderer);
 
-hook_post_init_renderer (pRenderer);
+    // Set shader macro based on runtime information
+    ShaderMacro rendererShaderDefines[] =
+    {
+        // Descriptor set indices
+        {"UPDATE_FREQ_NONE", "space0"},
+        {"UPDATE_FREQ_PER_FRAME", "space1"},
+        {"UPDATE_FREQ_PER_BATCH", "space2"},
+        {"UPDATE_FREQ_PER_DRAW", "space3"},
+    };
 
-// Set shader macro based on runtime information
-ShaderMacro rendererShaderDefines[] =
-{
-    // Descriptor set indices
-    {"UPDATE_FREQ_NONE", "space0"},
-    {"UPDATE_FREQ_PER_FRAME", "space1"},
-    {"UPDATE_FREQ_PER_BATCH", "space2"},
-    {"UPDATE_FREQ_PER_DRAW", "space3"},
-};
-pRenderer
-->
-mBuiltinShaderDefinesCount
-=
-sizeof
-(rendererShaderDefines)
-/
-sizeof
-(rendererShaderDefines[0]);
-pRenderer
-->
-pBuiltinShaderDefines
-=
-(ShaderMacro *)tf_calloc(
-        pRenderer->mBuiltinShaderDefinesCount,
-        sizeof(ShaderMacro));
-for
-(uint32_t i
-=
-0;
-i<pRenderer->mBuiltinShaderDefinesCount;
-++
-i
-)
+    pRenderer->mBuiltinShaderDefinesCount = sizeof(rendererShaderDefines) / sizeof(rendererShaderDefines[0]);
+    pRenderer->pBuiltinShaderDefines = static_cast<ShaderMacro *>(mi_calloc(pRenderer->mBuiltinShaderDefinesCount, sizeof(ShaderMacro)));
+    for (uint32_t i = 0; i < pRenderer->mBuiltinShaderDefinesCount; ++i)
     {
         pRenderer->pBuiltinShaderDefines[i] = rendererShaderDefines[i];
     }
 
-// Renderer is good!
-*
-ppRenderer
-=
-pRenderer;
+    // Renderer is good!
+    *ppRenderer = pRenderer;
 }

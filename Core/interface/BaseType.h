@@ -37,7 +37,7 @@
 #endif
 
 #ifdef _MSC_VER
-    #define ALIGNAS(x) __declspec( align( x ) ) 
+#define ALIGNAS(x) __declspec( align( x ) )
 #else
     #define ALIGNAS(x)  __attribute__ ((aligned( x )))
 #endif
@@ -61,7 +61,7 @@
 #define Hawl_CALLCONV
 #endif
 
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize;
 #endif
@@ -79,5 +79,3 @@ typedef uint8_t      uint8;
 typedef uint16_t     uint16;
 typedef uint32_t     uint32;
 typedef uint64_t     uint64;
-
-

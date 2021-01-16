@@ -25,9 +25,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+
 namespace Hawl
 {
-
 enum class Priority : int
 {
     Lowest = 0,
@@ -42,37 +42,36 @@ struct Task
 {
     HAWL_DISABLE_COPY(Task)
     Task() = default;
-    virtual ~Task() = default;
+    virtual      ~Task() = default;
     virtual void run() = 0;
-    Priority taskPriority = Priority::Normal;
+    Priority     taskPriority = Priority::Normal;
 };
 
 
 class ThreadPool
 {
+private:
+    using Queue = Algorithm::LockFreeQueue<Task *>;
 
-  private:
-    using Queue = Algorithm::LockFreeQueue<Task* >;
-
-  protected:
-    const uint MaxThreadCount = std::thread::hardware_concurrency() / 2;
-    Queue TaskQueue;
+protected:
+    const uint               MaxThreadCount = std::thread::hardware_concurrency() / 2;
+    Queue                    TaskQueue;
     std::vector<std::thread> m_threads;
 
     void TaskRunner()
     {
         while (!TaskQueue.IsEmpty())
         {
-            Task* realTask;
+            Task *realTask;
             // If DeQueue return error here, the task queue is empty
-            if(!TaskQueue.DeQueue(realTask))
+            if (!TaskQueue.DeQueue(realTask))
                 break;
             realTask->run();
             //TODO notify on thread here
         }
     }
 
-  public:
+public:
     virtual ~ThreadPool() = default;
 
     /**
@@ -100,7 +99,4 @@ class ThreadPool
      */
     virtual void RetractTask(Task *task) = 0;
 };
-
-
-
 } // namespace Hawl

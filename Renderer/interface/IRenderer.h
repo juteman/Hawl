@@ -26,6 +26,8 @@
 */
 
 #pragma once
+#include <EASTL/string.h>
+
 #include "OS.h"
 //
 // default capability levels of the renderer
@@ -235,20 +237,20 @@ typedef enum PresentStatus
 } PresentStatus;
 
 // Forward declarations
-typedef struct Renderer           Renderer;
-typedef struct Queue              Queue;
-typedef struct Pipeline           Pipeline;
-typedef struct Buffer             Buffer;
-typedef struct Texture            Texture;
-typedef struct RenderTarget       RenderTarget;
-typedef struct Shader             Shader;
-typedef struct DescriptorSet      DescriptorSet;
+typedef struct Renderer Renderer;
+typedef struct Queue Queue;
+typedef struct Pipeline Pipeline;
+typedef struct Buffer Buffer;
+typedef struct Texture Texture;
+typedef struct RenderTarget RenderTarget;
+typedef struct Shader Shader;
+typedef struct DescriptorSet DescriptorSet;
 typedef struct DescriptorIndexMap DescriptorIndexMap;
-typedef struct PipelineCache      PipelineCache;
+typedef struct PipelineCache PipelineCache;
 
 // Raytracing
-typedef struct Raytracing            Raytracing;
-typedef struct RaytracingHitGroup    RaytracingHitGroup;
+typedef struct Raytracing Raytracing;
+typedef struct RaytracingHitGroup RaytracingHitGroup;
 typedef struct AccelerationStructure AccelerationStructure;
 
 typedef struct EsramManager EsramManager;
@@ -259,7 +261,7 @@ typedef struct IndirectDrawArguments
     uint32_t mInstanceCount;
     uint32_t mStartVertex;
     uint32_t mStartInstance;
-}            IndirectDrawArguments;
+} IndirectDrawArguments;
 
 typedef struct IndirectDrawIndexArguments
 {
@@ -268,14 +270,14 @@ typedef struct IndirectDrawIndexArguments
     uint32_t mStartIndex;
     uint32_t mVertexOffset;
     uint32_t mStartInstance;
-}            IndirectDrawIndexArguments;
+} IndirectDrawIndexArguments;
 
 typedef struct IndirectDispatchArguments
 {
     uint32_t mGroupCountX;
     uint32_t mGroupCountY;
     uint32_t mGroupCountZ;
-}            IndirectDispatchArguments;
+} IndirectDispatchArguments;
 
 typedef enum IndirectArgumentType
 {
@@ -565,7 +567,7 @@ typedef union ClearValue
 
     struct
     {
-        float    depth;
+        float depth;
         uint32_t stencil;
     };
 } ClearValue;
@@ -660,7 +662,7 @@ inline const char *PresetLevelToString(const GPUPresetLevel preset)
 
 typedef struct BufferBarrier
 {
-    Buffer *      pBuffer;
+    Buffer *pBuffer;
     ResourceState mCurrentState;
     ResourceState mNewState;
     uint8_t mBeginOnly : 1;
@@ -672,7 +674,7 @@ typedef struct BufferBarrier
 
 typedef struct TextureBarrier
 {
-    Texture *     pTexture;
+    Texture *pTexture;
     ResourceState mCurrentState;
     ResourceState mNewState;
     uint8_t mBeginOnly : 1;
@@ -685,7 +687,7 @@ typedef struct TextureBarrier
     /// Following values are ignored if mSubresourceBarrier is false
     uint8_t mMipLevel : 7;
     uint16_t mArrayLayer;
-}            TextureBarrier;
+} TextureBarrier;
 
 typedef struct RenderTargetBarrier
 {
@@ -702,13 +704,13 @@ typedef struct RenderTargetBarrier
     /// Following values are ignored if mSubresourceBarrier is false
     uint8_t mMipLevel : 7;
     uint16_t mArrayLayer;
-}            RenderTargetBarrier;
+} RenderTargetBarrier;
 
 typedef struct ReadRange
 {
     uint64_t mOffset;
     uint64_t mSize;
-}            ReadRange;
+} ReadRange;
 
 typedef enum QueryType
 {
@@ -721,21 +723,21 @@ typedef enum QueryType
 typedef struct QueryPoolDesc
 {
     QueryType mType;
-    uint32_t  mQueryCount;
-    uint32_t  mNodeIndex;
-}             QueryPoolDesc;
+    uint32_t mQueryCount;
+    uint32_t mNodeIndex;
+} QueryPoolDesc;
 
 typedef struct QueryDesc
 {
     uint32_t mIndex;
-}            QueryDesc;
+} QueryDesc;
 
 typedef struct QueryPool
 {
 #if D3D12_SUPPORTED
     ID3D12QueryHeap *pDxQueryHeap;
     D3D12_QUERY_TYPE mType;
-    uint32_t         mCount;
+    uint32_t mCount;
 #endif
 #if defined(VULKAN)
 	VkQueryPool       pVkQueryPool;
@@ -802,10 +804,10 @@ typedef struct BufferDesc
     DescriptorType mDescriptors;
     /// Debug name used in gpu profile
     const char *pName;
-    uint32_t *  pSharedNodeIndices;
-    uint32_t    mNodeIndex;
-    uint32_t    mSharedNodeIndexCount;
-}               BufferDesc;
+    uint32_t *pSharedNodeIndices;
+    uint32_t mNodeIndex;
+    uint32_t mSharedNodeIndexCount;
+} BufferDesc;
 
 typedef struct DEFINE_ALIGNED(Buffer, 64)
 {
@@ -969,7 +971,7 @@ typedef struct VirtualTexture
     uint64_t mSparseVirtualTexturePageWidth;
     /// Sparse Virtual Texture Height
     uint64_t mSparseVirtualTexturePageHeight;
-}            VirtualTexture;
+} VirtualTexture;
 
 typedef struct DEFINE_ALIGNED(Texture, 64)
 {
@@ -1045,7 +1047,7 @@ typedef struct RenderTargetDesc
     uint32_t mSampleQuality;
     /// Descriptor creation
     DescriptorType mDescriptors;
-    const void *   pNativeHandle;
+    const void *pNativeHandle;
     /// Debug name used in gpu profile
     const char *pName;
     /// GPU indices to share this texture
@@ -1054,7 +1056,7 @@ typedef struct RenderTargetDesc
     uint32_t mSharedNodeIndexCount;
     /// GPU which will own this texture
     uint32_t mNodeIndex;
-}            RenderTargetDesc;
+} RenderTargetDesc;
 
 typedef struct DEFINE_ALIGNED(RenderTarget, 64)
 {
@@ -1062,10 +1064,10 @@ typedef struct DEFINE_ALIGNED(RenderTarget, 64)
 
 #if D3D12_SUPPORTED
     D3D12_CPU_DESCRIPTOR_HANDLE mDxDescriptors;
-    uint32_t                    mDxDescriptorSize;
-    uint32_t                    mPadA;
-    uint64_t                    mPadB;
-    uint64_t                    mPadC;
+    uint32_t mDxDescriptorSize;
+    uint32_t mPadA;
+    uint64_t mPadB;
+    uint64_t mPadC;
 #endif
 #if defined(VULKAN)
 	VkImageView                   pVkDescriptor;
@@ -1082,30 +1084,30 @@ typedef struct DEFINE_ALIGNED(RenderTarget, 64)
     uint32_t mMipLevels : 10;
     uint32_t mSampleQuality : 5;
     TextureFormat mFormat;
-    SampleCount   mSampleCount;
-}                 RenderTarget;
+    SampleCount mSampleCount;
+} RenderTarget;
 
 COMPILE_ASSERT(sizeof(RenderTarget) <= 32 * sizeof(uint64_t));
 
 typedef struct LoadActionsDesc
 {
-    ClearValue     mClearColorValues[MAX_RENDER_TARGET_ATTACHMENTS];
+    ClearValue mClearColorValues[MAX_RENDER_TARGET_ATTACHMENTS];
     LoadActionType mLoadActionsColor[MAX_RENDER_TARGET_ATTACHMENTS];
-    ClearValue     mClearDepth;
+    ClearValue mClearDepth;
     LoadActionType mLoadActionDepth;
     LoadActionType mLoadActionStencil;
-}                  LoadActionsDesc;
+} LoadActionsDesc;
 
 typedef struct SamplerDesc
 {
-    FilterType  mMinFilter;
-    FilterType  mMagFilter;
-    MipMapMode  mMipMapMode;
+    FilterType mMinFilter;
+    FilterType mMagFilter;
+    MipMapMode mMipMapMode;
     AddressMode mAddressU;
     AddressMode mAddressV;
     AddressMode mAddressW;
-    float       mMipLodBias;
-    float       mMaxAnisotropy;
+    float mMipLodBias;
+    float mMaxAnisotropy;
     CompareMode mCompareFunc;
 
 #if defined(VULKAN)
@@ -1193,14 +1195,14 @@ MAKE_ENUM_FLAG(uint32_t, RootSignatureFlags)
 
 typedef struct RootSignatureDesc
 {
-    Shader **          ppShaders;
-    uint32_t           mShaderCount;
-    uint32_t           mMaxBindlessTextures;
-    const char **      ppStaticSamplerNames;
-    Sampler **         ppStaticSamplers;
-    uint32_t           mStaticSamplerCount;
+    Shader **ppShaders;
+    uint32_t mShaderCount;
+    uint32_t mMaxBindlessTextures;
+    const char **ppStaticSamplerNames;
+    Sampler **ppStaticSamplers;
+    uint32_t mStaticSamplerCount;
     RootSignatureFlags mFlags;
-}                      RootSignatureDesc;
+} RootSignatureDesc;
 
 typedef struct DEFINE_ALIGNED(RootSignature, 64)
 {
@@ -1214,18 +1216,18 @@ typedef struct DEFINE_ALIGNED(RootSignature, 64)
     DescriptorIndexMap *pDescriptorNameToIndexMap;
 #if D3D12_SUPPORTED
     ID3D12RootSignature *pDxRootSignature;
-    uint8_t              mDxRootConstantRootIndices[MAX_ROOT_CONSTANTS_PER_ROOTSIGNATURE];
-    uint8_t              mDxViewDescriptorTableRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint8_t              mDxSamplerDescriptorTableRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint8_t              mDxRootDescriptorRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint32_t             mDxCumulativeViewDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint32_t             mDxCumulativeSamplerDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint16_t             mDxViewDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint16_t             mDxSamplerDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint8_t              mDxRootDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint32_t             mDxRootConstantCount;
-    uint64_t             mPadA;
-    uint64_t             mPadB;
+    uint8_t mDxRootConstantRootIndices[MAX_ROOT_CONSTANTS_PER_ROOTSIGNATURE];
+    uint8_t mDxViewDescriptorTableRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint8_t mDxSamplerDescriptorTableRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint8_t mDxRootDescriptorRootIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint32_t mDxCumulativeViewDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint32_t mDxCumulativeSamplerDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint16_t mDxViewDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint16_t mDxSamplerDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint8_t mDxRootDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint32_t mDxRootConstantCount;
+    uint64_t mPadA;
+    uint64_t mPadB;
 #endif
 #if defined(VULKAN)
 	VkDescriptorSetLayout      mVkDescriptorSetLayouts[DESCRIPTOR_UPDATE_FREQ_COUNT];
@@ -1269,15 +1271,15 @@ typedef struct DescriptorData
         // Descriptor set buffer extraction options
         struct
         {
-            uint32_t    mDescriptorSetBufferIndex;
-            Shader *    mDescriptorSetShader;
+            uint32_t mDescriptorSetBufferIndex;
+            Shader *mDescriptorSetShader;
             ShaderStage mDescriptorSetShaderStage;
         };
 
         struct
         {
             uint32_t mUAVMipSlice;
-            bool     mBindMipChain;
+            bool mBindMipChain;
         };
 
         bool mBindStencilResource;
@@ -1303,8 +1305,8 @@ typedef struct DescriptorData
     /// Number of resources in the descriptor(applies to array of textures, buffers,...)
     uint32_t mCount;
     uint32_t mIndex = (uint32_t)-1;
-    bool     mExtractBuffer = false;
-}            DescriptorData;
+    bool mExtractBuffer = false;
+} DescriptorData;
 
 typedef struct DEFINE_ALIGNED(DescriptorSet, 64)
 {
@@ -1316,10 +1318,10 @@ typedef struct DEFINE_ALIGNED(DescriptorSet, 64)
     /// Stride of the cbv srv uav descriptor table (number of descriptors * descriptor size)
     uint32_t mCbvSrvUavStride;
     /// Stride of the sampler descriptor table (number of descriptors * descriptor size)
-    uint32_t                   mSamplerStride;
-    const RootSignature *      pRootSignature;
+    uint32_t mSamplerStride;
+    const RootSignature *pRootSignature;
     D3D12_GPU_VIRTUAL_ADDRESS *pRootAddresses;
-    ID3D12RootSignature *      pRootSignatureHandle;
+    ID3D12RootSignature *pRootSignatureHandle;
     uint64_t mMaxSets : 16;
     uint64_t mUpdateFrequency : 3;
     uint64_t mNodeIndex : 4;
@@ -1345,8 +1347,8 @@ typedef struct DEFINE_ALIGNED(DescriptorSet, 64)
 typedef struct CmdPoolDesc
 {
     Queue *pQueue;
-    bool   mTransient;
-}          CmdPoolDesc;
+    bool mTransient;
+} CmdPoolDesc;
 
 typedef struct CmdPool
 {
@@ -1357,13 +1359,13 @@ typedef struct CmdPool
 	VkCommandPool           pVkCmdPool;
 #endif
     Queue *pQueue;
-}          CmdPool;
+} CmdPool;
 
 typedef struct CmdDesc
 {
     CmdPool *pPool;
-    bool     mSecondary;
-}            CmdDesc;
+    bool mSecondary;
+} CmdDesc;
 
 typedef enum MarkerType
 {
@@ -1382,13 +1384,13 @@ typedef struct DEFINE_ALIGNED(Cmd, 64)
     ID3D12GraphicsCommandList *pDxCmdList;
 
     // Cached in beginCmd to avoid fetching them during rendering
-    struct DescriptorHeap *     pBoundHeaps[2];
+    struct DescriptorHeap *pBoundHeaps[2];
     D3D12_GPU_DESCRIPTOR_HANDLE mBoundHeapStartHandles[2];
 
     // Command buffer state
     const ID3D12RootSignature *pBoundRootSignature;
-    DescriptorSet *            pBoundDescriptorSets[DESCRIPTOR_UPDATE_FREQ_COUNT];
-    uint16_t                   mBoundDescriptorSetIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    DescriptorSet *pBoundDescriptorSets[DESCRIPTOR_UPDATE_FREQ_COUNT];
+    uint16_t mBoundDescriptorSetIndices[DESCRIPTOR_UPDATE_FREQ_COUNT];
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
     CmdPool *pCmdPool;
@@ -1408,8 +1410,8 @@ typedef struct DEFINE_ALIGNED(Cmd, 64)
 	uint64_t                     mPadB[9];
 #endif
     Renderer *pRenderer;
-    Queue *   pQueue;
-}             Cmd;
+    Queue *pQueue;
+} Cmd;
 
 COMPILE_ASSERT(sizeof(Cmd) <= 64 * sizeof(uint64_t));
 
@@ -1424,9 +1426,9 @@ typedef struct Fence
 {
 #if D3D12_SUPPORTED
     ID3D12Fence *pDxFence;
-    HANDLE       pDxWaitIdleFenceEvent;
-    uint64_t     mFenceValue;
-    uint64_t     mPadA;
+    HANDLE pDxWaitIdleFenceEvent;
+    uint64_t mFenceValue;
+    uint64_t mPadA;
 #endif
 #if defined(VULKAN)
 	VkFence              pVkFence;
@@ -1456,9 +1458,9 @@ typedef struct Semaphore
     // queuePresent does not use the wait semaphore since the swapchain Present function
     // already does the synchronization in this case
     ID3D12Fence *pDxFence;
-    HANDLE       pDxWaitIdleFenceEvent;
-    uint64_t     mFenceValue;
-    uint64_t     mPadA;
+    HANDLE pDxWaitIdleFenceEvent;
+    uint64_t mFenceValue;
+    uint64_t mPadA;
 #endif
 #if defined(VULKAN)
 	VkSemaphore          pVkSemaphore;
@@ -1472,11 +1474,11 @@ typedef struct Semaphore
 
 typedef struct QueueDesc
 {
-    QueueType     mType;
-    QueueFlag     mFlag;
+    QueueType mType;
+    QueueFlag mFlag;
     QueuePriority mPriority;
-    uint32_t      mNodeIndex;
-}                 QueueDesc;
+    uint32_t mNodeIndex;
+} QueueDesc;
 
 typedef struct Queue
 {
@@ -1503,7 +1505,7 @@ typedef struct ShaderMacro
 {
     const char *definition;
     const char *value;
-}               ShaderMacro;
+} ShaderMacro;
 
 #if defined(TARGET_IOS)
 typedef struct ShaderStageDesc
@@ -1530,10 +1532,10 @@ typedef struct ShaderDesc
 typedef struct BinaryShaderStageDesc
 {
     /// Byte code array
-    void *      pByteCode;
-    uint32_t    mByteCodeSize;
+    void *pByteCode;
+    uint32_t mByteCodeSize;
     const char *pEntryPoint;
-}               BinaryShaderStageDesc;
+} BinaryShaderStageDesc;
 
 typedef struct BinaryShaderDesc
 {
@@ -1546,12 +1548,12 @@ typedef struct BinaryShaderDesc
     BinaryShaderStageDesc mHull;
     BinaryShaderStageDesc mDomain;
     BinaryShaderStageDesc mComp;
-}                         BinaryShaderDesc;
+} BinaryShaderDesc;
 
 typedef struct Shader
 {
     ShaderStage mStages;
-    uint32_t    mNumThreadsPerGroup[3];
+    uint32_t mNumThreadsPerGroup[3];
 #if D3D12_SUPPORTED
     // TODO add Shader Encoding here
     //IDxcBlobEncoding**            pShaderBlobs;
@@ -1562,7 +1564,7 @@ typedef struct Shader
 	char**                        pEntryNames;
 #endif
     PipelineReflection *pReflection;
-}                       Shader;
+} Shader;
 
 typedef struct BlendStateDesc
 {
@@ -1586,37 +1588,37 @@ typedef struct BlendStateDesc
     bool mAlphaToCoverage;
     /// Set whether each render target has an unique blend function. When false the blend function in slot 0 will be used for all render targets.
     bool mIndependentBlend;
-}        BlendStateDesc;
+} BlendStateDesc;
 
 typedef struct DepthStateDesc
 {
-    bool        mDepthTest;
-    bool        mDepthWrite;
+    bool mDepthTest;
+    bool mDepthWrite;
     CompareMode mDepthFunc;
-    bool        mStencilTest;
-    uint8_t     mStencilReadMask;
-    uint8_t     mStencilWriteMask;
+    bool mStencilTest;
+    uint8_t mStencilReadMask;
+    uint8_t mStencilWriteMask;
     CompareMode mStencilFrontFunc;
-    StencilOp   mStencilFrontFail;
-    StencilOp   mDepthFrontFail;
-    StencilOp   mStencilFrontPass;
+    StencilOp mStencilFrontFail;
+    StencilOp mDepthFrontFail;
+    StencilOp mStencilFrontPass;
     CompareMode mStencilBackFunc;
-    StencilOp   mStencilBackFail;
-    StencilOp   mDepthBackFail;
-    StencilOp   mStencilBackPass;
-}               DepthStateDesc;
+    StencilOp mStencilBackFail;
+    StencilOp mDepthBackFail;
+    StencilOp mStencilBackPass;
+} DepthStateDesc;
 
 typedef struct RasterizerStateDesc
 {
-    CullMode  mCullMode;
-    int32_t   mDepthBias;
-    float     mSlopeScaledDepthBias;
-    FillMode  mFillMode;
-    bool      mMultiSample;
-    bool      mScissor;
+    CullMode mCullMode;
+    int32_t mDepthBias;
+    float mSlopeScaledDepthBias;
+    FillMode mFillMode;
+    bool mMultiSample;
+    bool mScissor;
     FrontFace mFrontFace;
-    bool      mDepthClampEnable;
-}             RasterizerStateDesc;
+    bool mDepthClampEnable;
+} RasterizerStateDesc;
 
 typedef enum VertexAttribRate
 {
@@ -1627,21 +1629,21 @@ typedef enum VertexAttribRate
 
 typedef struct VertexAttrib
 {
-    ShaderSemantic   mSemantic;
-    uint32_t         mSemanticNameLength;
-    char             mSemanticName[MAX_SEMANTIC_NAME_LENGTH];
-    TextureFormat    mFormat;
-    uint32_t         mBinding;
-    uint32_t         mLocation;
-    uint32_t         mOffset;
+    ShaderSemantic mSemantic;
+    uint32_t mSemanticNameLength;
+    char mSemanticName[MAX_SEMANTIC_NAME_LENGTH];
+    TextureFormat mFormat;
+    uint32_t mBinding;
+    uint32_t mLocation;
+    uint32_t mOffset;
     VertexAttribRate mRate;
-}                    VertexAttrib;
+} VertexAttrib;
 
 typedef struct VertexLayout
 {
-    uint32_t     mAttribCount;
+    uint32_t mAttribCount;
     VertexAttrib mAttribs[MAX_VERTEX_ATTRIBS];
-}                VertexLayout;
+} VertexLayout;
 
 /************************************************************************/
 // #pGlobalRootSignature - Root Signature used by all shaders in the ppShaders array
@@ -1656,47 +1658,47 @@ typedef struct VertexLayout
 /************************************************************************/
 typedef struct RaytracingPipelineDesc
 {
-    Raytracing *        pRaytracing;
-    RootSignature *     pGlobalRootSignature;
-    Shader *            pRayGenShader;
-    RootSignature *     pRayGenRootSignature;
-    Shader **           ppMissShaders;
-    RootSignature **    ppMissRootSignatures;
+    Raytracing *pRaytracing;
+    RootSignature *pGlobalRootSignature;
+    Shader *pRayGenShader;
+    RootSignature *pRayGenRootSignature;
+    Shader **ppMissShaders;
+    RootSignature **ppMissRootSignatures;
     RaytracingHitGroup *pHitGroups;
-    RootSignature *     pEmptyRootSignature;
-    unsigned            mMissShaderCount;
-    unsigned            mHitGroupCount;
+    RootSignature *pEmptyRootSignature;
+    unsigned mMissShaderCount;
+    unsigned mHitGroupCount;
     // #TODO : Remove this after adding shader reflection for raytracing shaders
     unsigned mPayloadSize;
     // #TODO : Remove this after adding shader reflection for raytracing shaders
     unsigned mAttributeSize;
     unsigned mMaxTraceRecursionDepth;
     unsigned mMaxRaysCount;
-}            RaytracingPipelineDesc;
+} RaytracingPipelineDesc;
 
 
 typedef struct GraphicsPipelineDesc
 {
-    Shader *             pShaderProgram;
-    RootSignature *      pRootSignature;
-    VertexLayout *       pVertexLayout;
-    BlendStateDesc *     pBlendState;
-    DepthStateDesc *     pDepthState;
+    Shader *pShaderProgram;
+    RootSignature *pRootSignature;
+    VertexLayout *pVertexLayout;
+    BlendStateDesc *pBlendState;
+    DepthStateDesc *pDepthState;
     RasterizerStateDesc *pRasterizerState;
-    TextureFormat *      pColorFormats;
-    uint32_t             mRenderTargetCount;
-    SampleCount          mSampleCount;
-    uint32_t             mSampleQuality;
-    TextureFormat        mDepthStencilFormat;
-    PrimitiveTopology    mPrimitiveTopo;
-    bool                 mSupportIndirectCommandBuffer;
-}                        GraphicsPipelineDesc;
+    TextureFormat *pColorFormats;
+    uint32_t mRenderTargetCount;
+    SampleCount mSampleCount;
+    uint32_t mSampleQuality;
+    TextureFormat mDepthStencilFormat;
+    PrimitiveTopology mPrimitiveTopo;
+    bool mSupportIndirectCommandBuffer;
+} GraphicsPipelineDesc;
 
 typedef struct ComputePipelineDesc
 {
-    Shader *       pShaderProgram;
+    Shader *pShaderProgram;
     RootSignature *pRootSignature;
-}                  ComputePipelineDesc;
+} ComputePipelineDesc;
 
 typedef struct PipelineDesc
 {
@@ -1704,16 +1706,16 @@ typedef struct PipelineDesc
 
     union
     {
-        ComputePipelineDesc    mComputeDesc;
-        GraphicsPipelineDesc   mGraphicsDesc;
+        ComputePipelineDesc mComputeDesc;
+        GraphicsPipelineDesc mGraphicsDesc;
         RaytracingPipelineDesc mRaytracingDesc;
     };
 
     PipelineCache *pCache;
-    void *         pPipelineExtensions;
-    uint32_t       mExtensionCount;
-    const char *   pName;
-}                  PipelineDesc;
+    void *pPipelineExtensions;
+    uint32_t mExtensionCount;
+    const char *pName;
+} PipelineDesc;
 
 
 typedef struct DEFINE_ALIGNED(Pipeline, 64)
@@ -1723,10 +1725,10 @@ typedef struct DEFINE_ALIGNED(Pipeline, 64)
 #ifdef ENABLE_RAYTRACING
     ID3D12StateObject *pDxrPipeline;
 #endif
-    ID3D12RootSignature *  pRootSignature;
-    PipelineType           mType;
+    ID3D12RootSignature *pRootSignature;
+    PipelineType mType;
     D3D_PRIMITIVE_TOPOLOGY mDxPrimitiveTopology;
-    uint64_t               mPadB[3];
+    uint64_t mPadB[3];
 #endif
 #if defined(VULKAN)
 	VkPipeline                  pVkPipeline;
@@ -1755,15 +1757,15 @@ typedef struct PipelineCacheDesc
     /// Initial pipeline cache data (can be NULL which means empty pipeline cache)
     void *pData;
     /// Initial pipeline cache size
-    size_t             mSize;
+    size_t mSize;
     PipelineCacheFlags mFlags;
-}                      PipelineCacheDesc;
+} PipelineCacheDesc;
 
 typedef struct PipelineCache
 {
 #if D3D12_SUPPORTED
     ID3D12PipelineLibrary *pLibrary;
-    void *                 pData;
+    void *pData;
 #endif
 #if defined(VULKAN)
 	VkPipelineCache        pCache;
@@ -1792,7 +1794,7 @@ typedef struct SwapChainDesc
     bool mEnableVsync;
     /// We can toggle to using FLIP model if app desires.
     bool mUseFlipSwapEffect;
-}        SwapChainDesc;
+} SwapChainDesc;
 
 typedef struct SwapChain
 {
@@ -1854,9 +1856,9 @@ typedef enum GpuMode
 
 typedef struct RendererDesc
 {
-    RendererApi  mApi;
+    RendererApi mApi;
     ShaderTarget mShaderTarget;
-    GpuMode      mGpuMode;
+    GpuMode mGpuMode;
 #if defined(VULKAN)
 	const char**                 ppInstanceLayers;
 	const char**                 ppInstanceExtensions;
@@ -1874,7 +1876,7 @@ typedef struct RendererDesc
     /// This results in new validation not possible during API calls on the CPU, by creating patched shaders that have validation added directly to the shader.
     /// However, it can slow things down a lot, especially for applications with numerous PSOs. Time to see the first render frame may take several minutes
     bool mEnableGPUBasedValidation;
-}        RendererDesc;
+} RendererDesc;
 
 typedef struct GPUVendorPreset
 {
@@ -1883,18 +1885,18 @@ typedef struct GPUVendorPreset
     char mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH];
     // OPtional as not all gpu's have that. Default is : 0x00
     GPUPresetLevel mPresetLevel;
-    char           mGpuName[MAX_GPU_VENDOR_STRING_LENGTH];
+    char mGpuName[MAX_GPU_VENDOR_STRING_LENGTH];
     //If GPU Name is missing then value will be empty string
     char mGpuDriverVersion[MAX_GPU_VENDOR_STRING_LENGTH];
     char mGpuDriverDate[MAX_GPU_VENDOR_STRING_LENGTH];
-}        GPUVendorPreset;
+} GPUVendorPreset;
 
 typedef struct GPUCapBits
 {
     bool canShaderReadFrom[TextureFormat::Count];
     bool canShaderWriteTo[TextureFormat::Count];
     bool canRenderTargetWriteTo[TextureFormat::Count];
-}        GPUCapBits;
+} GPUCapBits;
 
 typedef enum DefaultResourceAlignment
 {
@@ -1920,14 +1922,14 @@ MAKE_ENUM_FLAG(uint32_t, WaveOpsSupportFlags);
 
 typedef struct GPUSettings
 {
-    uint32_t            mUniformBufferAlignment;
-    uint32_t            mUploadBufferTextureAlignment;
-    uint32_t            mUploadBufferTextureRowAlignment;
-    uint32_t            mMaxVertexInputBindings;
-    uint32_t            mMaxRootSignatureDWORDS;
-    uint32_t            mWaveLaneCount;
+    uint32_t mUniformBufferAlignment;
+    uint32_t mUploadBufferTextureAlignment;
+    uint32_t mUploadBufferTextureRowAlignment;
+    uint32_t mMaxVertexInputBindings;
+    uint32_t mMaxRootSignatureDWORDS;
+    uint32_t mWaveLaneCount;
     WaveOpsSupportFlags mWaveOpsSupportFlags;
-    GPUVendorPreset     mGpuVendorPreset;
+    GPUVendorPreset mGpuVendorPreset;
 
     uint32_t mMultiDrawIndirect : 1;
     uint32_t mROVsSupported : 1;
@@ -1939,9 +1941,9 @@ typedef struct DEFINE_ALIGNED(Renderer, 64)
 {
 #if D3D12_SUPPORTED
     // API specific descriptor heap and memory allocator
-    struct DescriptorHeap **  pCPUDescriptorHeaps;
-    struct DescriptorHeap **  pCbvSrvUavHeaps;
-    struct DescriptorHeap **  pSamplerHeaps;
+    struct DescriptorHeap **pCPUDescriptorHeaps;
+    struct DescriptorHeap **pCbvSrvUavHeaps;
+    struct DescriptorHeap **pSamplerHeaps;
     class D3D12MA::Allocator *pResourceAllocator;
 #if defined(XBOX)
 	IDXGIFactory2*                  pDXGIFactory;
@@ -1951,14 +1953,14 @@ typedef struct DEFINE_ALIGNED(Renderer, 64)
 #elif D3D12_SUPPORTED
     IDXGIFactory6 *pDXGIFactory;
     IDXGIAdapter4 *pDxActiveGPU;
-    ID3D12Device * pDxDevice;
+    ID3D12Device *pDxDevice;
 #if defined(DRED)
 	ID3D12DeviceRemovedExtendedDataSettings* pDredSettings;
 #else
     uint64_t mPadA;
 #endif
 #endif
-    ID3D12Debug *    pDXDebug;
+    ID3D12Debug *pDXDebug;
     ID3D12InfoQueue *pDxDebugValidation;
 #endif
 #if defined(VULKAN)
@@ -1995,17 +1997,17 @@ typedef struct DEFINE_ALIGNED(Renderer, 64)
 	bool                            mDiagnosticCheckPointsSupport;
 #endif
     struct NullDescriptors *pNullDescriptors;
-    char *                  pName;
-    GPUSettings *           pActiveGpuSettings;
-    ShaderMacro *           pBuiltinShaderDefines;
-    GPUCapBits *            pCapBits;
+    eastl::string mName;
+    GPUSettings *pActiveGpuSettings;
+    ShaderMacro *pBuiltinShaderDefines;
+    GPUCapBits *pCapBits;
     uint32_t mLinkedNodeCount : 4;
     uint32_t mGpuMode : 3;
     uint32_t mShaderTarget : 4;
     uint32_t mApi : 5;
     uint32_t mEnableGpuBasedValidation : 1;
     uint32_t mBuiltinShaderDefinesCount;
-}            Renderer;
+} Renderer;
 
 // 3 cache lines
 COMPILE_ASSERT(sizeof(Renderer) <= 24 * sizeof(uint64_t));
@@ -2014,18 +2016,18 @@ COMPILE_ASSERT(sizeof(Renderer) <= 24 * sizeof(uint64_t));
 typedef struct IndirectArgumentDescriptor
 {
     IndirectArgumentType mType;
-    const char *         pName;
-    uint32_t             mIndex;
-}                        IndirectArgumentDescriptor;
+    const char *pName;
+    uint32_t mIndex;
+} IndirectArgumentDescriptor;
 
 typedef struct CommandSignatureDesc
 {
-    RootSignature *             pRootSignature;
-    uint32_t                    mIndirectArgCount;
+    RootSignature *pRootSignature;
+    uint32_t mIndirectArgCount;
     IndirectArgumentDescriptor *pArgDescs;
     /// Set to true if indirect argument struct should not be aligned to 16 bytes
     bool mPacked;
-}        CommandSignatureDesc;
+} CommandSignatureDesc;
 
 typedef struct CommandSignature
 {
@@ -2040,32 +2042,32 @@ typedef struct CommandSignature
 
 typedef struct DescriptorSetDesc
 {
-    RootSignature *           pRootSignature;
+    RootSignature *pRootSignature;
     DescriptorUpdateFrequency mUpdateFrequency;
-    uint32_t                  mMaxSets;
-    uint32_t                  mNodeIndex;
-}                             DescriptorSetDesc;
+    uint32_t mMaxSets;
+    uint32_t mNodeIndex;
+} DescriptorSetDesc;
 
 typedef struct QueueSubmitDesc
 {
-    uint32_t    mCmdCount;
-    Cmd **      ppCmds;
-    Fence *     pSignalFence;
-    uint32_t    mWaitSemaphoreCount;
+    uint32_t mCmdCount;
+    Cmd **ppCmds;
+    Fence *pSignalFence;
+    uint32_t mWaitSemaphoreCount;
     Semaphore **ppWaitSemaphores;
-    uint32_t    mSignalSemaphoreCount;
+    uint32_t mSignalSemaphoreCount;
     Semaphore **ppSignalSemaphores;
-    bool        mSubmitDone;
-}               QueueSubmitDesc;
+    bool mSubmitDone;
+} QueueSubmitDesc;
 
 typedef struct QueuePresentDesc
 {
-    SwapChain * pSwapChain;
-    uint32_t    mWaitSemaphoreCount;
+    SwapChain *pSwapChain;
+    uint32_t mWaitSemaphoreCount;
     Semaphore **ppWaitSemaphores;
-    uint8_t     mIndex;
-    bool        mSubmitDone;
-}               QueuePresentDesc;
+    uint8_t mIndex;
+    bool mSubmitDone;
+} QueuePresentDesc;
 
 #define API_INTERFACE
 
@@ -2073,9 +2075,9 @@ typedef struct QueuePresentDesc
 // API functions
 // allocates memory and initializes the renderer -> returns pRenderer
 //
-API_INTERFACE void HAWL_CALLCONV initRenderer(const char *        app_name,
+API_INTERFACE void HAWL_CALLCONV initRenderer(const char *app_name,
                                               const RendererDesc *p_settings,
-                                              Renderer **         pRenderer);
+                                              Renderer **pRenderer);
 API_INTERFACE void HAWL_CALLCONV removeRenderer(Renderer *pRenderer);
 
 API_INTERFACE void HAWL_CALLCONV addFence(Renderer *pRenderer, Fence **p_fence);
@@ -2087,156 +2089,156 @@ API_INTERFACE void HAWL_CALLCONV removeSemaphore(Renderer *pRenderer, Semaphore 
 API_INTERFACE void HAWL_CALLCONV addQueue(Renderer *pRenderer, QueueDesc *pQDesc, Queue **pQueue);
 API_INTERFACE void HAWL_CALLCONV removeQueue(Renderer *pRenderer, Queue *pQueue);
 
-API_INTERFACE void HAWL_CALLCONV addSwapChain(Renderer *           pRenderer,
+API_INTERFACE void HAWL_CALLCONV addSwapChain(Renderer *pRenderer,
                                               const SwapChainDesc *p_desc,
-                                              SwapChain **         p_swap_chain);
+                                              SwapChain **p_swap_chain);
 API_INTERFACE void HAWL_CALLCONV removeSwapChain(Renderer *pRenderer, SwapChain *p_swap_chain);
 
 // command pool functions
-API_INTERFACE void HAWL_CALLCONV addCmdPool(Renderer *         pRenderer,
+API_INTERFACE void HAWL_CALLCONV addCmdPool(Renderer *pRenderer,
                                             const CmdPoolDesc *p_desc,
-                                            CmdPool **         p_cmd_pool);
+                                            CmdPool **p_cmd_pool);
 API_INTERFACE void HAWL_CALLCONV removeCmdPool(Renderer *pRenderer, CmdPool *p_CmdPool);
 API_INTERFACE void HAWL_CALLCONV addCmd(Renderer *pRenderer, const CmdDesc *p_desc, Cmd **p_cmd);
 API_INTERFACE void HAWL_CALLCONV removeCmd(Renderer *pRenderer, Cmd *pCmd);
-API_INTERFACE void HAWL_CALLCONV addCmd_n(Renderer *     pRenderer,
+API_INTERFACE void HAWL_CALLCONV addCmd_n(Renderer *pRenderer,
                                           const CmdDesc *p_desc,
-                                          uint32_t       cmd_count,
-                                          Cmd ***        p_cmds);
+                                          uint32_t cmd_count,
+                                          Cmd ***p_cmds);
 API_INTERFACE void HAWL_CALLCONV removeCmd_n(Renderer *pRenderer, uint32_t cmd_count, Cmd **p_cmds);
 
 //
 // All buffer, texture loading handled by resource system -> IResourceLoader.*
 //
 
-API_INTERFACE void HAWL_CALLCONV addRenderTarget(Renderer *              pRenderer,
+API_INTERFACE void HAWL_CALLCONV addRenderTarget(Renderer *pRenderer,
                                                  const RenderTargetDesc *pDesc,
-                                                 RenderTarget **         ppRenderTarget);
-API_INTERFACE void HAWL_CALLCONV removeRenderTarget(Renderer *    pRenderer,
+                                                 RenderTarget **ppRenderTarget);
+API_INTERFACE void HAWL_CALLCONV removeRenderTarget(Renderer *pRenderer,
                                                     RenderTarget *pRenderTarget);
-API_INTERFACE void HAWL_CALLCONV addSampler(Renderer *         pRenderer,
+API_INTERFACE void HAWL_CALLCONV addSampler(Renderer *pRenderer,
                                             const SamplerDesc *pDesc,
-                                            Sampler **         p_sampler);
+                                            Sampler **p_sampler);
 API_INTERFACE void HAWL_CALLCONV removeSampler(Renderer *pRenderer, Sampler *p_sampler);
 
 // shader functions
 #if defined(TARGET_IOS)
 API_INTERFACE void HAWL_CALLCONV addShader(Renderer* pRenderer, const ShaderDesc* p_desc, Shader** p_shader_program);
 #endif
-API_INTERFACE void HAWL_CALLCONV addShaderBinary(Renderer *              pRenderer,
+API_INTERFACE void HAWL_CALLCONV addShaderBinary(Renderer *pRenderer,
                                                  const BinaryShaderDesc *p_desc,
-                                                 Shader **               p_shader_program);
+                                                 Shader **p_shader_program);
 API_INTERFACE void HAWL_CALLCONV removeShader(Renderer *pRenderer, Shader *p_shader_program);
 
-API_INTERFACE void HAWL_CALLCONV addRootSignature(Renderer *               pRenderer,
+API_INTERFACE void HAWL_CALLCONV addRootSignature(Renderer *pRenderer,
                                                   const RootSignatureDesc *pDesc,
-                                                  RootSignature **         pRootSignature);
-API_INTERFACE void HAWL_CALLCONV removeRootSignature(Renderer *     pRenderer,
+                                                  RootSignature **pRootSignature);
+API_INTERFACE void HAWL_CALLCONV removeRootSignature(Renderer *pRenderer,
                                                      RootSignature *pRootSignature);
 
 // pipeline functions
-API_INTERFACE void HAWL_CALLCONV addPipeline(Renderer *          pRenderer,
+API_INTERFACE void HAWL_CALLCONV addPipeline(Renderer *pRenderer,
                                              const PipelineDesc *p_pipeline_settings,
-                                             Pipeline **         p_pipeline);
+                                             Pipeline **p_pipeline);
 API_INTERFACE void HAWL_CALLCONV removePipeline(Renderer *pRenderer, Pipeline *p_pipeline);
-API_INTERFACE void HAWL_CALLCONV addPipelineCache(Renderer *               pRenderer,
+API_INTERFACE void HAWL_CALLCONV addPipelineCache(Renderer *pRenderer,
                                                   const PipelineCacheDesc *pDesc,
-                                                  PipelineCache **         ppPipelineCache);
-API_INTERFACE void HAWL_CALLCONV getPipelineCacheData(Renderer *     pRenderer,
+                                                  PipelineCache **ppPipelineCache);
+API_INTERFACE void HAWL_CALLCONV getPipelineCacheData(Renderer *pRenderer,
                                                       PipelineCache *pPipelineCache,
-                                                      size_t *       pSize,
-                                                      void *         pData);
-API_INTERFACE void HAWL_CALLCONV removePipelineCache(Renderer *     pRenderer,
+                                                      size_t *pSize,
+                                                      void *pData);
+API_INTERFACE void HAWL_CALLCONV removePipelineCache(Renderer *pRenderer,
                                                      PipelineCache *pPipelineCache);
 
 // Descriptor Set functions
-API_INTERFACE void HAWL_CALLCONV addDescriptorSet(Renderer *               pRenderer,
+API_INTERFACE void HAWL_CALLCONV addDescriptorSet(Renderer *pRenderer,
                                                   const DescriptorSetDesc *pDesc,
-                                                  DescriptorSet **         pDescriptorSet);
-API_INTERFACE void HAWL_CALLCONV removeDescriptorSet(Renderer *     pRenderer,
+                                                  DescriptorSet **pDescriptorSet);
+API_INTERFACE void HAWL_CALLCONV removeDescriptorSet(Renderer *pRenderer,
                                                      DescriptorSet *pDescriptorSet);
-API_INTERFACE void HAWL_CALLCONV updateDescriptorSet(Renderer *            pRenderer,
-                                                     uint32_t              index,
-                                                     DescriptorSet *       pDescriptorSet,
-                                                     uint32_t              count,
+API_INTERFACE void HAWL_CALLCONV updateDescriptorSet(Renderer *pRenderer,
+                                                     uint32_t index,
+                                                     DescriptorSet *pDescriptorSet,
+                                                     uint32_t count,
                                                      const DescriptorData *pParams);
 
 // command buffer functions
 API_INTERFACE void HAWL_CALLCONV resetCmdPool(Renderer *pRenderer, CmdPool *pCmdPool);
 API_INTERFACE void HAWL_CALLCONV beginCmd(Cmd *p_cmd);
 API_INTERFACE void HAWL_CALLCONV endCmd(Cmd *p_cmd);
-API_INTERFACE void HAWL_CALLCONV cmdBindRenderTargets(Cmd *                  p_cmd,
-                                                      uint32_t               render_target_count,
-                                                      RenderTarget **        p_render_targets,
-                                                      RenderTarget *         p_depth_stencil,
+API_INTERFACE void HAWL_CALLCONV cmdBindRenderTargets(Cmd *p_cmd,
+                                                      uint32_t render_target_count,
+                                                      RenderTarget **p_render_targets,
+                                                      RenderTarget *p_depth_stencil,
                                                       const LoadActionsDesc *loadActions,
-                                                      uint32_t *             pColorArraySlices,
-                                                      uint32_t *             pColorMipSlices,
-                                                      uint32_t               depthArraySlice,
-                                                      uint32_t               depthMipSlice);
-API_INTERFACE void HAWL_CALLCONV cmdSetViewport(Cmd * p_cmd,
+                                                      uint32_t *pColorArraySlices,
+                                                      uint32_t *pColorMipSlices,
+                                                      uint32_t depthArraySlice,
+                                                      uint32_t depthMipSlice);
+API_INTERFACE void HAWL_CALLCONV cmdSetViewport(Cmd *p_cmd,
                                                 float x,
                                                 float y,
                                                 float width,
                                                 float height,
                                                 float min_depth,
                                                 float max_depth);
-API_INTERFACE void HAWL_CALLCONV cmdSetScissor(Cmd *    p_cmd,
+API_INTERFACE void HAWL_CALLCONV cmdSetScissor(Cmd *p_cmd,
                                                uint32_t x,
                                                uint32_t y,
                                                uint32_t width,
                                                uint32_t height);
 API_INTERFACE void HAWL_CALLCONV cmdSetStencilReferenceValue(Cmd *p_cmd, uint32_t val);
 API_INTERFACE void HAWL_CALLCONV cmdBindPipeline(Cmd *p_cmd, Pipeline *p_pipeline);
-API_INTERFACE void HAWL_CALLCONV cmdBindDescriptorSet(Cmd *          pCmd,
-                                                      uint32_t       index,
+API_INTERFACE void HAWL_CALLCONV cmdBindDescriptorSet(Cmd *pCmd,
+                                                      uint32_t index,
                                                       DescriptorSet *pDescriptorSet);
-API_INTERFACE void HAWL_CALLCONV cmdBindPushConstants(Cmd *          pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdBindPushConstants(Cmd *pCmd,
                                                       RootSignature *pRootSignature,
-                                                      const char *   pName,
-                                                      const void *   pConstants);
+                                                      const char *pName,
+                                                      const void *pConstants);
 API_INTERFACE void HAWL_CALLCONV cmdBindPushConstantsByIndex(
-    Cmd *          pCmd,
+    Cmd *pCmd,
     RootSignature *pRootSignature,
-    uint32_t       paramIndex,
-    const void *   pConstants);
-API_INTERFACE void HAWL_CALLCONV cmdBindIndexBuffer(Cmd *    p_cmd,
-                                                    Buffer * p_buffer,
+    uint32_t paramIndex,
+    const void *pConstants);
+API_INTERFACE void HAWL_CALLCONV cmdBindIndexBuffer(Cmd *p_cmd,
+                                                    Buffer *p_buffer,
                                                     uint32_t indexType,
                                                     uint64_t offset);
-API_INTERFACE void HAWL_CALLCONV cmdBindVertexBuffer(Cmd *           p_cmd,
-                                                     uint32_t        buffer_count,
-                                                     Buffer **       pp_buffers,
+API_INTERFACE void HAWL_CALLCONV cmdBindVertexBuffer(Cmd *p_cmd,
+                                                     uint32_t buffer_count,
+                                                     Buffer **pp_buffers,
                                                      const uint32_t *pStrides,
                                                      const uint64_t *pOffsets);
 API_INTERFACE void HAWL_CALLCONV cmdDraw(Cmd *p_cmd, uint32_t vertex_count, uint32_t first_vertex);
-API_INTERFACE void HAWL_CALLCONV cmdDrawInstanced(Cmd *    pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdDrawInstanced(Cmd *pCmd,
                                                   uint32_t vertexCount,
                                                   uint32_t firstVertex,
                                                   uint32_t instanceCount,
                                                   uint32_t firstInstance);
-API_INTERFACE void HAWL_CALLCONV cmdDrawIndexed(Cmd *    p_cmd,
+API_INTERFACE void HAWL_CALLCONV cmdDrawIndexed(Cmd *p_cmd,
                                                 uint32_t index_count,
                                                 uint32_t first_index,
                                                 uint32_t first_vertex);
-API_INTERFACE void HAWL_CALLCONV cmdDrawIndexedInstanced(Cmd *    pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdDrawIndexedInstanced(Cmd *pCmd,
                                                          uint32_t indexCount,
                                                          uint32_t firstIndex,
                                                          uint32_t instanceCount,
                                                          uint32_t firstVertex,
                                                          uint32_t firstInstance);
-API_INTERFACE void HAWL_CALLCONV cmdDispatch(Cmd *    p_cmd,
+API_INTERFACE void HAWL_CALLCONV cmdDispatch(Cmd *p_cmd,
                                              uint32_t group_count_x,
                                              uint32_t group_count_y,
                                              uint32_t group_count_z);
 
 // Transition Commands
-API_INTERFACE void HAWL_CALLCONV cmdResourceBarrier(Cmd *                p_cmd,
-                                                    uint32_t             buffer_barrier_count,
-                                                    BufferBarrier *      p_buffer_barriers,
-                                                    uint32_t             texture_barrier_count,
-                                                    TextureBarrier *     p_texture_barriers,
-                                                    uint32_t             rt_barrier_count,
+API_INTERFACE void HAWL_CALLCONV cmdResourceBarrier(Cmd *p_cmd,
+                                                    uint32_t buffer_barrier_count,
+                                                    BufferBarrier *p_buffer_barriers,
+                                                    uint32_t texture_barrier_count,
+                                                    TextureBarrier *p_texture_barriers,
+                                                    uint32_t rt_barrier_count,
                                                     RenderTargetBarrier *p_rt_barriers);
 
 // Virtual Textures
@@ -2257,12 +2259,12 @@ API_INTERFACE void HAWL_CALLCONV queueSubmit(Queue *p_queue, const QueueSubmitDe
 API_INTERFACE PresentStatus HAWL_CALLCONV queuePresent(Queue *p_queue,
                                                        const QueuePresentDesc *p_desc);
 API_INTERFACE void HAWL_CALLCONV waitQueueIdle(Queue *p_queue);
-API_INTERFACE void HAWL_CALLCONV getFenceStatus(Renderer *   pRenderer,
-                                                Fence *      p_fence,
+API_INTERFACE void HAWL_CALLCONV getFenceStatus(Renderer *pRenderer,
+                                                Fence *p_fence,
                                                 FenceStatus *p_fence_status);
 API_INTERFACE void HAWL_CALLCONV waitForFences(Renderer *pRenderer,
-                                               uint32_t  fenceCount,
-                                               Fence **  ppFences);
+                                               uint32_t fenceCount,
+                                               Fence **ppFences);
 API_INTERFACE void HAWL_CALLCONV toggleVSync(Renderer *pRenderer, SwapChain **ppSwapchain);
 
 //Returns the recommended format for the swapchain.
@@ -2272,38 +2274,38 @@ API_INTERFACE TextureFormat HAWL_CALLCONV getRecommendedSwapchainFormat(bool hin
 
 //indirect Draw functions
 API_INTERFACE void HAWL_CALLCONV addIndirectCommandSignature(
-    Renderer *                  pRenderer,
+    Renderer *pRenderer,
     const CommandSignatureDesc *p_desc,
-    CommandSignature **         ppCommandSignature);
+    CommandSignature **ppCommandSignature);
 API_INTERFACE void HAWL_CALLCONV removeIndirectCommandSignature(
-    Renderer *        pRenderer,
+    Renderer *pRenderer,
     CommandSignature *pCommandSignature);
-API_INTERFACE void HAWL_CALLCONV cmdExecuteIndirect(Cmd *             pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdExecuteIndirect(Cmd *pCmd,
                                                     CommandSignature *pCommandSignature,
-                                                    uint              maxCommandCount,
-                                                    Buffer *          pIndirectBuffer,
-                                                    uint64_t          bufferOffset,
-                                                    Buffer *          pCounterBuffer,
-                                                    uint64_t          counterBufferOffset);
+                                                    uint maxCommandCount,
+                                                    Buffer *pIndirectBuffer,
+                                                    uint64_t bufferOffset,
+                                                    Buffer *pCounterBuffer,
+                                                    uint64_t counterBufferOffset);
 /************************************************************************/
 // GPU Query Interface
 /************************************************************************/
 API_INTERFACE void HAWL_CALLCONV getTimestampFrequency(Queue *pQueue, double *pFrequency);
-API_INTERFACE void HAWL_CALLCONV addQueryPool(Renderer *           pRenderer,
+API_INTERFACE void HAWL_CALLCONV addQueryPool(Renderer *pRenderer,
                                               const QueryPoolDesc *pDesc,
-                                              QueryPool **         ppQueryPool);
+                                              QueryPool **ppQueryPool);
 API_INTERFACE void HAWL_CALLCONV removeQueryPool(Renderer *pRenderer, QueryPool *pQueryPool);
-API_INTERFACE void HAWL_CALLCONV cmdResetQueryPool(Cmd *      pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdResetQueryPool(Cmd *pCmd,
                                                    QueryPool *pQueryPool,
-                                                   uint32_t   startQuery,
-                                                   uint32_t   queryCount);
+                                                   uint32_t startQuery,
+                                                   uint32_t queryCount);
 API_INTERFACE void HAWL_CALLCONV cmdBeginQuery(Cmd *pCmd, QueryPool *pQueryPool, QueryDesc *pQuery);
 API_INTERFACE void HAWL_CALLCONV cmdEndQuery(Cmd *pCmd, QueryPool *pQueryPool, QueryDesc *pQuery);
-API_INTERFACE void HAWL_CALLCONV cmdResolveQuery(Cmd *      pCmd,
+API_INTERFACE void HAWL_CALLCONV cmdResolveQuery(Cmd *pCmd,
                                                  QueryPool *pQueryPool,
-                                                 Buffer *   pReadbackBuffer,
-                                                 uint32_t   startQuery,
-                                                 uint32_t   queryCount);
+                                                 Buffer *pReadbackBuffer,
+                                                 uint32_t startQuery,
+                                                 uint32_t queryCount);
 /************************************************************************/
 // Stats Info Interface
 /************************************************************************/
@@ -2315,39 +2317,39 @@ API_INTERFACE void HAWL_CALLCONV freeMemoryStats(Renderer *pRenderer, char *stat
 /************************************************************************/
 // Debug Marker Interface
 /************************************************************************/
-API_INTERFACE void HAWL_CALLCONV cmdBeginDebugMarker(Cmd *       pCmd,
-                                                     float       r,
-                                                     float       g,
-                                                     float       b,
+API_INTERFACE void HAWL_CALLCONV cmdBeginDebugMarker(Cmd *pCmd,
+                                                     float r,
+                                                     float g,
+                                                     float b,
                                                      const char *pName);
 API_INTERFACE void HAWL_CALLCONV cmdEndDebugMarker(Cmd *pCmd);
-API_INTERFACE void HAWL_CALLCONV cmdAddDebugMarker(Cmd *       pCmd,
-                                                   float       r,
-                                                   float       g,
-                                                   float       b,
+API_INTERFACE void HAWL_CALLCONV cmdAddDebugMarker(Cmd *pCmd,
+                                                   float r,
+                                                   float g,
+                                                   float b,
                                                    const char *pName);
 #if D3D12_SUPPORTED
-API_INTERFACE uint32_t HAWL_CALLCONV cmdWriteMarker(Cmd *      pCmd,
+API_INTERFACE uint32_t HAWL_CALLCONV cmdWriteMarker(Cmd *pCmd,
                                                     MarkerType markerType,
-                                                    uint32_t   markerValue,
-                                                    Buffer *   pBuffer,
-                                                    size_t     offset,
-                                                    bool       useAutoFlags = false);
+                                                    uint32_t markerValue,
+                                                    Buffer *pBuffer,
+                                                    size_t offset,
+                                                    bool useAutoFlags = false);
 #endif
 /************************************************************************/
 // Resource Debug Naming Interface
 /************************************************************************/
-API_INTERFACE void HAWL_CALLCONV setBufferName(Renderer *  pRenderer,
-                                               Buffer *    pBuffer,
+API_INTERFACE void HAWL_CALLCONV setBufferName(Renderer *pRenderer,
+                                               Buffer *pBuffer,
                                                const char *pName);
-API_INTERFACE void HAWL_CALLCONV setTextureName(Renderer *  pRenderer,
-                                                Texture *   pTexture,
+API_INTERFACE void HAWL_CALLCONV setTextureName(Renderer *pRenderer,
+                                                Texture *pTexture,
                                                 const char *pName);
-API_INTERFACE void HAWL_CALLCONV setRenderTargetName(Renderer *    pRenderer,
+API_INTERFACE void HAWL_CALLCONV setRenderTargetName(Renderer *pRenderer,
                                                      RenderTarget *pRenderTarget,
-                                                     const char *  pName);
-API_INTERFACE void HAWL_CALLCONV setPipelineName(Renderer *  pRenderer,
-                                                 Pipeline *  pPipeline,
+                                                     const char *pName);
+API_INTERFACE void HAWL_CALLCONV setPipelineName(Renderer *pRenderer,
+                                                 Pipeline *pPipeline,
                                                  const char *pName);
 /************************************************************************/
 /************************************************************************/
