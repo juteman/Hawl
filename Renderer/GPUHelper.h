@@ -99,3 +99,17 @@ static void nvapiPrintDriverInfo()
 	}
 #endif
 }
+
+static void agsExit()
+{
+#if defined(AMDAGS)
+	agsDeInitialize(pAgsContext);
+#endif
+}
+
+static void nvapiExit()
+{
+#if defined(NVAPI)
+	NvAPI_Unload();
+#endif
+}
