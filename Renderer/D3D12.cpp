@@ -253,7 +253,7 @@ typedef struct DescriptorHeap
     /// DX Heap
     ID3D12DescriptorHeap *pCurrentHeap;
     /// Lock for multi-threaded descriptor allocations
-    std::mutex pMutex;
+    std::mutex* pMutex;
     ID3D12Device *pDevice;
     D3D12_CPU_DESCRIPTOR_HANDLE *pHandles;
     /// Start position in the heap
@@ -280,6 +280,8 @@ static void add_descriptor_heap(ID3D12Device *pDevice,
 
     auto *pHeap = static_cast<DescriptorHeap *>(mi_calloc(1, sizeof(*pHeap)));
 
+
+    pHeap->pMutex = static_cast<std::mutex *>(mi_calloc(1, sizeof(std::mutex)));
     // Descriptor Heap pDevice point to Renderer.pDxDevice
     pHeap->pDevice = pDevice;
 
@@ -451,7 +453,7 @@ static DescriptorHeap::DescriptorHandle consume_descriptor_handles(DescriptorHea
 {
     if (pHeap->mUsedDescriptors + descriptorCount > pHeap->mDesc.NumDescriptors)
     {
-        std::scoped_lock<std::mutex> lock(pHeap->pMutex);
+        std::scoped_lock<std::mutex> lock(*pHeap->pMutex);
 
         if ((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE))
         {
@@ -521,7 +523,7 @@ static DescriptorHeap::DescriptorHandle consume_descriptor_handles(DescriptorHea
 void return_cpu_descriptor_handles(DescriptorHeap *pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count)
 {
     EA_ASSERT((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) == 0);
-    std::scoped_lock<std::mutex> lock(pHeap->pMutex);
+    std::scoped_lock<std::mutex> lock(*pHeap->pMutex);
     for (uint32_t i = 0; i < count; ++i)
         pHeap->mFreeList.push_back({
             {handle.ptr + pHeap->mDescriptorSize * i},
@@ -1321,4 +1323,39 @@ void removeRenderer(Renderer *pRenderer)
     SAFE_FREE(pRenderer->pCapBits)
     SAFE_FREE(pRenderer->pActiveGpuSettings)
     SAFE_FREE(pRenderer)
+}
+
+
+/************************************************************************/
+// Resource Creation Functions
+/************************************************************************/
+void addFence(Renderer* pRenderer, Fence** ppFence)
+{
+	//ASSERT that renderer is valid
+	EA_ASSERT(pRenderer);
+	EA_ASSERT(ppFence);
+
+	//create a Fence and ASSERT that it is valid
+	Fence* pFence = static_cast<Fence *>(mi_calloc(1, sizeof(Fence)));
+	EA_ASSERT(pFence);
+
+	CHECK_DX12RESULT(pRenderer->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&pFence->pDxFence)));
+	pFence->mFenceValue = 1;
+
+	pFence->pDxWaitIdleFenceEvent = CreateEvent(nullptr, FALSE, FALSE, NULL);
+
+	*ppFence = pFence;
+}
+
+void removeFence(Renderer* pRenderer, Fence* pFence)
+{
+	//ASSERT that renderer is valid
+	EA_ASSERT(pRenderer);
+	//ASSERT that given fence to remove is valid
+	EA_ASSERT(pFence);
+
+	SAFE_RELEASE(pFence->pDxFence)
+	CloseHandle(pFence->pDxWaitIdleFenceEvent);
+
+	SAFE_FREE(pFence);
 }

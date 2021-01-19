@@ -192,7 +192,7 @@ struct ShaderMacro
 };
 
 struct GPUCapBits
-{
+{ 
     bool canShaderReadFrom[TextureFormat::Count];
     bool canShaderWriteTo[TextureFormat::Count];
     bool canRenderTargetWriteTo[TextureFormat::Count];
