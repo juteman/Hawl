@@ -313,6 +313,7 @@ static void remove_descriptor_heap(DescriptorHeap *pHeap)
     // TODO make new and delete c++ friendly
     // Deconstruct should not be called by hand
     // pHeap->pMutex.~mutex();
+    mi_free(pHeap->pMutex);
 
     pHeap->mFreeList.~vector();
 
@@ -1331,11 +1332,11 @@ void removeRenderer(Renderer *pRenderer)
 /************************************************************************/
 void addFence(Renderer* pRenderer, Fence** ppFence)
 {
-	//ASSERT that renderer is valid
+	//EA_ASSERT that renderer is valid
 	EA_ASSERT(pRenderer);
 	EA_ASSERT(ppFence);
 
-	//create a Fence and ASSERT that it is valid
+	//create a Fence and EA_ASSERT that it is valid
 	Fence* pFence = static_cast<Fence *>(mi_calloc(1, sizeof(Fence)));
 	EA_ASSERT(pFence);
 
@@ -1349,13 +1350,73 @@ void addFence(Renderer* pRenderer, Fence** ppFence)
 
 void removeFence(Renderer* pRenderer, Fence* pFence)
 {
-	//ASSERT that renderer is valid
+	//EA_ASSERT that renderer is valid
 	EA_ASSERT(pRenderer);
-	//ASSERT that given fence to remove is valid
+	//EA_ASSERT that given fence to remove is valid
 	EA_ASSERT(pFence);
 
 	SAFE_RELEASE(pFence->pDxFence)
 	CloseHandle(pFence->pDxWaitIdleFenceEvent);
 
 	SAFE_FREE(pFence);
+}
+
+
+void addQueue(Renderer* pRenderer, QueueDesc* pDesc, Queue** ppQueue)
+{
+	EA_ASSERT(pRenderer);
+	EA_ASSERT(pDesc);
+	EA_ASSERT(ppQueue);
+
+    auto pQueue = static_cast<Queue *>(mi_calloc(1, sizeof(Queue)));
+	EA_ASSERT(pQueue);
+
+	if (pDesc->mNodeIndex)
+	{
+		EA_ASSERT(pRenderer->mGpuMode == GPU_MODE_LINKED && "Node Masking can only be used with Linked Multi GPU");
+	}
+
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	if (pDesc->mFlag & QUEUE_FLAG_DISABLE_GPU_TIMEOUT)
+		queueDesc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;
+	queueDesc.Type = gDx12CmdTypeTranslator[pDesc->mType];
+	queueDesc.Priority = gDx12QueuePriorityTranslator[pDesc->mPriority];
+	queueDesc.NodeMask = util_calculate_node_mask(pRenderer, pDesc->mNodeIndex);
+
+	CHECK_DX12RESULT(hook_create_command_queue(pRenderer->pDxDevice, &queueDesc, &pQueue->pDxQueue));
+
+	wchar_t queueTypeBuffer[32] = {};
+	wchar_t* queueType = nullptr;
+	switch (queueDesc.Type)
+	{
+		case D3D12_COMMAND_LIST_TYPE_DIRECT: queueType = L"GRAPHICS QUEUE"; break;
+		case D3D12_COMMAND_LIST_TYPE_COMPUTE: queueType = L"COMPUTE QUEUE"; break;
+		case D3D12_COMMAND_LIST_TYPE_COPY: queueType = L"COPY QUEUE"; break;
+		default: break;
+	}
+
+	swprintf_s(queueTypeBuffer, L"%ls %u", queueType, pDesc->mNodeIndex);
+	pQueue->pDxQueue->SetName(queueTypeBuffer);
+
+	pQueue->mType = pDesc->mType;
+	pQueue->mNodeIndex = pDesc->mNodeIndex;
+
+	// Add queue fence. This fence will make sure we finish all GPU works before releasing the queue
+	addFence(pRenderer, &pQueue->pFence);
+
+	*ppQueue = pQueue;
+}
+
+void removeQueue(Renderer* pRenderer, Queue* pQueue)
+{
+	EA_ASSERT(pQueue);
+
+	// Make sure we finished all GPU works before we remove the queue
+	waitQueueIdle(pQueue);
+
+	removeFence(pRenderer, pQueue->pFence);
+	
+	SAFE_RELEASE(pQueue->pDxQueue);
+
+	SAFE_FREE(pQueue);
 }

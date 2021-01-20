@@ -86,3 +86,10 @@ extern void hook_fill_gpu_desc(Renderer* pRenderer, D3D_FEATURE_LEVEL featureLev
 	size_t numConverted = 0;
 	wcstombs_s(&numConverted, gpuDesc.mName, desc.Description, MAX_GPU_VENDOR_STRING_LENGTH);
 }
+
+
+
+HRESULT hook_create_command_queue(ID3D12Device* pDevice, const D3D12_COMMAND_QUEUE_DESC* pDesc, ID3D12CommandQueue** ppQueue)
+{
+	return pDevice->CreateCommandQueue(pDesc, IID_PPV_ARGS(ppQueue));
+}

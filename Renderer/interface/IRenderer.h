@@ -2083,8 +2083,9 @@ API_INTERFACE void HAWL_CALLCONV removeRenderer(Renderer *pRenderer);
 API_INTERFACE void HAWL_CALLCONV addFence(Renderer *pRenderer, Fence **p_fence);
 API_INTERFACE void HAWL_CALLCONV removeFence(Renderer *pRenderer, Fence *p_fence);
 
-API_INTERFACE void HAWL_CALLCONV addSemaphore(Renderer *pRenderer, Semaphore **p_semaphore);
-API_INTERFACE void HAWL_CALLCONV removeSemaphore(Renderer *pRenderer, Semaphore *p_semaphore);
+// We don't need Semaphore in DX12 now
+// API_INTERFACE void HAWL_CALLCONV addSemaphore(Renderer *pRenderer, Semaphore **p_semaphore);
+// API_INTERFACE void HAWL_CALLCONV removeSemaphore(Renderer *pRenderer, Semaphore *p_semaphore);
 
 API_INTERFACE void HAWL_CALLCONV addQueue(Renderer *pRenderer, QueueDesc *pQDesc, Queue **pQueue);
 API_INTERFACE void HAWL_CALLCONV removeQueue(Renderer *pRenderer, Queue *pQueue);
