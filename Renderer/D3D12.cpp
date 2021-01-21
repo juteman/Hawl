@@ -658,6 +658,32 @@ uint32_t util_calculate_node_mask(Renderer *pRenderer, uint32_t i)
         return 0;
 }
 
+
+
+DXGI_FORMAT util_to_dx_swapchain_format(TextureFormat const format)
+{
+	DXGI_FORMAT result = DXGI_FORMAT_UNKNOWN;
+
+	// FLIP_DISCARD and FLIP_SEQEUNTIAL swapchain buffers only support these formats
+	switch (format)
+	{
+		case R16G16B16A16_SFLOAT: result = DXGI_FORMAT_R16G16B16A16_FLOAT; break;
+		case B8G8R8A8_UNORM: result = DXGI_FORMAT_B8G8R8A8_UNORM; break;
+		case R8G8B8A8_UNORM: result = DXGI_FORMAT_R8G8B8A8_UNORM; break;
+		case B8G8R8A8_SRGB: result = DXGI_FORMAT_B8G8R8A8_UNORM; break;
+		case R8G8B8A8_SRGB: result = DXGI_FORMAT_R8G8B8A8_UNORM; break;
+		case R10G10B10A2_UNORM: result = DXGI_FORMAT_R10G10B10A2_UNORM; break;
+		default: break;
+	}
+
+	if (result == DXGI_FORMAT_UNKNOWN)
+	{
+		Logger::error("Image Format {} not supported for creating swapchain buffer", static_cast<uint32_t>(format));
+	}
+
+	return result;
+}
+
 static bool AddDevice(Renderer *pRenderer)
 {
     // The D3D debug layer (as well as Microsoft PIX and other graphics debugger
@@ -1419,4 +1445,105 @@ void removeQueue(Renderer* pRenderer, Queue* pQueue)
 	SAFE_RELEASE(pQueue->pDxQueue);
 
 	SAFE_FREE(pQueue);
+}
+
+void addSwapChain(Renderer* pRenderer, const SwapChainDesc* pDesc, SwapChain** ppSwapChain)
+{
+	EA_ASSERT(pRenderer);
+	EA_ASSERT(pDesc);
+	EA_ASSERT(ppSwapChain);
+	EA_ASSERT(pDesc->mImageCount <= MAX_SWAPCHAIN_IMAGES);
+
+	auto* pSwapChain = static_cast<SwapChain *>(mi_calloc(1, sizeof(SwapChain) + pDesc->mImageCount * sizeof(RenderTarget *)));
+	EA_ASSERT(pSwapChain);
+	pSwapChain->ppRenderTargets = reinterpret_cast<RenderTarget **>(pSwapChain + 1);
+	EA_ASSERT(pSwapChain->ppRenderTargets);
+
+#if !defined(XBOX)
+	pSwapChain->mDxSyncInterval = pDesc->mEnableVsync ? 1 : 0;
+
+	DXGI_SWAP_CHAIN_DESC1 desc = {};
+	desc.Width = pDesc->mWidth;
+	desc.Height = pDesc->mHeight;
+	desc.Format = util_to_dx_swapchain_format(pDesc->mColorFormat);
+	desc.Stereo = false;
+	desc.SampleDesc.Count = 1;    // If multisampling is needed, we'll resolve it later
+	desc.SampleDesc.Quality = 0;
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.BufferCount = pDesc->mImageCount;
+	desc.Scaling = DXGI_SCALING_STRETCH;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	desc.Flags = 0;
+
+	BOOL allowTearing = FALSE;
+	pRenderer->pDXGIFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+	desc.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+	pSwapChain->mFlags |= (!pDesc->mEnableVsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+	IDXGISwapChain1* swapchain;
+
+	HWND hwnd = static_cast<HWND>(pDesc->mWindowHandle.window);
+
+	CHECK_DX12RESULT(pRenderer->pDXGIFactory->CreateSwapChainForHwnd(pDesc->ppPresentQueues[0]->pDxQueue, hwnd, &desc, NULL, NULL, &swapchain));
+
+	CHECK_DX12RESULT(pRenderer->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+
+	CHECK_DX12RESULT(swapchain->QueryInterface(IID_ARGS(&pSwapChain->pDxSwapChain)));
+	swapchain->Release();
+
+	// Allowing multiple command queues to present for applications like Alternate Frame Rendering
+	if (pRenderer->mGpuMode == GPU_MODE_LINKED && pDesc->mPresentQueueCount > 1)
+	{
+        auto** ppQueues = static_cast<IUnknown **>(alloca(pDesc->mPresentQueueCount * sizeof(IUnknown *)));
+		UINT*      pCreationMasks = static_cast<UINT *>(alloca(pDesc->mPresentQueueCount * sizeof(UINT)));
+		for (uint32_t i = 0; i < pDesc->mPresentQueueCount; ++i)
+		{
+			ppQueues[i] = pDesc->ppPresentQueues[i]->pDxQueue;
+			pCreationMasks[i] = (1 << pDesc->ppPresentQueues[i]->mNodeIndex);
+		}
+
+		pSwapChain->pDxSwapChain->ResizeBuffers1(
+			desc.BufferCount, desc.Width, desc.Height, desc.Format, desc.Flags, pCreationMasks, ppQueues);
+	}
+
+	auto** buffers = static_cast<ID3D12Resource **>(alloca(pDesc->mImageCount * sizeof(ID3D12Resource *)));
+
+	// Create rendertargets from swapchain
+	for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
+	{
+		CHECK_DX12RESULT(pSwapChain->pDxSwapChain->GetBuffer(i, IID_ARGS(&buffers[i])));
+	}
+
+#endif
+
+	RenderTargetDesc descColor = {};
+	descColor.mWidth = pDesc->mWidth;
+	descColor.mHeight = pDesc->mHeight;
+	descColor.mDepth = 1;
+	descColor.mArraySize = 1;
+	descColor.mFormat = pDesc->mColorFormat;
+	descColor.mClearValue = pDesc->mColorClearValue;
+	descColor.mSampleCount = SAMPLE_COUNT_1;
+	descColor.mSampleQuality = 0;
+	descColor.pNativeHandle = NULL;
+	descColor.mFlags = TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET;
+#if defined(XBOX)
+	descColor.mFlags |= TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT;
+	pSwapChain->pPresentQueue = pDesc->mPresentQueueCount ? pDesc->ppPresentQueues[0] : NULL;
+#endif
+
+	for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
+	{
+#if !defined(XBOX)
+		descColor.pNativeHandle = static_cast<void *>(buffers[i]);
+#endif
+		::addRenderTarget(pRenderer, &descColor, &pSwapChain->ppRenderTargets[i]);
+	}
+
+	pSwapChain->mImageCount = pDesc->mImageCount;
+	pSwapChain->mEnableVsync = pDesc->mEnableVsync;
+
+	*ppSwapChain = pSwapChain;
 }
