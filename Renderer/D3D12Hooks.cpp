@@ -93,3 +93,8 @@ HRESULT hook_create_command_queue(ID3D12Device* pDevice, const D3D12_COMMAND_QUE
 {
 	return pDevice->CreateCommandQueue(pDesc, IID_PPV_ARGS(ppQueue));
 }
+
+HRESULT hook_create_copy_cmd(ID3D12Device* pDevice, uint32_t nodeMask, ID3D12CommandAllocator* pAlloc, Cmd* pCmd)
+{
+	return pDevice->CreateCommandList(nodeMask, D3D12_COMMAND_LIST_TYPE_COPY, pAlloc, nullptr, IID_PPV_ARGS(&pCmd->pDxCmdList));
+}

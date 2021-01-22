@@ -253,7 +253,7 @@ typedef struct DescriptorHeap
     /// DX Heap
     ID3D12DescriptorHeap *pCurrentHeap;
     /// Lock for multi-threaded descriptor allocations
-    std::mutex* pMutex;
+    std::mutex *pMutex;
     ID3D12Device *pDevice;
     D3D12_CPU_DESCRIPTOR_HANDLE *pHandles;
     /// Start position in the heap
@@ -279,7 +279,6 @@ static void add_descriptor_heap(ID3D12Device *pDevice,
     hook_modify_descriptor_heap_size(pDesc->Type, &numDescriptors);
 
     auto *pHeap = static_cast<DescriptorHeap *>(mi_calloc(1, sizeof(*pHeap)));
-
 
     pHeap->pMutex = static_cast<std::mutex *>(mi_calloc(1, sizeof(std::mutex)));
     // Descriptor Heap pDevice point to Renderer.pDxDevice
@@ -659,29 +658,41 @@ uint32_t util_calculate_node_mask(Renderer *pRenderer, uint32_t i)
 }
 
 
-
 DXGI_FORMAT util_to_dx_swapchain_format(TextureFormat const format)
 {
-	DXGI_FORMAT result = DXGI_FORMAT_UNKNOWN;
+    DXGI_FORMAT result = DXGI_FORMAT_UNKNOWN;
 
-	// FLIP_DISCARD and FLIP_SEQEUNTIAL swapchain buffers only support these formats
-	switch (format)
-	{
-		case R16G16B16A16_SFLOAT: result = DXGI_FORMAT_R16G16B16A16_FLOAT; break;
-		case B8G8R8A8_UNORM: result = DXGI_FORMAT_B8G8R8A8_UNORM; break;
-		case R8G8B8A8_UNORM: result = DXGI_FORMAT_R8G8B8A8_UNORM; break;
-		case B8G8R8A8_SRGB: result = DXGI_FORMAT_B8G8R8A8_UNORM; break;
-		case R8G8B8A8_SRGB: result = DXGI_FORMAT_R8G8B8A8_UNORM; break;
-		case R10G10B10A2_UNORM: result = DXGI_FORMAT_R10G10B10A2_UNORM; break;
-		default: break;
-	}
+    // FLIP_DISCARD and FLIP_SEQEUNTIAL swapchain buffers only support these formats
+    switch (format)
+    {
+    case R16G16B16A16_SFLOAT:
+        result = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        break;
+    case B8G8R8A8_UNORM:
+        result = DXGI_FORMAT_B8G8R8A8_UNORM;
+        break;
+    case R8G8B8A8_UNORM:
+        result = DXGI_FORMAT_R8G8B8A8_UNORM;
+        break;
+    case B8G8R8A8_SRGB:
+        result = DXGI_FORMAT_B8G8R8A8_UNORM;
+        break;
+    case R8G8B8A8_SRGB:
+        result = DXGI_FORMAT_R8G8B8A8_UNORM;
+        break;
+    case R10G10B10A2_UNORM:
+        result = DXGI_FORMAT_R10G10B10A2_UNORM;
+        break;
+    default:
+        break;
+    }
 
-	if (result == DXGI_FORMAT_UNKNOWN)
-	{
-		Logger::error("Image Format {} not supported for creating swapchain buffer", static_cast<uint32_t>(format));
-	}
+    if (result == DXGI_FORMAT_UNKNOWN)
+    {
+        Logger::error("Image Format {} not supported for creating swapchain buffer", static_cast<uint32_t>(format));
+    }
 
-	return result;
+    return result;
 }
 
 static bool AddDevice(Renderer *pRenderer)
@@ -1356,194 +1367,326 @@ void removeRenderer(Renderer *pRenderer)
 /************************************************************************/
 // Resource Creation Functions
 /************************************************************************/
-void addFence(Renderer* pRenderer, Fence** ppFence)
+void addFence(Renderer *pRenderer, Fence **ppFence)
 {
-	//EA_ASSERT that renderer is valid
-	EA_ASSERT(pRenderer);
-	EA_ASSERT(ppFence);
+    //EA_ASSERT that renderer is valid
+    EA_ASSERT(pRenderer);
+    EA_ASSERT(ppFence);
 
-	//create a Fence and EA_ASSERT that it is valid
-	Fence* pFence = static_cast<Fence *>(mi_calloc(1, sizeof(Fence)));
-	EA_ASSERT(pFence);
+    //create a Fence and EA_ASSERT that it is valid
+    Fence *pFence = static_cast<Fence *>(mi_calloc(1, sizeof(Fence)));
+    EA_ASSERT(pFence);
 
-	CHECK_DX12RESULT(pRenderer->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&pFence->pDxFence)));
-	pFence->mFenceValue = 1;
+    CHECK_DX12RESULT(pRenderer->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&pFence->pDxFence)));
+    pFence->mFenceValue = 1;
 
-	pFence->pDxWaitIdleFenceEvent = CreateEvent(nullptr, FALSE, FALSE, NULL);
+    pFence->pDxWaitIdleFenceEvent = CreateEvent(nullptr, FALSE, FALSE, NULL);
 
-	*ppFence = pFence;
+    *ppFence = pFence;
 }
 
-void removeFence(Renderer* pRenderer, Fence* pFence)
+void removeFence(Renderer *pRenderer, Fence *pFence)
 {
-	//EA_ASSERT that renderer is valid
-	EA_ASSERT(pRenderer);
-	//EA_ASSERT that given fence to remove is valid
-	EA_ASSERT(pFence);
+    //EA_ASSERT that renderer is valid
+    EA_ASSERT(pRenderer);
+    //EA_ASSERT that given fence to remove is valid
+    EA_ASSERT(pFence);
 
-	SAFE_RELEASE(pFence->pDxFence)
-	CloseHandle(pFence->pDxWaitIdleFenceEvent);
+    SAFE_RELEASE(pFence->pDxFence)
+    CloseHandle(pFence->pDxWaitIdleFenceEvent);
 
-	SAFE_FREE(pFence);
+    SAFE_FREE(pFence);
 }
 
 
-void addQueue(Renderer* pRenderer, QueueDesc* pDesc, Queue** ppQueue)
+void addQueue(Renderer *pRenderer, QueueDesc *pDesc, Queue **ppQueue)
 {
-	EA_ASSERT(pRenderer);
-	EA_ASSERT(pDesc);
-	EA_ASSERT(ppQueue);
+    EA_ASSERT(pRenderer);
+    EA_ASSERT(pDesc);
+    EA_ASSERT(ppQueue);
 
     auto pQueue = static_cast<Queue *>(mi_calloc(1, sizeof(Queue)));
-	EA_ASSERT(pQueue);
+    EA_ASSERT(pQueue);
 
-	if (pDesc->mNodeIndex)
-	{
-		EA_ASSERT(pRenderer->mGpuMode == GPU_MODE_LINKED && "Node Masking can only be used with Linked Multi GPU");
-	}
+    if (pDesc->mNodeIndex)
+    {
+        EA_ASSERT(pRenderer->mGpuMode == GPU_MODE_LINKED && "Node Masking can only be used with Linked Multi GPU");
+    }
 
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	if (pDesc->mFlag & QUEUE_FLAG_DISABLE_GPU_TIMEOUT)
-		queueDesc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;
-	queueDesc.Type = gDx12CmdTypeTranslator[pDesc->mType];
-	queueDesc.Priority = gDx12QueuePriorityTranslator[pDesc->mPriority];
-	queueDesc.NodeMask = util_calculate_node_mask(pRenderer, pDesc->mNodeIndex);
+    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    if (pDesc->mFlag & QUEUE_FLAG_DISABLE_GPU_TIMEOUT)
+        queueDesc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;
+    queueDesc.Type = gDx12CmdTypeTranslator[pDesc->mType];
+    queueDesc.Priority = gDx12QueuePriorityTranslator[pDesc->mPriority];
+    queueDesc.NodeMask = util_calculate_node_mask(pRenderer, pDesc->mNodeIndex);
 
-	CHECK_DX12RESULT(hook_create_command_queue(pRenderer->pDxDevice, &queueDesc, &pQueue->pDxQueue));
+    CHECK_DX12RESULT(hook_create_command_queue(pRenderer->pDxDevice, &queueDesc, &pQueue->pDxQueue));
 
-	wchar_t queueTypeBuffer[32] = {};
-	wchar_t* queueType = nullptr;
-	switch (queueDesc.Type)
-	{
-		case D3D12_COMMAND_LIST_TYPE_DIRECT: queueType = L"GRAPHICS QUEUE"; break;
-		case D3D12_COMMAND_LIST_TYPE_COMPUTE: queueType = L"COMPUTE QUEUE"; break;
-		case D3D12_COMMAND_LIST_TYPE_COPY: queueType = L"COPY QUEUE"; break;
-		default: break;
-	}
+    wchar_t queueTypeBuffer[32] = {};
+    wchar_t *queueType = nullptr;
+    switch (queueDesc.Type)
+    {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+        queueType = L"GRAPHICS QUEUE";
+        break;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+        queueType = L"COMPUTE QUEUE";
+        break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+        queueType = L"COPY QUEUE";
+        break;
+    default:
+        break;
+    }
 
-	swprintf_s(queueTypeBuffer, L"%ls %u", queueType, pDesc->mNodeIndex);
-	pQueue->pDxQueue->SetName(queueTypeBuffer);
+    swprintf_s(queueTypeBuffer, L"%ls %u", queueType, pDesc->mNodeIndex);
+    pQueue->pDxQueue->SetName(queueTypeBuffer);
 
-	pQueue->mType = pDesc->mType;
-	pQueue->mNodeIndex = pDesc->mNodeIndex;
+    pQueue->mType = pDesc->mType;
+    pQueue->mNodeIndex = pDesc->mNodeIndex;
 
-	// Add queue fence. This fence will make sure we finish all GPU works before releasing the queue
-	addFence(pRenderer, &pQueue->pFence);
+    // Add queue fence. This fence will make sure we finish all GPU works before releasing the queue
+    addFence(pRenderer, &pQueue->pFence);
 
-	*ppQueue = pQueue;
+    *ppQueue = pQueue;
 }
 
-void removeQueue(Renderer* pRenderer, Queue* pQueue)
+void removeQueue(Renderer *pRenderer, Queue *pQueue)
 {
-	EA_ASSERT(pQueue);
+    EA_ASSERT(pQueue);
 
-	// Make sure we finished all GPU works before we remove the queue
-	waitQueueIdle(pQueue);
+    // Make sure we finished all GPU works before we remove the queue
+    waitQueueIdle(pQueue);
 
-	removeFence(pRenderer, pQueue->pFence);
-	
-	SAFE_RELEASE(pQueue->pDxQueue);
+    removeFence(pRenderer, pQueue->pFence);
 
-	SAFE_FREE(pQueue);
+    SAFE_RELEASE(pQueue->pDxQueue);
+
+    SAFE_FREE(pQueue);
 }
 
-void addSwapChain(Renderer* pRenderer, const SwapChainDesc* pDesc, SwapChain** ppSwapChain)
+void addSwapChain(Renderer *pRenderer, const SwapChainDesc *pDesc, SwapChain **ppSwapChain)
 {
-	EA_ASSERT(pRenderer);
-	EA_ASSERT(pDesc);
-	EA_ASSERT(ppSwapChain);
-	EA_ASSERT(pDesc->mImageCount <= MAX_SWAPCHAIN_IMAGES);
+    EA_ASSERT(pRenderer);
+    EA_ASSERT(pDesc);
+    EA_ASSERT(ppSwapChain);
+    EA_ASSERT(pDesc->mImageCount <= MAX_SWAPCHAIN_IMAGES);
 
-	auto* pSwapChain = static_cast<SwapChain *>(mi_calloc(1, sizeof(SwapChain) + pDesc->mImageCount * sizeof(RenderTarget *)));
-	EA_ASSERT(pSwapChain);
-	pSwapChain->ppRenderTargets = reinterpret_cast<RenderTarget **>(pSwapChain + 1);
-	EA_ASSERT(pSwapChain->ppRenderTargets);
+    auto *pSwapChain = static_cast<SwapChain *>(mi_calloc(1, sizeof(SwapChain) + pDesc->mImageCount * sizeof(RenderTarget *)));
+    EA_ASSERT(pSwapChain);
+    pSwapChain->ppRenderTargets = reinterpret_cast<RenderTarget **>(pSwapChain + 1);
+    EA_ASSERT(pSwapChain->ppRenderTargets);
 
 #if !defined(XBOX)
-	pSwapChain->mDxSyncInterval = pDesc->mEnableVsync ? 1 : 0;
+    pSwapChain->mDxSyncInterval = pDesc->mEnableVsync ? 1 : 0;
 
-	DXGI_SWAP_CHAIN_DESC1 desc = {};
-	desc.Width = pDesc->mWidth;
-	desc.Height = pDesc->mHeight;
-	desc.Format = util_to_dx_swapchain_format(pDesc->mColorFormat);
-	desc.Stereo = false;
-	desc.SampleDesc.Count = 1;    // If multisampling is needed, we'll resolve it later
-	desc.SampleDesc.Quality = 0;
-	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.BufferCount = pDesc->mImageCount;
-	desc.Scaling = DXGI_SCALING_STRETCH;
-	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-	desc.Flags = 0;
+    DXGI_SWAP_CHAIN_DESC1 desc = {};
+    desc.Width = pDesc->mWidth;
+    desc.Height = pDesc->mHeight;
+    desc.Format = util_to_dx_swapchain_format(pDesc->mColorFormat);
+    desc.Stereo = false;
+    desc.SampleDesc.Count = 1; // If multisampling is needed, we'll resolve it later
+    desc.SampleDesc.Quality = 0;
+    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    desc.BufferCount = pDesc->mImageCount;
+    desc.Scaling = DXGI_SCALING_STRETCH;
+    desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    desc.Flags = 0;
 
-	BOOL allowTearing = FALSE;
-	pRenderer->pDXGIFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
-	desc.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+    BOOL allowTearing = FALSE;
+    pRenderer->pDXGIFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+    desc.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
-	pSwapChain->mFlags |= (!pDesc->mEnableVsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    pSwapChain->mFlags |= (!pDesc->mEnableVsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
-	IDXGISwapChain1* swapchain;
+    IDXGISwapChain1 *swapchain;
 
-	HWND hwnd = static_cast<HWND>(pDesc->mWindowHandle.window);
+    HWND hwnd = static_cast<HWND>(pDesc->mWindowHandle.window);
 
-	CHECK_DX12RESULT(pRenderer->pDXGIFactory->CreateSwapChainForHwnd(pDesc->ppPresentQueues[0]->pDxQueue, hwnd, &desc, NULL, NULL, &swapchain));
+    CHECK_DX12RESULT(pRenderer->pDXGIFactory->CreateSwapChainForHwnd(pDesc->ppPresentQueues[0]->pDxQueue, hwnd, &desc, NULL, NULL, &swapchain));
 
-	CHECK_DX12RESULT(pRenderer->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+    CHECK_DX12RESULT(pRenderer->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
-	CHECK_DX12RESULT(swapchain->QueryInterface(IID_ARGS(&pSwapChain->pDxSwapChain)));
-	swapchain->Release();
+    CHECK_DX12RESULT(swapchain->QueryInterface(IID_ARGS(&pSwapChain->pDxSwapChain)));
+    swapchain->Release();
 
-	// Allowing multiple command queues to present for applications like Alternate Frame Rendering
-	if (pRenderer->mGpuMode == GPU_MODE_LINKED && pDesc->mPresentQueueCount > 1)
-	{
-        auto** ppQueues = static_cast<IUnknown **>(alloca(pDesc->mPresentQueueCount * sizeof(IUnknown *)));
-		UINT*      pCreationMasks = static_cast<UINT *>(alloca(pDesc->mPresentQueueCount * sizeof(UINT)));
-		for (uint32_t i = 0; i < pDesc->mPresentQueueCount; ++i)
-		{
-			ppQueues[i] = pDesc->ppPresentQueues[i]->pDxQueue;
-			pCreationMasks[i] = (1 << pDesc->ppPresentQueues[i]->mNodeIndex);
-		}
+    // Allowing multiple command queues to present for applications like Alternate Frame Rendering
+    if (pRenderer->mGpuMode == GPU_MODE_LINKED && pDesc->mPresentQueueCount > 1)
+    {
+        auto **ppQueues = static_cast<IUnknown **>(alloca(pDesc->mPresentQueueCount * sizeof(IUnknown *)));
+        UINT *pCreationMasks = static_cast<UINT *>(alloca(pDesc->mPresentQueueCount * sizeof(UINT)));
+        for (uint32_t i = 0; i < pDesc->mPresentQueueCount; ++i)
+        {
+            ppQueues[i] = pDesc->ppPresentQueues[i]->pDxQueue;
+            pCreationMasks[i] = (1 << pDesc->ppPresentQueues[i]->mNodeIndex);
+        }
 
-		pSwapChain->pDxSwapChain->ResizeBuffers1(
-			desc.BufferCount, desc.Width, desc.Height, desc.Format, desc.Flags, pCreationMasks, ppQueues);
-	}
+        pSwapChain->pDxSwapChain->ResizeBuffers1(
+            desc.BufferCount, desc.Width, desc.Height, desc.Format, desc.Flags, pCreationMasks, ppQueues);
+    }
 
-	auto** buffers = static_cast<ID3D12Resource **>(alloca(pDesc->mImageCount * sizeof(ID3D12Resource *)));
+    auto **buffers = static_cast<ID3D12Resource **>(alloca(pDesc->mImageCount * sizeof(ID3D12Resource *)));
 
-	// Create rendertargets from swapchain
-	for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
-	{
-		CHECK_DX12RESULT(pSwapChain->pDxSwapChain->GetBuffer(i, IID_ARGS(&buffers[i])));
-	}
+    // Create rendertargets from swapchain
+    for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
+    {
+        CHECK_DX12RESULT(pSwapChain->pDxSwapChain->GetBuffer(i, IID_ARGS(&buffers[i])));
+    }
 
 #endif
 
-	RenderTargetDesc descColor = {};
-	descColor.mWidth = pDesc->mWidth;
-	descColor.mHeight = pDesc->mHeight;
-	descColor.mDepth = 1;
-	descColor.mArraySize = 1;
-	descColor.mFormat = pDesc->mColorFormat;
-	descColor.mClearValue = pDesc->mColorClearValue;
-	descColor.mSampleCount = SAMPLE_COUNT_1;
-	descColor.mSampleQuality = 0;
-	descColor.pNativeHandle = NULL;
-	descColor.mFlags = TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET;
+    RenderTargetDesc descColor = {};
+    descColor.mWidth = pDesc->mWidth;
+    descColor.mHeight = pDesc->mHeight;
+    descColor.mDepth = 1;
+    descColor.mArraySize = 1;
+    descColor.mFormat = pDesc->mColorFormat;
+    descColor.mClearValue = pDesc->mColorClearValue;
+    descColor.mSampleCount = SAMPLE_COUNT_1;
+    descColor.mSampleQuality = 0;
+    descColor.pNativeHandle = nullptr;
+    descColor.mFlags = TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET;
 #if defined(XBOX)
 	descColor.mFlags |= TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT;
 	pSwapChain->pPresentQueue = pDesc->mPresentQueueCount ? pDesc->ppPresentQueues[0] : NULL;
 #endif
-
-	for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
-	{
+    for (uint32_t i = 0; i < pDesc->mImageCount; ++i)
+    {
 #if !defined(XBOX)
-		descColor.pNativeHandle = static_cast<void *>(buffers[i]);
+        descColor.pNativeHandle = static_cast<void *>(buffers[i]);
 #endif
-		::addRenderTarget(pRenderer, &descColor, &pSwapChain->ppRenderTargets[i]);
+        ::addRenderTarget(pRenderer, &descColor, &pSwapChain->ppRenderTargets[i]);
+    }
+
+    pSwapChain->mImageCount = pDesc->mImageCount;
+    pSwapChain->mEnableVsync = pDesc->mEnableVsync;
+
+    *ppSwapChain = pSwapChain;
+}
+
+void addCmdPool(Renderer *pRenderer, const CmdPoolDesc *pDesc, CmdPool **ppCmdPool)
+{
+    //EA_ASSERT that renderer is valid
+    EA_ASSERT(pRenderer);
+    EA_ASSERT(pDesc);
+    EA_ASSERT(ppCmdPool);
+
+    //create one new CmdPool and add to renderer
+    CmdPool *pCmdPool = static_cast<CmdPool *>(mi_calloc(1, sizeof(CmdPool)));
+    EA_ASSERT(pCmdPool);
+
+    CHECK_DX12RESULT(pRenderer->pDxDevice->CreateCommandAllocator(
+        gDx12CmdTypeTranslator[pDesc->pQueue->mType], IID_ARGS(&pCmdPool->pDxCmdAlloc)));
+
+    pCmdPool->pQueue = pDesc->pQueue;
+
+    *ppCmdPool = pCmdPool;
+}
+
+void removeCmdPool(Renderer *pRenderer, CmdPool *pCmdPool)
+{
+    //check validity of given renderer and command pool
+    EA_ASSERT(pRenderer);
+    EA_ASSERT(pCmdPool);
+
+    SAFE_RELEASE(pCmdPool->pDxCmdAlloc)
+    SAFE_FREE(pCmdPool)
+}
+
+
+void addCmd(Renderer* pRenderer, const CmdDesc* pDesc, Cmd** ppCmd)
+{
+	//verify that given pool is valid
+    EA_ASSERT(pRenderer);
+	EA_ASSERT(pDesc);
+	EA_ASSERT(ppCmd);
+
+	// initialize to zero
+    auto* pCmd = static_cast<Cmd *>(mi_calloc_aligned(1, sizeof(Cmd), alignof(Cmd)));
+	EA_ASSERT(pCmd);
+
+	//set command pool of new command
+	pCmd->mNodeIndex = pDesc->pPool->pQueue->mNodeIndex;
+	pCmd->mType = pDesc->pPool->pQueue->mType;
+	pCmd->pQueue = pDesc->pPool->pQueue;
+	pCmd->pRenderer = pRenderer;
+
+	pCmd->pBoundHeaps[0] = pRenderer->pCbvSrvUavHeaps[pCmd->mNodeIndex];
+	pCmd->pBoundHeaps[1] = pRenderer->pSamplerHeaps[pCmd->mNodeIndex];
+
+	pCmd->pCmdPool = pDesc->pPool;
+
+    const uint32_t nodeMask = util_calculate_node_mask(pRenderer, pCmd->mNodeIndex);
+
+	if (QUEUE_TYPE_TRANSFER == pDesc->pPool->pQueue->mType)
+	{
+		CHECK_DX12RESULT(hook_create_copy_cmd(pRenderer->pDxDevice, nodeMask, pDesc->pPool->pDxCmdAlloc, pCmd))
+	}
+	else
+	{
+		ID3D12PipelineState* initialState = nullptr;
+		CHECK_DX12RESULT(pRenderer->pDxDevice->CreateCommandList(
+			nodeMask, gDx12CmdTypeTranslator[pCmd->mType], pDesc->pPool->pDxCmdAlloc,
+			initialState, __uuidof(pCmd->pDxCmdList), reinterpret_cast<void **>(&(pCmd->pDxCmdList))))
 	}
 
-	pSwapChain->mImageCount = pDesc->mImageCount;
-	pSwapChain->mEnableVsync = pDesc->mEnableVsync;
+	// Command lists are addd in the recording state, but there is nothing
+	// to record yet. The main loop expects it to be closed, so close it now.
+	CHECK_DX12RESULT(pCmd->pDxCmdList->Close())
 
-	*ppSwapChain = pSwapChain;
+	*ppCmd = pCmd;
+}
+
+void removeCmd(Renderer* pRenderer, Cmd* pCmd)
+{
+	//verify that given command and pool are valid
+	EA_ASSERT(pRenderer);
+	EA_ASSERT(pCmd);
+
+	if (QUEUE_TYPE_TRANSFER == pCmd->mType)
+	{
+		hook_remove_copy_cmd(pCmd);
+	}
+	else
+	{
+		SAFE_RELEASE(pCmd->pDxCmdList)
+	}
+
+	SAFE_FREE(pCmd)
+}
+
+
+void addCmd_n(Renderer* pRenderer, const CmdDesc* pDesc, uint32_t cmdCount, Cmd*** pppCmd)
+{
+	//verify that ***cmd is valid
+	EA_ASSERT(pRenderer);
+	EA_ASSERT(pDesc);
+	EA_ASSERT(cmdCount);
+	EA_ASSERT(pppCmd);
+
+	Cmd** ppCmds = (Cmd**)mi_calloc(cmdCount, sizeof(Cmd*));
+	EA_ASSERT(ppCmds);
+
+	//add n new cmds to given pool
+	for (uint32_t i = 0; i < cmdCount; ++i)
+	{
+		::addCmd(pRenderer, pDesc, &ppCmds[i]);
+	}
+
+	*pppCmd = ppCmds;
+}
+
+void removeCmd_n(Renderer* pRenderer, uint32_t cmdCount, Cmd** ppCmds)
+{
+	//verify that given command list is valid
+	EA_ASSERT(ppCmds);
+
+	//remove every given cmd in array
+	for (uint32_t i = 0; i < cmdCount; ++i)
+	{
+		removeCmd(pRenderer, ppCmds[i]);
+	}
+
+	SAFE_FREE(ppCmds);
 }
