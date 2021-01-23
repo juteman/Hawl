@@ -1034,7 +1034,7 @@ typedef struct RenderTargetDesc
     /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
     uint32_t mArraySize;
     /// Number of mip levels
-    uint32_t mMipLevels;
+    mutable uint32_t mMipLevels;
     /// MSAA
     SampleCount mSampleCount;
     /// Internal image format

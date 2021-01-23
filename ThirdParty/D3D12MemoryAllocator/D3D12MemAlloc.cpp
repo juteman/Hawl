@@ -4382,13 +4382,16 @@ HRESULT AllocatorPimpl::CreateResource(
 
     ALLOCATION_DESC finalAllocDesc = *pAllocDesc;
 
+    // Muti-GPU
+    D3D12MA_ASSERT(IsPow2(finalAllocDesc.CreationNodeMask));
+
     D3D12_RESOURCE_DESC finalResourceDesc = *pResourceDesc;
     D3D12_RESOURCE_ALLOCATION_INFO resAllocInfo = GetResourceAllocationInfo(finalResourceDesc);
     resAllocInfo.Alignment = D3D12MA_MAX<UINT64>(resAllocInfo.Alignment, D3D12MA_DEBUG_ALIGNMENT);
     D3D12MA_ASSERT(IsPow2(resAllocInfo.Alignment));
     D3D12MA_ASSERT(resAllocInfo.SizeInBytes > 0);
 
-    if(pAllocDesc->CustomPool != NULL)
+    if(pAllocDesc->CustomPool != nullptr)
     {
         if((finalAllocDesc.Flags & ALLOCATION_FLAG_COMMITTED) != 0)
         {
