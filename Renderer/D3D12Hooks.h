@@ -1,11 +1,11 @@
 #pragma once
 #include "IRenderer.h"
 
-typedef struct GpuDesc
+struct GpuDesc
 {
 	Renderer*                         pRenderer = nullptr;
 #if defined(XBOX)
-	IDXGIAdapter*                     pGpu = NULL;
+	IDXGIAdapter*                     pGpu = nullptr;
 #else
 	IDXGIAdapter4*                    pGpu = nullptr;
 #endif
@@ -13,12 +13,12 @@ typedef struct GpuDesc
 	D3D12_FEATURE_DATA_D3D12_OPTIONS  mFeatureDataOptions;
 	D3D12_FEATURE_DATA_D3D12_OPTIONS1 mFeatureDataOptions1;
 	SIZE_T                            mDedicatedVideoMemory = 0;
-	char                              mVendorId[MAX_GPU_VENDOR_STRING_LENGTH];
-	char                              mDeviceId[MAX_GPU_VENDOR_STRING_LENGTH];
-	char                              mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH];
-	char                              mName[MAX_GPU_VENDOR_STRING_LENGTH];
+	char                              mVendorId[MAX_GPU_VENDOR_STRING_LENGTH] = {};
+	char                              mDeviceId[MAX_GPU_VENDOR_STRING_LENGTH] = {};
+	char                              mRevisionId[MAX_GPU_VENDOR_STRING_LENGTH] = {};
+	char                              mName[MAX_GPU_VENDOR_STRING_LENGTH] = {};
 	GPUPresetLevel                    mPreset;
-}                                     GpuDesc;
+};
 
 extern HMODULE hook_get_d3d12_module_handle();
 
