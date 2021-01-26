@@ -20,8 +20,23 @@
 
 #pragma once
 #include "BaseType.h"
-static inline uint32 RoundUp(const uint32& value, const uint32& multiple) { return ((value + multiple - 1) / multiple) * multiple; }
-static inline uint64 RoundUp64(const uint64& value, const uint64& multiple) { return ((value + multiple - 1) / multiple) * multiple; }
 
-static inline uint32_t RoundDown(const uint32& value, const uint32& multiple) { return value  - value % multiple; }
-static inline uint64_t RoundDown64(const uint64& value, const uint64& multiple) { return value - value % multiple; }
+static inline uint32 RoundUp(const uint32 &value, const uint32 &multiple)
+{
+    return ((value + multiple - 1) / multiple) * multiple;
+}
+
+static inline uint64 RoundUp64(const uint64 &value, const uint64 &multiple)
+{
+    return ((value + multiple - 1) / multiple) * multiple;
+}
+
+static inline uint32_t RoundDown(const uint32 &value, const uint32 &multiple)
+{
+    return value - value % multiple;
+}
+
+static inline uint64_t RoundDown64(const uint64 &value, const uint64 &multiple)
+{
+    return value - value % multiple;
+}

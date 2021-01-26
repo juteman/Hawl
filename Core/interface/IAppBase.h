@@ -32,7 +32,7 @@ namespace Hawl
 class IApp
 {
 public:
-    virtual INT  Init() = 0;
+    virtual INT Init() = 0;
     virtual void Exit() = 0;
     virtual bool Load() = 0;
     virtual void Unload() = 0;

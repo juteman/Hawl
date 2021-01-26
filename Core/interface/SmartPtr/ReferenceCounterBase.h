@@ -140,7 +140,7 @@ public:
     /// rename the type
     typedef T ValueType;
 
-    ValueType   m_value; // this type expected to be a pointer
+    ValueType m_value; // this type expected to be a pointer
     DeleterType m_deleter;
 
     RefCntDeleter(ValueType value, DeleterType deleter)
@@ -172,7 +172,7 @@ template <typename T>
 class RefCntInst : public RefCntUtilityBase
 {
 public:
-    typedef T                                                          ValueType;
+    typedef T ValueType;
     typedef typename std::aligned_storage<sizeof(T), alignof(T)>::type StorgeType;
 
     mutable StorgeType m_memory;

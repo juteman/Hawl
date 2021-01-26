@@ -75,13 +75,13 @@ template <typename T>
 class SharedPtr
 {
 public:
-    typedef SharedPtr<T>                               ThisType;
-    typedef T                                          ObjectType;
+    typedef SharedPtr<T> ThisType;
+    typedef T ObjectType;
     typedef typename SharedPtrTraits<T>::referenceType ReferenceType;
 
 protected:
     RefCntUtilityBase *m_pRefCnt;
-    T *                m_pObject;
+    T *m_pObject;
 
 public:
     /// Init a blank SharePtr
@@ -324,7 +324,7 @@ class WeakPtr
 {
 public:
     typedef WeakPtr<T> ThisType;
-    typedef T          ObjectType;
+    typedef T ObjectType;
 
 public:
     WeakPtr() noexcept

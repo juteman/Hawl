@@ -38,7 +38,7 @@ private:
 
     /// 禁止在堆上分配数组对象
     void *operator new[](size_t size);
-    void  operator delete[](void *ptr);
+    void operator delete[](void *ptr);
 
 public:
     /// 重载new函数，使其能够被垃圾回收

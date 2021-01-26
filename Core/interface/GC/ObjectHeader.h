@@ -28,11 +28,11 @@ class GCObjectHeader
 {
 public:
     static GCObjectHeader *fromPayload(const void *);
-    bool                   isMarked() const;
-    void                   mark();
-    void                   unmark();
-    void                   markDead();
-    bool                   isDead() const;
+    bool isMarked() const;
+    void mark();
+    void unmark();
+    void markDead();
+    bool isDead() const;
 };
 }
 #endif

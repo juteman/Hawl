@@ -42,9 +42,9 @@ struct Task
 {
     HAWL_DISABLE_COPY(Task)
     Task() = default;
-    virtual      ~Task() = default;
+    virtual ~Task() = default;
     virtual void run() = 0;
-    Priority     taskPriority = Priority::Normal;
+    Priority taskPriority = Priority::Normal;
 };
 
 
@@ -54,8 +54,8 @@ private:
     using Queue = Algorithm::LockFreeQueue<Task *>;
 
 protected:
-    const uint               MaxThreadCount = std::thread::hardware_concurrency() / 2;
-    Queue                    TaskQueue;
+    const uint MaxThreadCount = std::thread::hardware_concurrency() / 2;
+    Queue TaskQueue;
     std::vector<std::thread> m_threads;
 
     void TaskRunner()
