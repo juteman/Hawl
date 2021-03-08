@@ -1,4 +1,3 @@
-#include "Renderer.h"
 #include "GPUHelper.h"
 #include "DX12Helper.h"
 #include "mimalloc.h"

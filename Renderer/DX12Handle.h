@@ -23,12 +23,13 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
-namespace Hawl
+namespace Server::Graphics
 {
+
 using Factory6Handle = Microsoft::WRL::ComPtr<IDXGIFactory6>;
 using Adapter4Handle = Microsoft::WRL::ComPtr<IDXGIAdapter4>;
 using AdapterHandle = Microsoft::WRL::ComPtr<IDXGIAdapter1>;
-using DeviceHandle = Microsoft::WRL::ComPtr<ID3D12Device>;
+using DevicePtr = Microsoft::WRL::ComPtr<ID3D12Device>;
 using Device4Handle = Microsoft::WRL::ComPtr<ID3D12Device4>;
 using CommandQueueHandle = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
 using ISwapChain3Handle = Microsoft::WRL::ComPtr<IDXGISwapChain3>;

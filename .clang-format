@@ -12,5 +12,5 @@ BinPackParameters: false
 BinPackArguments: false
 AlwaysBreakTemplateDeclarations: Yes
 Cpp11BracedListStyle: true
-ColumnLimit: 100
+ColumnLimit: 120
 

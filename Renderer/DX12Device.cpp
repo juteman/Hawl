@@ -75,7 +75,7 @@ DX12Device::DX12Device(uint32 bEnableGpuBasedValidation)
 #if GRAPHICS_DEBUG
     flags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
-    CHECK_DX12_RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&pDXGIFactory6)))
+    CHECK_DX12RESULT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&pDXGIFactory6)))
 
     bool           foundSuitAbleGpu = false;
     IDXGIAdapter4 *adapter4 = nullptr;
