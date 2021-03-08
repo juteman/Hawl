@@ -38,6 +38,27 @@ inline eastl::wstring AnsiToWString(const eastl::string &str)
     return eastl::wstring(buffer);
 }
 
+
+/*
+ * User define DX12 Exception class
+ *
+ * @example
+ *FORCEINLINE void CheckDX12Result(HRESULT result, const char* code, const char* filename, uint32 line)
+ *{
+ *   __debugbreak();
+ *   throw DX12Exception(result, code, filename, line);
+ *}
+ */
+class DX12Exception : public std::runtime_error
+{
+public:
+    DX12Exception(HRESULT result, const char* code, const char* filename, uint32 line)
+        : std::runtime_error(fmt::format(" FAILED with {}  in {} line: {} with HRESULT: {}", code, filename, line, result))
+    {
+        
+    }
+};
+
 /**
  * @brief Check if result is failure, if it is, will exit with error message
  * @param result | result code to check
@@ -49,8 +70,7 @@ inline eastl::wstring AnsiToWString(const eastl::string &str)
 FORCEINLINE void CheckDX12Result(HRESULT result, const char* code, const char* filename, uint32 line)
 {
     __debugbreak();
-    Logger::error(" FAILED with {}  in {} line: {} with HRESULT: {}", code, filename, line, result);
-    EA_ASSERT(false);
+    throw DX12Exception(result, code, filename, line);
 }
 
 #ifndef CHECK_DX12RESULT

@@ -6,70 +6,37 @@
 #include "Logger.h"
 #include <cassert>
 
-namespace Hawl
+
+void GetHardwareAdapter(IDXGIFactory1 *pFactory,
+                        IDXGIAdapter1 **ppAdapter,
+                        bool needHighPerformance)
 {
-FORCEINLINE void EnableDebugLayer(ID3D12Debug *pDXDebug, const uint32 bEnableGpuBasedValidation)
-{
-    pDXDebug->EnableDebugLayer();
-    ID3D12Debug1 *pDebug1 = nullptr;
-    if (SUCCEEDED(pDXDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
+    *ppAdapter = nullptr;
+
+    IDXGIAdapter1 *adapter;
+
+    IDXGIFactory6 *factory6;
+    if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
     {
-        pDebug1->SetEnableGPUBasedValidation(bEnableGpuBasedValidation);
-        pDebug1->Release();
-    }
-}
+        for (
+            UINT adapterIndex = 0;
+            DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(
+                adapterIndex,
+                needHighPerformance == true
+                    ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE
+                    : DXGI_GPU_PREFERENCE_UNSPECIFIED,
+                IID_PPV_ARGS(&adapter));
+            ++adapterIndex)
+        {
+            DXGI_ADAPTER_DESC1 desc;
+            adapter->GetDesc1(&desc);
 
-void FillGpuDesc(ID3D12Device *&pDxDevice, const D3D_FEATURE_LEVEL &featureLevel, GpuDesc &gpuDesc)
-{
-    // Query the level of support of Shader Model.
-    D3D12_FEATURE_DATA_D3D12_OPTIONS  featureData = {};
-    D3D12_FEATURE_DATA_D3D12_OPTIONS1 featureData1 = {};
-    // Query the level of support of Wave Intrinsics.
-    pDxDevice->CheckFeatureSupport(
-        static_cast<D3D12_FEATURE>(D3D12_FEATURE_D3D12_OPTIONS),
-        &featureData,
-        sizeof(featureData));
-    pDxDevice->CheckFeatureSupport(
-        static_cast<D3D12_FEATURE>(D3D12_FEATURE_D3D12_OPTIONS1),
-        &featureData1,
-        sizeof(featureData1));
-
-    DXGI_ADAPTER_DESC3 desc = {};
-    gpuDesc.pGpu->GetDesc3(&desc);
-    gpuDesc.mMaxSupportedFeatureLevel = featureLevel;
-    gpuDesc.mDedicatedVideoMemory = desc.DedicatedVideoMemory;
-    gpuDesc.mFeatureDataOptions = featureData;
-    gpuDesc.mFeatureDataOptions1 = featureData1;
-
-    gpuDesc.mDeviceId = desc.DeviceId;
-    gpuDesc.mVendorId = desc.VendorId;
-    gpuDesc.mRevisionId = desc.Revision;
-
-    size_t numConverted = 0;
-    wcstombs_s(&numConverted, gpuDesc.mName, desc.Description, MAX_GPU_VENDOR_STRING_LENGTH);
-}
-
-DX12Device::DX12Device(uint32 bEnableGpuBasedValidation)
-{
-#if GRAPHICS_DEBUG
-    if (SUCCEEDED(
-        D3D12GetDebugInterface(__uuidof(pDXDebug), reinterpret_cast<void **>(&(pDXDebug)))))
-    {
-        EnableDebugLayer(pDXDebug, bEnableGpuBasedValidation);
-    }
-#endif
-
-    // TODO DRED_ENABLE used for debug, needed add and deconstructed function both
-#if DRED_ENABLE
-#endif
-
-    D3D_FEATURE_LEVEL featureLevels[4] =
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-    };
+            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+            {
+                // Don't select the Basic Render Driver adapter.
+                // If you want a software adapter, pass in "/warp" on the command line.
+                continue;
+            }
 
     uint flags = 0;
 #if GRAPHICS_DEBUG
@@ -121,60 +88,23 @@ DX12Device::DX12Device(uint32 bEnableGpuBasedValidation)
         adapter4->Release();
     }
 
-    // If the only adapter we found is a software adapter, log error message for QA
-    if (!foundSuitAbleGpu && foundSoftwareAdapter)
-    {
-        Logger::error("The only available GPU has DXGI_ADAPTER_FLAG_SOFTWARE. Early exiting");
-        assert(false);
+            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+            {
+                // Don't select the Basic Render Driver adapter.
+                // If you want a software adapter, pass in "/warp" on the command line.
+                continue;
+            }
+
+            // Check to see whether the adapter supports Direct3D 12, but don't create the
+            // actual device yet.
+            if (SUCCEEDED(
+                D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device),
+                    nullptr)))
+            {
+                break;
+            }
+        }
     }
 
-    Logger::info("Name of selected gpu: {}", gpuDesc.mName);
-    Logger::info("Vendor id of selected gpu: {}", gpuDesc.mVendorId);
-    Logger::info("Revision id of selected gpu: {}", gpuDesc.mRevisionId);
-    Logger::info("Dedicated video memory of selected gpu: {}", gpuDesc.mDedicatedVideoMemory);
-#if DEBUG
-    HRESULT hr = pDxDevice->QueryInterface(IID_PPV_ARGS(&pDxDebugValidation));
-    if (SUCCEEDED(hr))
-    {
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-        // D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND breaks even when it is disabled
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
-        pDxDebugValidation->SetBreakOnID(D3D12_MESSAGE_ID_LOADPIPELINE_NAMENOTFOUND, false);
-    }
-#endif
-
-    //TODO store the caps builder
+    *ppAdapter = adapter;
 }
-
-DX12Device::~DX12Device()
-{
-    SAFE_RELEASE(pDXGIFactory6);
-    if (pDxDebugValidation)
-    {
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, false);
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, false);
-        pDxDebugValidation->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
-        SAFE_RELEASE(pDxDebugValidation);
-    }
-#if DEBUG
-    ID3D12DebugDevice *pDebugDevice = nullptr;
-    pDxDevice->QueryInterface(&pDebugDevice);
-
-    SAFE_RELEASE(pDXDebug);
-    SAFE_RELEASE(pDxDevice);
-
-    if (pDebugDevice)
-    {
-        // Debug device is released first so report live objects don't show its ref as a warning.
-        pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
-        pDebugDevice->Release();
-    }
-#else
-    SAFE_RELEASE(pDxDevice);
-#endif
-
-#if DRED_ENABLE
-#endif
-}
-} // namespace Hawl

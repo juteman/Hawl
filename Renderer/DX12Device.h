@@ -2,10 +2,8 @@
 #include "BaseType.h"
 
 #include <d3d12.h>
-#include <dxgi1_6.h>
+#include <dxgi1_6.h>    
 
-namespace Hawl
-{
 class DX12Device
 {
 public:
@@ -19,4 +17,3 @@ public:
 
 
 };
-}
